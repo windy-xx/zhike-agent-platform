@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>五行配对挑战 - 中医益智游戏</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+        --primary-green: #2D8C5A;
+        --dark-green: #1F6B44;
+        --light-green: #4CAF50;
+        --accent-brown: #8B5A2B;
+        --dark-brown: #6B4423;
+        --accent-red: #C23B22;
+        --bg-cream: #F9F6F0;
+        --text-dark: #2C2416;
+        --text-muted: #6B5D4F;
+    }
+    body {
+        font-family: 'Noto Serif SC', serif;
+        background: var(--bg-cream);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        color: var(--text-dark);
+        position: relative;
+    }
+    body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background:
+            radial-gradient(ellipse at 20% 20%, rgba(45,140,90,0.08) 0%, transparent 50%),
+            radial-gradient(ellipse at 80% 80%, rgba(139,90,43,0.08) 0%, transparent 50%);
+        pointer-events: none;
+    }
+
+    /* Header */
+    .game-header {
+        background: linear-gradient(135deg, #1A4D3F 0%, #2D7A5E 50%, #3CB371 100%);
+        padding: 25px 35px;
+        box-shadow: 0 6px 30px rgba(45,140,90,0.25);
+        position: relative;
+        overflow: hidden;
+    }
+    .game-header::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, transparent 0%, var(--accent-red) 20%, var(--accent-brown) 40%, var(--primary-green) 60%, var(--accent-brown) 80%, transparent 100%);
+    }
+    .header-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+        z-index: 1;
+    }
+    .game-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #fff;
+        text-shadow: 0 3px 10px rgba(0,0,0,0.3);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .game-title .icon { font-size: 36px; }
+    .game-stats {
+        display: flex;
+        gap: 40px;
+    }
+    .stat-item { text-align: center; }
+    .stat-label {
+        font-size: 13px;
+        color: rgba(255,255,255,0.85);
+        margin-bottom: 5px;
+    }
+    .stat-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #fff;
+        text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    /* Main */
+    .game-container {
+        flex: 1;
+        max-width: 1200px;
+        width: 100%;
+        margin: 0 auto;
+        padding: 40px 30px;
+    }
+
+    /* Pairing columns */
+    .pairing-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 50px;
+    }
+    .pairing-column {
+        background: linear-gradient(145deg, #FFFFFF 0%, #FFFBF7 100%);
+        border-radius: 24px;
+        padding: 35px;
+        box-shadow: 0 8px 35px rgba(45,140,90,0.12);
+    }
+    .column-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--accent-brown);
+        margin-bottom: 25px;
+        text-align: center;
+        padding-bottom: 20px;
+        border-bottom: 3px solid var(--primary-green);
+        letter-spacing: 4px;
+        position: relative;
+    }
+    .column-title::after {
+        content: '';
+        position: absolute;
+        bottom: -3px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60px;
+        height: 3px;
+        background: var(--accent-red);
+    }
+
+    /* Element cards */
+    .element-card {
+        background: linear-gradient(145deg, #FFFFFF 0%, #FFFBF7 100%);
+        border: 2px solid rgba(139,90,43,0.2);
+        border-radius: 18px;
+        padding: 25px;
+        text-align: center;
+        margin-bottom: 18px;
+        cursor: pointer;
+        transition: all 0.4s ease;
+        position: relative;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+    .element-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--primary-green), var(--light-green));
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+    .element-card:hover {
+        border-color: var(--primary-green);
+        transform: translateY(-5px);
+        box-shadow: 0 12px 30px rgba(45,140,90,0.2);
+    }
+    .element-card:hover::before { opacity: 1; }
+    .element-card.selected {
+        border-color: var(--accent-red);
+        background: linear-gradient(145deg, #FFF5F5, #FFE5E5);
+        box-shadow: 0 8px 25px rgba(194,59,34,0.25);
+    }
+    .element-card.correct {
+        border-color: var(--primary-green);
+        background: linear-gradient(145deg, #F0FDF4, #DCFCE7);
+        box-shadow: 0 8px 25px rgba(45,140,90,0.25);
+        cursor: default;
+    }
+    .element-card.correct::after {
+        content: '✓';
+        position: absolute;
+        top: 12px; right: 12px;
+        font-size: 24px;
+        color: var(--primary-green);
+        background: #fff;
+        width: 36px; height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(45,140,90,0.2);
+    }
+    .element-name {
+        font-size: 36px;
+        font-weight: 700;
+        color: var(--accent-brown);
+        margin-bottom: 8px;
+        letter-spacing: 3px;
+    }
+    .element-pinyin {
+        font-size: 16px;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+
+    /* Footer buttons */
+    .game-footer {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        padding: 30px;
+    }
+    .btn {
+        padding: 14px 32px;
+        border-radius: 14px;
+        font-size: 17px;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        transition: all 0.4s;
+        border: none;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        letter-spacing: 0.5px;
+    }
+    .btn:hover { transform: translateY(-3px); }
+    .btn {
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        min-height: 44px;
+    }
+    .btn:active { transform: scale(0.97); }
+    .element-card {
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        min-height: 44px;
+    }
+    .btn-reset {
+        background: linear-gradient(135deg, var(--accent-brown), var(--dark-brown));
+        color: #fff;
+    }
+    .btn-reset:hover { box-shadow: 0 10px 30px rgba(139,90,43,0.4); }
+    .btn-next {
+        background: linear-gradient(135deg, var(--primary-green), var(--dark-green));
+        color: #fff;
+    }
+    .btn-next:hover { box-shadow: 0 10px 30px rgba(45,140,90,0.4); }
+    .btn-back {
+        background: linear-gradient(135deg, #6B7280, #4B5563);
+        color: #fff;
+    }
+    .btn-back:hover { box-shadow: 0 10px 30px rgba(107,114,128,0.4); }
+
+    /* Toast */
+    .toast {
+        position: fixed;
+        top: 100px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-30px);
+        padding: 18px 36px;
+        border-radius: 14px;
+        font-weight: 700;
+        font-size: 16px;
+        opacity: 0;
+        transition: all 0.4s;
+        z-index: 999;
+        pointer-events: none;
+        box-shadow: 0 10px 35px rgba(0,0,0,0.2);
+        letter-spacing: 1px;
+    }
+    .toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+    .toast.correct {
+        background: linear-gradient(145deg, var(--primary-green), var(--dark-green));
+        color: white;
+    }
+    .toast.wrong {
+        background: linear-gradient(145deg, var(--accent-red), #A03020);
+        color: white;
+    }
+    .toast.info {
+        background: linear-gradient(145deg, var(--accent-brown), var(--dark-brown));
+        color: white;
+    }
+
+    /* Victory modal */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.7);
+        backdrop-filter: blur(8px);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal-content {
+        background: linear-gradient(145deg, #FFFFFF, #FFFBF7);
+        border-radius: 32px;
+        padding: 60px 50px;
+        text-align: center;
+        max-width: 500px;
+        box-shadow: 0 25px 80px rgba(0,0,0,0.3);
+        animation: modalIn 0.6s ease;
+    }
+    @keyframes modalIn {
+        from { opacity: 0; transform: scale(0.7) translateY(-40px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .modal-icon {
+        font-size: 100px;
+        margin-bottom: 25px;
+        animation: iconBounce 1.2s ease infinite;
+    }
+    @keyframes iconBounce {
+        0%, 100% { transform: translateY(0) scale(1); }
+        50% { transform: translateY(-15px) scale(1.1); }
+    }
+    .modal-title {
+        font-size: 36px;
+        font-weight: 700;
+        color: var(--accent-brown);
+        margin-bottom: 15px;
+    }
+    .modal-subtitle {
+        font-size: 22px;
+        font-weight: 600;
+        color: var(--primary-green);
+        margin-bottom: 20px;
+    }
+    .modal-text {
+        font-size: 17px;
+        color: var(--text-muted);
+        margin-bottom: 30px;
+        line-height: 1.8;
+    }
+    .modal-stats {
+        display: flex;
+        justify-content: center;
+        gap: 50px;
+        margin-bottom: 40px;
+        padding: 25px;
+        background: linear-gradient(145deg, rgba(45,140,90,0.1), rgba(45,140,90,0.05));
+        border-radius: 20px;
+        border: 2px solid rgba(45,140,90,0.2);
+    }
+    .modal-stat-item { text-align: center; }
+    .modal-stat-label {
+        font-size: 14px;
+        color: var(--accent-brown);
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+    .modal-stat-value {
+        font-size: 40px;
+        font-weight: 700;
+        color: var(--primary-green);
+    }
+    .btn-primary {
+        background: linear-gradient(145deg, var(--primary-green), var(--dark-green));
+        color: #fff;
+        padding: 20px 60px;
+        font-size: 20px;
+        box-shadow: 0 8px 30px rgba(45,140,90,0.3);
+    }
+    .btn-primary:hover {
+        transform: scale(1.08);
+        box-shadow: 0 15px 45px rgba(45,140,90,0.4);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .game-header { padding: 18px 20px; }
+        .game-title { font-size: 22px; gap: 8px; }
+        .game-title .icon { font-size: 28px; }
+        .game-stats { gap: 20px; }
+        .stat-value { font-size: 22px; }
+        .pairing-container { grid-template-columns: 1fr; gap: 25px; }
+        .pairing-column { padding: 20px; }
+        .element-name { font-size: 28px; }
+        .btn { padding: 12px 24px; font-size: 15px; }
+        .modal-content { padding: 40px 30px; margin: 0 16px; }
+        .modal-stats { gap: 30px; }
+        .modal-stat-value { font-size: 32px; }
+    }
+    @media (max-width: 480px) {
+        .game-header { padding: 14px 16px; }
+        .header-content { flex-direction: column; gap: 10px; }
+        .game-title { font-size: 18px; }
+        .game-stats { gap: 24px; }
+        .stat-value { font-size: 18px; }
+        .stat-label { font-size: 12px; }
+        .stat-item { min-width: 50px; }
+        .game-container { padding: 20px 16px; }
+        .pairing-column { padding: 16px; border-radius: 16px; }
+        .column-title { font-size: 18px; margin-bottom: 16px; letter-spacing: 2px; }
+        .element-card {
+            padding: 16px;
+            margin-bottom: 12px;
+            border-radius: 14px;
+            min-height: 60px;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        .element-name { font-size: 24px; }
+        .element-pinyin { font-size: 14px; }
+        .element-card.correct::after {
+            width: 28px; height: 28px; font-size: 18px;
+            top: 8px; right: 8px;
+        }
+        .game-footer {
+            flex-wrap: wrap;
+            padding: 20px 16px;
+            gap: 10px;
+        }
+        .btn {
+            padding: 12px 20px;
+            font-size: 14px;
+            border-radius: 12px;
+            min-width: 0;
+            flex: 1;
+            justify-content: center;
+            min-height: 44px;
+        }
+        .toast { padding: 14px 24px; font-size: 14px; }
+        .modal-content { padding: 30px 20px; border-radius: 24px; }
+        .modal-icon { font-size: 72px; }
+        .modal-title { font-size: 28px; }
+        .modal-subtitle { font-size: 18px; }
+        .modal-stats { gap: 20px; padding: 16px; }
+        .modal-stat-value { font-size: 28px; }
+        .btn-primary { padding: 16px 40px; font-size: 17px; }
+    }
+</style>
+</head>
+<body>
+
+<header class="game-header">
+    <a href="tcm-game-hub.html" style="position:absolute;top:10px;left:12px;z-index:10;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.9);display:flex;align-items:center;justify-content:center;text-decoration:none;color:#666;font-size:18px;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,0.1);">←</a>
+    <div class="header-content">
+        <h1 class="game-title">
+            <span class="icon">⚖️</span>
+            五行配对挑战
+        </h1>
+        <div class="game-stats">
+            <div class="stat-item">
+                <div class="stat-label">得分</div>
+                <div class="stat-value" id="elementsScore">0/5</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">用时</div>
+                <div class="stat-value" id="elementsTime">0秒</div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="game-container">
+    <div class="pairing-container">
+        <div class="pairing-column">
+            <h3 class="column-title">五行</h3>
+            <div id="elementsList"></div>
+        </div>
+        <div class="pairing-column">
+            <h3 class="column-title">脏腑</h3>
+            <div id="organsList"></div>
+        </div>
+    </div>
+</main>
+
+<footer class="game-footer">
+    <button class="btn btn-reset" onclick="resetGame()">
+        <span>↻</span> 重置游戏
+    </button>
+    <button class="btn btn-next" onclick="showHint()">
+        <span>💡</span> 提示
+    </button>
+    <button class="btn btn-back" onclick="goBack()">
+        <span>←</span> 返回
+    </button>
+</footer>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Victory Modal -->
+<div class="modal-overlay" id="victoryModal">
+    <div class="modal-content">
+        <div class="modal-icon">🎉</div>
+        <h2 class="modal-title" id="modalTitle">五行配对大师</h2>
+        <p class="modal-subtitle" id="modalSubtitle">恭喜通关！</p>
+        <p class="modal-text" id="modalText">你已经掌握了五行与脏腑的对应关系！</p>
+        <div class="modal-stats">
+            <div class="modal-stat-item">
+                <div class="modal-stat-label">得分</div>
+                <div class="modal-stat-value" id="modalScore">100</div>
+            </div>
+            <div class="modal-stat-item">
+                <div class="modal-stat-label">用时</div>
+                <div class="modal-stat-value" id="modalTime">0秒</div>
+            </div>
+        </div>
+        <button class="btn btn-primary" onclick="resetGame()">再玩一次</button>
+        <a href="tcm-game-hub.html" class="btn btn-back" style="margin-top:12px;display:inline-flex;text-decoration:none;">返回游戏大厅</a>
+    </div>
+</div>
+
+<script>
+    const elementsData = [
+        { name: '木', pinyin: 'Mù', organ: '肝' },
+        { name: '火', pinyin: 'Huǒ', organ: '心' },
+        { name: '土', pinyin: 'Tǔ', organ: '脾' },
+        { name: '金', pinyin: 'Jīn', organ: '肺' },
+        { name: '水', pinyin: 'Shuǐ', organ: '肾' }
+    ];
+
+    let gameState = {
+        selectedElement: null,
+        selectedOrgan: null,
+        matches: 0,
+        startTime: null,
+        timer: null
+    };
+
+    function initGame() {
+        gameState = {
+            selectedElement: null,
+            selectedOrgan: null,
+            matches: 0,
+            startTime: Date.now(),
+            timer: null
+        };
+
+        document.getElementById('elementsScore').textContent = '0/5';
+        document.getElementById('elementsTime').textContent = '0秒';
+        document.getElementById('victoryModal').classList.remove('show');
+
+        // 左列：五行（固定顺序）
+        const elementsList = document.getElementById('elementsList');
+        elementsList.innerHTML = '';
+        elementsData.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'element-card';
+            card.dataset.element = item.name;
+            card.innerHTML = `
+                <div class="element-name">${item.name}</div>
+                <div class="element-pinyin">${item.pinyin}</div>
+            `;
+            card.onclick = () => selectElement(card, item.name);
+            elementsList.appendChild(card);
+        });
+
+        // 右列：脏腑（随机打乱）
+        const organsList = document.getElementById('organsList');
+        organsList.innerHTML = '';
+        const shuffled = [...elementsData].sort(() => Math.random() - 0.5);
+        shuffled.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'element-card';
+            card.dataset.organ = item.organ;
+            card.innerHTML = `
+                <div class="element-name">${item.organ}</div>
+                <div class="element-pinyin">${item.organ}脏</div>
+            `;
+            card.onclick = () => selectOrgan(card, item.organ);
+            organsList.appendChild(card);
+        });
+
+        gameState.timer = setInterval(updateTimer, 1000);
+    }
+
+    function selectElement(card, element) {
+        if (card.classList.contains('correct')) return;
+        document.querySelectorAll('#elementsList .element-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        gameState.selectedElement = element;
+        checkMatch();
+    }
+
+    function selectOrgan(card, organ) {
+        if (card.classList.contains('correct')) return;
+        document.querySelectorAll('#organsList .element-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        gameState.selectedOrgan = organ;
+        checkMatch();
+    }
+
+    function checkMatch() {
+        if (!gameState.selectedElement || !gameState.selectedOrgan) return;
+
+        const match = elementsData.find(item => item.name === gameState.selectedElement);
+        if (match && match.organ === gameState.selectedOrgan) {
+            // 正确
+            const eCard = document.querySelector(`#elementsList .element-card[data-element="${gameState.selectedElement}"]`);
+            const oCard = document.querySelector(`#organsList .element-card[data-organ="${gameState.selectedOrgan}"]`);
+            eCard.classList.remove('selected');
+            oCard.classList.remove('selected');
+            eCard.classList.add('correct');
+            oCard.classList.add('correct');
+
+            gameState.matches++;
+            document.getElementById('elementsScore').textContent = `${gameState.matches}/5`;
+            showToast('✓ 配对正确！', 'correct');
+
+            if (gameState.matches === 5) {
+                clearInterval(gameState.timer);
+                const timeUsed = Math.floor((Date.now() - gameState.startTime) / 1000);
+                setTimeout(() => showVictory(timeUsed), 500);
+            }
+        } else {
+            showToast('✗ 配对错误，请重新选择', 'wrong');
+        }
+
+        gameState.selectedElement = null;
+        gameState.selectedOrgan = null;
+    }
+
+    function updateTimer() {
+        const seconds = Math.floor((Date.now() - gameState.startTime) / 1000);
+        document.getElementById('elementsTime').textContent = `${seconds}秒`;
+    }
+
+    function showToast(msg, type) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.className = `toast ${type} show`;
+        setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    function showVictory(timeUsed) {
+        document.getElementById('modalScore').textContent = gameState.matches * 20;
+        document.getElementById('modalTime').textContent = timeUsed + '秒';
+        document.getElementById('victoryModal').classList.add('show');
+        // 提交分数到后端
+        submitGameScore(gameState.matches * 20, 100, timeUsed);
+    }
+
+    async function submitGameScore(score, accuracy, duration) {
+        try {
+            const token = localStorage.getItem('token') || '';
+            await fetch('/api/games/score', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ gameType: 'wuxing', score, accuracy, durationSeconds: duration })
+            });
+        } catch {}
+    }
+
+    function showHint() {
+        const unmatched = elementsData.filter(item => {
+            const card = document.querySelector(`#elementsList .element-card[data-element="${item.name}"]`);
+            return card && !card.classList.contains('correct');
+        });
+        if (unmatched.length > 0) {
+            const hint = unmatched[0];
+            showToast(`💡 提示：${hint.name} → ${hint.organ}`, 'info');
+        } else {
+            showToast('已全部配对！', 'correct');
+        }
+    }
+
+    function resetGame() {
+        if (gameState.timer) clearInterval(gameState.timer);
+        initGame();
+    }
+
+    function goBack() {
+        if (document.referrer && !document.referrer.includes('tcm-game-match')) {
+            history.back();
+        } else {
+            window.location.href = 'tcm-student.html';
+        }
+    }
+
+    // 初始化
+    document.addEventListener('DOMContentLoaded', initGame);
+</script>
+</body>
+</html>

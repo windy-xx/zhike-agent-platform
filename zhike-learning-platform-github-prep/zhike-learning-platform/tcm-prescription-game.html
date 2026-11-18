@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>方剂配伍挑战 - 中医方剂游戏</title>
+<style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Serif SC', 'SimSun', serif;
+            background-color: #F9F6F0;
+            background-image:
+                radial-gradient(ellipse at 20% 30%, rgba(45, 140, 90, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 70%, rgba(139, 90, 43, 0.03) 0%, transparent 50%),
+                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%238B5A2B' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #333333;
+        }
+
+        /* 顶部标题栏 */
+        .game-header {
+            background: linear-gradient(135deg, #2D8C5A 0%, #1F6B44 100%);
+            padding: 20px 30px;
+            box-shadow: 0 4px 20px rgba(45, 140, 90, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .game-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #FFFFFF;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .game-title .icon {
+            font-size: 32px;
+        }
+
+        .game-stats {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #FFFFFF;
+        }
+
+        /* 生命值 */
+        .lives-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .life-heart {
+            font-size: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .life-heart.lost {
+            opacity: 0.3;
+            filter: grayscale(100%);
+        }
+
+        /* 主游戏区 */
+        .game-container {
+            flex: 1;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        /* 当前关卡信息 */
+        .level-info {
+            background: linear-gradient(135deg, #FFFFFF 0%, #F5F2ED 100%);
+            border-radius: 20px;
+            padding: 25px 30px;
+            box-shadow: 0 6px 25px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .level-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .level-badge {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #2D8C5A 0%, #1F6B44 100%);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: 0 6px 20px rgba(45, 140, 90, 0.3);
+        }
+
+        .level-badge .level-num {
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .level-badge .level-text {
+            font-size: 10px;
+            opacity: 0.8;
+        }
+
+        .prescription-name {
+            font-size: 28px;
+            font-weight: 700;
+            color: #8B5A2B;
+        }
+
+        .prescription-origin {
+            font-size: 14px;
+            color: #999999;
+            margin-top: 4px;
+        }
+
+        .progress-bar-container {
+            flex: 1;
+            max-width: 300px;
+            margin: 0 30px;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #8B5A2B;
+            margin-bottom: 6px;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: rgba(139, 90, 43, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2D8C5A, #4CAF50);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .target-count {
+            text-align: right;
+            min-width: 100px;
+        }
+
+        .target-count .label {
+            font-size: 12px;
+            color: #999999;
+        }
+
+        .target-count .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2D8C5A;
+        }
+
+        /* 已选药材区 */
+        .selected-area {
+            background: #FFFFFF;
+            border-radius: 20px;
+            padding: 25px 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            min-height: 140px;
+            border: 2px dashed #E5DCC8;
+            transition: all 0.3s ease;
+        }
+
+        .selected-area.has-items {
+            border-color: #2D8C5A;
+            background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%);
+        }
+
+        .area-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #8B5A2B;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .selected-herbs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        /* 待选药材区 */
+        .available-area {
+            background: #FFFFFF;
+            border-radius: 20px;
+            padding: 25px 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        }
+
+        .herbs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 15px;
+        }
+
+        /* 药材卡片 */
+        .herb-card {
+            background: linear-gradient(135deg, #FFFFFF 0%, #FFFBF7 100%);
+            border: 2px solid #E5DCC8;
+            border-radius: 14px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .herb-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #2D8C5A, #4CAF50);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .herb-card:hover {
+            border-color: #2D8C5A;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(45, 140, 90, 0.2);
+        }
+
+        .herb-card:hover::before {
+            opacity: 1;
+        }
+
+        .herb-card.selected {
+            opacity: 0.4;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .herb-card.correct-select {
+            animation: correctPulse 0.5s ease;
+        }
+
+        .herb-card.wrong-select {
+            animation: wrongShake 0.5s ease;
+        }
+
+        @keyframes correctPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes wrongShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        .herb-icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .herb-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333333;
+            margin-bottom: 4px;
+        }
+
+        .herb-pinyin {
+            font-size: 11px;
+            color: #999999;
+        }
+
+        /* 已选药材标签 */
+        .selected-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: linear-gradient(135deg, #2D8C5A 0%, #1F6B44 100%);
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+            box-shadow: 0 4px 15px rgba(45, 140, 90, 0.3);
+            animation: tagIn 0.3s ease;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .selected-tag:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(45, 140, 90, 0.4);
+        }
+
+        @keyframes tagIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .selected-tag .herb-icon {
+            font-size: 18px;
+            margin-bottom: 0;
+        }
+
+        .selected-tag .remove-hint {
+            font-size: 11px;
+            opacity: 0.7;
+        }
+
+        /* 底部按钮区 */
+        .game-footer {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #8B5A2B 0%, #6B4423 100%);
+            color: #FFFFFF;
+        }
+
+        .btn-reset:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139, 90, 43, 0.4);
+        }
+
+        .btn-next {
+            background: linear-gradient(135deg, #2D8C5A 0%, #1F6B44 100%);
+            color: #FFFFFF;
+        }
+
+        .btn-next:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-next:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(45, 140, 90, 0.4);
+        }
+
+        .btn-back {
+            background: linear-gradient(135deg, #6B7280 0%, #4B5563 100%);
+            color: #FFFFFF;
+        }
+
+        .btn-back:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(107, 114, 128, 0.4);
+        }
+
+        /* 胜利弹窗 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #FFFFFF 0%, #FFFBF7 100%);
+            border-radius: 24px;
+            padding: 50px 40px;
+            text-align: center;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: modalIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8) translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: iconBounce 1s ease infinite;
+        }
+
+        @keyframes iconBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .modal-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #8B5A2B;
+            margin-bottom: 10px;
+        }
+
+        .modal-subtitle {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2D8C5A;
+            margin-bottom: 15px;
+        }
+
+        .modal-text {
+            font-size: 15px;
+            color: #666666;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .modal-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(45, 140, 90, 0.1);
+            border-radius: 16px;
+        }
+
+        .modal-stat-item {
+            text-align: center;
+        }
+
+        .modal-stat-label {
+            font-size: 12px;
+            color: #8B5A2B;
+            margin-bottom: 5px;
+        }
+
+        .modal-stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2D8C5A;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2D8C5A 0%, #1F6B44 100%);
+            color: #FFFFFF;
+            padding: 16px 50px;
+            font-size: 18px;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(45, 140, 90, 0.4);
+        }
+
+        /* 提示信息 */
+        .toast {
+            position: fixed;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 15px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 999;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.correct {
+            background: linear-gradient(135deg, #2D8C5A 0%, #1F6B44 100%);
+            color: white;
+            box-shadow: 0 6px 20px rgba(45, 140, 90, 0.4);
+        }
+
+        .toast.wrong {
+            background: linear-gradient(135deg, #C23B22 0%, #A03020 100%);
+            color: white;
+            box-shadow: 0 6px 20px rgba(194, 59, 34, 0.4);
+        }
+
+        .toast.info {
+            background: linear-gradient(135deg, #8B5A2B 0%, #6B4423 100%);
+            color: white;
+            box-shadow: 0 6px 20px rgba(139, 90, 43, 0.4);
+        }
+
+        /* 触控优化 */
+        .herb-card, .selected-tag, .btn {
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        .herb-card:active {
+            transform: scale(0.97);
+        }
+        .btn {
+            min-height: 44px;
+        }
+        .btn:active {
+            transform: scale(0.97) !important;
+        }
+        .selected-tag:active {
+            transform: scale(0.95);
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .game-header {
+                padding: 15px 20px;
+            }
+
+            .game-title {
+                font-size: 22px;
+            }
+
+            .game-title .icon {
+                font-size: 26px;
+            }
+
+            .game-stats {
+                gap: 20px;
+            }
+
+            .stat-value {
+                font-size: 20px;
+            }
+
+            .game-container {
+                padding: 20px 15px;
+                gap: 15px;
+            }
+
+            .level-info {
+                flex-direction: column;
+                gap: 20px;
+                padding: 20px;
+            }
+
+            .progress-bar-container {
+                max-width: none;
+                width: 100%;
+                margin: 10px 0;
+            }
+
+            .target-count {
+                text-align: center;
+            }
+
+            .herbs-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .herb-card {
+                padding: 12px;
+            }
+
+            .herb-icon {
+                font-size: 28px;
+            }
+
+            .selected-area, .available-area {
+                padding: 20px 15px;
+            }
+
+            .modal-stats {
+                gap: 20px;
+            }
+
+            .modal-stat-value {
+                font-size: 24px;
+            }
+
+            .modal-content {
+                padding: 30px 20px;
+                margin: 0 16px;
+                max-width: calc(100vw - 32px);
+            }
+
+            .game-footer {
+                flex-wrap: wrap;
+                gap: 10px;
+                padding: 15px;
+            }
+
+            .game-footer .btn {
+                flex: 1;
+                justify-content: center;
+                min-width: 0;
+                padding: 12px 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-content {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+
+            .game-title {
+                font-size: 18px;
+                gap: 8px;
+            }
+
+            .game-title .icon {
+                font-size: 22px;
+            }
+
+            .game-stats {
+                gap: 15px;
+            }
+
+            .stat-value {
+                font-size: 16px;
+            }
+
+            .stat-label {
+                font-size: 12px;
+            }
+
+            .stat-item {
+                min-width: 50px;
+            }
+
+            .life-heart {
+                font-size: 20px;
+            }
+
+            .level-badge {
+                width: 50px;
+                height: 50px;
+            }
+
+            .level-badge .level-num {
+                font-size: 20px;
+            }
+
+            .prescription-name {
+                font-size: 22px;
+            }
+
+            .herbs-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+
+            .herb-icon {
+                font-size: 24px;
+                margin-bottom: 4px;
+            }
+
+            .herb-name {
+                font-size: 14px;
+            }
+
+            .herb-pinyin {
+                font-size: 10px;
+            }
+
+            .selected-tag {
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+
+            .modal-icon {
+                font-size: 60px;
+            }
+
+            .modal-title {
+                font-size: 24px;
+            }
+
+            .modal-subtitle {
+                font-size: 16px;
+            }
+
+            .toast {
+                padding: 12px 20px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部标题栏 -->
+    <header class="game-header">
+        <a href="tcm-game-hub.html" style="position:absolute;top:10px;left:12px;z-index:10;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.9);display:flex;align-items:center;justify-content:center;text-decoration:none;color:#666;font-size:18px;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,0.1);">←</a>
+        <div class="header-content">
+            <h1 class="game-title">
+                <span class="icon">💊</span>
+                方剂配伍挑战
+            </h1>
+            <div class="game-stats">
+                <div class="stat-item">
+                    <div class="stat-label">当前得分</div>
+                    <div class="stat-value" id="score">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">生命值</div>
+                    <div class="lives-container">
+                        <span class="life-heart" id="life1">❤️</span>
+                        <span class="life-heart" id="life2">❤️</span>
+                        <span class="life-heart" id="life3">❤️</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主游戏区 -->
+    <main class="game-container">
+        <!-- 当前关卡信息 -->
+        <div class="level-info">
+            <div class="level-header">
+                <div class="level-badge">
+                    <span class="level-num" id="levelNum">1</span>
+                    <span class="level-text">关卡</span>
+                </div>
+                <div>
+                    <h2 class="prescription-name" id="prescriptionName">麻黄汤</h2>
+                    <p class="prescription-origin" id="prescriptionOrigin">出自《伤寒论》</p>
+                </div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-label">
+                    <span>配伍进度</span>
+                    <span id="progressText">0/4</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="target-count">
+                <div class="label">还需选择</div>
+                <div class="value" id="remainingCount">4</div>
+            </div>
+        </div>
+
+        <!-- 已选药材区 -->
+        <div class="selected-area" id="selectedArea">
+            <div class="area-title">
+                <span>✅</span>
+                <span>已选药材</span>
+                <span style="font-size: 12px; color: #999; margin-left: auto;">点击可移除</span>
+            </div>
+            <div class="selected-herbs" id="selectedHerbs">
+                <span style="color: #999; font-size: 14px; padding: 20px;">请从下方选择正确的药材...</span>
+            </div>
+        </div>
+
+        <!-- 待选药材区 -->
+        <div class="available-area">
+            <div class="area-title">
+                <span>🌿</span>
+                <span>待选药材</span>
+            </div>
+            <div class="herbs-grid" id="herbsGrid"></div>
+        </div>
+    </main>
+
+    <!-- 底部按钮区 -->
+    <footer class="game-footer">
+        <button class="btn btn-reset" onclick="resetLevel()">
+            <span>↻</span>
+            重置关卡
+        </button>
+        <button class="btn btn-next" id="nextBtn" onclick="nextLevel()" disabled>
+            <span>→</span>
+            下一关
+        </button>
+        <button class="btn btn-back" onclick="goBack()">
+            <span>←</span>
+            返回
+        </button>
+    </footer>
+
+    <!-- 关卡完成弹窗 -->
+    <div class="modal-overlay" id="levelModal">
+        <div class="modal-content">
+            <div class="modal-icon">✨</div>
+            <h2 class="modal-title" id="levelCompleteTitle">配伍完成！</h2>
+            <p class="modal-subtitle" id="levelCompleteName"></p>
+            <p class="modal-text">恭喜你正确完成了该方剂的配伍！</p>
+            <div class="modal-stats">
+                <div class="modal-stat-item">
+                    <div class="modal-stat-label">当前得分</div>
+                    <div class="modal-stat-value" id="levelScore">0</div>
+                </div>
+                <div class="modal-stat-item">
+                    <div class="modal-stat-label">剩余生命</div>
+                    <div class="modal-stat-value" id="levelLives">3</div>
+                </div>
+            </div>
+            <button class="btn btn-primary" id="levelNextBtn" onclick="closeLevelModal()">
+                进入下一关
+            </button>
+        </div>
+    </div>
+
+    <!-- 胜利弹窗 -->
+    <div class="modal-overlay" id="victoryModal">
+        <div class="modal-content">
+            <div class="modal-icon">🏆</div>
+            <h2 class="modal-title">恭喜通关！</h2>
+            <p class="modal-subtitle">方剂大师</p>
+            <p class="modal-text">你已经掌握了经典方剂的配伍知识！</p>
+            <div class="modal-stats">
+                <div class="modal-stat-item">
+                    <div class="modal-stat-label">最终得分</div>
+                    <div class="modal-stat-value" id="finalScore">0</div>
+                </div>
+                <div class="modal-stat-item">
+                    <div class="modal-stat-label">剩余生命</div>
+                    <div class="modal-stat-value" id="finalLives">3</div>
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="resetGame()">
+                再玩一次
+            </button>
+            <a href="tcm-game-hub.html" class="btn btn-back" style="margin-top:12px;display:inline-flex;text-decoration:none;">返回游戏大厅</a>
+        </div>
+    </div>
+
+    <!-- 提示信息 -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // 方剂数据
+        const prescriptions = [
+            {
+                name: '麻黄汤',
+                origin: '出自《伤寒论》',
+                correctHerbs: [
+                    { name: '麻黄', pinyin: 'Má Huáng', icon: '🌾' },
+                    { name: '桂枝', pinyin: 'Guì Zhī', icon: '🪵' },
+                    { name: '杏仁', pinyin: 'Xìng Rén', icon: '🥜' },
+                    { name: '甘草', pinyin: 'Gān Cǎo', icon: '🌱' }
+                ],
+                distractHerbs: [
+                    { name: '石膏', pinyin: 'Shí Gāo', icon: '🪨' },
+                    { name: '人参', pinyin: 'Rén Shēn', icon: '🌿' }
+                ]
+            },
+            {
+                name: '银翘散',
+                origin: '出自《温病条辨》',
+                correctHerbs: [
+                    { name: '金银花', pinyin: 'Jīn Yín Huā', icon: '🌼' },
+                    { name: '连翘', pinyin: 'Lián Qiào', icon: '🌿' },
+                    { name: '薄荷', pinyin: 'Bò He', icon: '🍃' },
+                    { name: '荆芥', pinyin: 'Jīng Jiè', icon: '🌾' },
+                    { name: '淡豆豉', pinyin: 'Dàn Dòu Chǐ', icon: '🫘' }
+                ],
+                distractHerbs: [
+                    { name: '麻黄', pinyin: 'Má Huáng', icon: '🌾' },
+                    { name: '桂枝', pinyin: 'Guì Zhī', icon: '🪵' },
+                    { name: '黄芩', pinyin: 'Huáng Qín', icon: '🌿' }
+                ]
+            },
+            {
+                name: '六味地黄丸',
+                origin: '出自《小儿药证直诀》',
+                correctHerbs: [
+                    { name: '熟地黄', pinyin: 'Shú Dì Huáng', icon: '🟤' },
+                    { name: '山茱萸', pinyin: 'Shān Zhū Yú', icon: '🔴' },
+                    { name: '山药', pinyin: 'Shān Yào', icon: '🥔' },
+                    { name: '泽泻', pinyin: 'Zé Xiè', icon: '⚪' },
+                    { name: '牡丹皮', pinyin: 'Mǔ Dān Pí', icon: '🌸' },
+                    { name: '茯苓', pinyin: 'Fú Líng', icon: '🍄' }
+                ],
+                distractHerbs: [
+                    { name: '当归', pinyin: 'Dāng Guī', icon: '🌿' },
+                    { name: '白芍', pinyin: 'Bái Sháo', icon: '🌼' },
+                    { name: '川芎', pinyin: 'Chuān Xiōng', icon: '🌱' }
+                ]
+            }
+        ];
+
+        // 游戏状态
+        let gameState = {
+            currentLevel: 0,
+            score: 0,
+            lives: 3,
+            selectedHerbs: [],
+            availableHerbs: []
+        };
+
+        // 洗牌算法
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // 初始化游戏
+        function initGame() {
+            gameState = {
+                currentLevel: 0,
+                score: 0,
+                lives: 3,
+                selectedHerbs: [],
+                availableHerbs: []
+            };
+
+            updateLives();
+            document.getElementById('score').textContent = '0';
+            document.getElementById('victoryModal').classList.remove('show');
+            document.getElementById('nextBtn').disabled = true;
+
+            loadLevel();
+        }
+
+        // 加载关卡
+        function loadLevel() {
+            const prescription = prescriptions[gameState.currentLevel];
+            gameState.selectedHerbs = [];
+
+            // 合并正确药材和干扰药材
+            const allHerbs = shuffleArray([
+                ...prescription.correctHerbs.map(h => ({ ...h, correct: true })),
+                ...prescription.distractHerbs.map(h => ({ ...h, correct: false }))
+            ]);
+
+            gameState.availableHerbs = allHerbs;
+
+            // 更新UI
+            document.getElementById('levelNum').textContent = gameState.currentLevel + 1;
+            document.getElementById('prescriptionName').textContent = prescription.name;
+            document.getElementById('prescriptionOrigin').textContent = prescription.origin;
+
+            updateProgress();
+            renderHerbs();
+            renderSelected();
+        }
+
+        // 渲染待选药材
+        function renderHerbs() {
+            const grid = document.getElementById('herbsGrid');
+            grid.innerHTML = '';
+
+            gameState.availableHerbs.forEach((herb, index) => {
+                const card = document.createElement('div');
+                card.className = 'herb-card';
+                if (gameState.selectedHerbs.includes(herb)) {
+                    card.classList.add('selected');
+                }
+                card.innerHTML = `
+                    <span class="herb-icon">${herb.icon}</span>
+                    <div class="herb-name">${herb.name}</div>
+                    <div class="herb-pinyin">${herb.pinyin}</div>
+                `;
+                card.onclick = () => selectHerb(herb, card);
+                grid.appendChild(card);
+            });
+        }
+
+        // 渲染已选药材
+        function renderSelected() {
+            const container = document.getElementById('selectedHerbs');
+            const area = document.getElementById('selectedArea');
+
+            if (gameState.selectedHerbs.length === 0) {
+                container.innerHTML = '<span style="color: #999; font-size: 14px; padding: 20px;">请从下方选择正确的药材...</span>';
+                area.classList.remove('has-items');
+            } else {
+                area.classList.add('has-items');
+                container.innerHTML = '';
+
+                gameState.selectedHerbs.forEach((herb, index) => {
+                    const tag = document.createElement('span');
+                    tag.className = 'selected-tag';
+                    tag.innerHTML = `
+                        <span class="herb-icon">${herb.icon}</span>
+                        <span>${herb.name}</span>
+                    `;
+                    tag.onclick = () => removeHerb(index);
+                    container.appendChild(tag);
+                });
+            }
+        }
+
+        // 选择药材
+        function selectHerb(herb, card) {
+            if (gameState.selectedHerbs.includes(herb)) return;
+
+            if (herb.correct) {
+                // 正确选择
+                gameState.selectedHerbs.push(herb);
+                gameState.score += 10;
+                document.getElementById('score').textContent = gameState.score;
+
+                card.classList.add('correct-select');
+                setTimeout(() => {
+                    card.classList.add('selected');
+                    renderSelected();
+                    updateProgress();
+                    checkLevelComplete();
+                }, 500);
+
+                showToast('正确！+10分', 'correct');
+            } else {
+                // 错误选择
+                card.classList.add('wrong-select');
+                gameState.lives--;
+                updateLives();
+
+                setTimeout(() => {
+                    card.classList.remove('wrong-select');
+                }, 500);
+
+                showToast('错误！不是该方剂的组成药材', 'wrong');
+
+                if (gameState.lives <= 0) {
+                    setTimeout(() => {
+                        const accuracy = Math.round((gameState.score / (prescriptions.length * 10)) * 100);
+                        submitScore(gameState.score, accuracy, 0);
+                        document.getElementById('finalScore').textContent = gameState.score;
+                        document.getElementById('finalLives').textContent = 0;
+                        document.getElementById('victoryModal').querySelector('.modal-icon').textContent = '💔';
+                        document.getElementById('victoryModal').querySelector('.modal-title').textContent = '游戏结束';
+                        document.getElementById('victoryModal').querySelector('.modal-subtitle').textContent = '生命值耗尽';
+                        document.getElementById('victoryModal').querySelector('.modal-text').textContent = '很遗憾，你的生命值用完了！下次再接再厉吧！';
+                        document.getElementById('victoryModal').classList.add('show');
+                    }, 600);
+                }
+            }
+        }
+
+        // 移除已选药材
+        function removeHerb(index) {
+            const herb = gameState.selectedHerbs[index];
+            gameState.selectedHerbs.splice(index, 1);
+            gameState.score = Math.max(0, gameState.score - 5);
+            document.getElementById('score').textContent = gameState.score;
+
+            renderHerbs();
+            renderSelected();
+            updateProgress();
+            document.getElementById('nextBtn').disabled = true;
+
+            showToast('已移除药材，-5分', 'info');
+        }
+
+        // 更新进度
+        function updateProgress() {
+            const prescription = prescriptions[gameState.currentLevel];
+            const total = prescription.correctHerbs.length;
+            const selected = gameState.selectedHerbs.length;
+            const remaining = total - selected;
+
+            document.getElementById('progressText').textContent = `${selected}/${total}`;
+            document.getElementById('remainingCount').textContent = remaining;
+            document.getElementById('progressFill').style.width = `${(selected / total) * 100}%`;
+        }
+
+        // 更新生命值
+        function updateLives() {
+            for (let i = 1; i <= 3; i++) {
+                const heart = document.getElementById(`life${i}`);
+                if (i <= gameState.lives) {
+                    heart.classList.remove('lost');
+                } else {
+                    heart.classList.add('lost');
+                }
+            }
+        }
+
+        // 检查关卡完成
+        function checkLevelComplete() {
+            const prescription = prescriptions[gameState.currentLevel];
+            const total = prescription.correctHerbs.length;
+
+            if (gameState.selectedHerbs.length === total) {
+                document.getElementById('nextBtn').disabled = false;
+
+                // 弹出关卡完成提示
+                setTimeout(() => {
+                    document.getElementById('levelCompleteName').textContent = prescription.name;
+                    document.getElementById('levelScore').textContent = gameState.score;
+                    document.getElementById('levelLives').textContent = gameState.lives;
+
+                    // 如果是最后一关，按钮改为"查看成绩"
+                    if (gameState.currentLevel >= prescriptions.length - 1) {
+                        document.getElementById('levelNextBtn').textContent = '查看最终成绩';
+                    } else {
+                        document.getElementById('levelNextBtn').textContent = '进入下一关';
+                    }
+
+                    document.getElementById('levelModal').classList.add('show');
+                }, 600);
+            }
+        }
+
+        // 关闭关卡弹窗并进入下一关
+        function closeLevelModal() {
+            document.getElementById('levelModal').classList.remove('show');
+            nextLevel();
+        }
+
+        // 下一关
+        function nextLevel() {
+            gameState.currentLevel++;
+
+            if (gameState.currentLevel >= prescriptions.length) {
+                showVictory();
+            } else {
+                document.getElementById('nextBtn').disabled = true;
+                loadLevel();
+            }
+        }
+
+        // 重置关卡
+        function resetLevel() {
+            loadLevel();
+        }
+
+        // 显示胜利
+        function showVictory() {
+            document.getElementById('finalScore').textContent = gameState.score;
+            document.getElementById('finalLives').textContent = gameState.lives;
+            document.getElementById('victoryModal').classList.add('show');
+            // 提交分数：accuracy 基于剩余生命比例
+            const accuracy = Math.round((gameState.lives / 3) * 100);
+            submitScore(gameState.score, accuracy, 0);
+        }
+
+        async function submitScore(score, accuracy, duration) {
+            try {
+                const token = localStorage.getItem('token') || '';
+                await fetch('/api/games/score', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify({ gameType: 'prescription', score, accuracy, durationSeconds: duration })
+                });
+            } catch {}
+        }
+
+        // 重置游戏
+        function resetGame() {
+            initGame();
+        }
+
+        // 返回
+        function goBack() {
+            if (confirm('确定要退出当前游戏吗？')) {
+                window.history.back();
+            }
+        }
+
+        // 显示提示
+        function showToast(message, type) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', initGame);
+    </script>
+</body>
+</html>

@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>经方记忆翻牌 - 中药方剂游戏</title>
+<style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Serif SC', 'SimSun', serif;
+            background: linear-gradient(135deg, #F5F0E8 0%, #E8E0D5 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #333;
+        }
+
+        .game-header {
+            background: linear-gradient(135deg, #8B5A2B 0%, #6B4423 100%);
+            padding: 20px 30px;
+            box-shadow: 0 4px 20px rgba(139, 90, 43, 0.3);
+            position: relative;
+        }
+
+        .header-content {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .game-title {
+            font-size: 26px;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .game-stats {
+            display: flex;
+            gap: 25px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .game-container {
+            flex: 1;
+            max-width: 1000px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .game-info {
+            text-align: center;
+            margin-bottom: 25px;
+            padding: 15px;
+            background: rgba(139, 90, 43, 0.1);
+            border-radius: 12px;
+            font-size: 14px;
+            color: #8B5A2B;
+        }
+
+        /* 卡片网格 */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .card {
+            aspect-ratio: 3/4;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.5s ease;
+            transform-style: preserve-3d;
+        }
+
+        .card.flipped .card-inner,
+        .card.matched .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front,
+        .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .card-front {
+            background: linear-gradient(135deg, #8B5A2B 0%, #A0522D 100%);
+            border: 3px solid #6B4423;
+        }
+
+        .card-front::before {
+            content: '💊';
+            font-size: 36px;
+            opacity: 0.5;
+        }
+
+        .card-back {
+            background: #fff;
+            transform: rotateY(180deg);
+            border: 3px solid #8B5A2B;
+            padding: 10px;
+            text-align: center;
+            flex-direction: column;
+        }
+
+        .card-type {
+            font-size: 10px;
+            color: #8B5A2B;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .card-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #333;
+            line-height: 1.3;
+        }
+
+        .card.matched .card-back {
+            background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%);
+            border-color: #2D8C5A;
+        }
+
+        .card.matched .card-name {
+            color: #2D8C5A;
+        }
+
+        /* 底部按钮 */
+        .game-footer {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #8B5A2B, #6B4423);
+            color: #fff;
+        }
+
+        .btn-hint {
+            background: linear-gradient(135deg, #F59E0B, #D97706);
+            color: #fff;
+        }
+
+        .btn-back {
+            background: linear-gradient(135deg, #6B7280, #4B5563);
+            color: #fff;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* 胜利弹窗 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #fff, #FFFBF7);
+            border-radius: 24px;
+            padding: 40px;
+            text-align: center;
+            max-width: 420px;
+            animation: modalIn 0.5s ease;
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-icon {
+            width: 90px;
+            height: 90px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #2D8C5A, #1F6B44);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 44px;
+        }
+
+        .modal-title {
+            font-size: 26px;
+            font-weight: 700;
+            color: #8B5A2B;
+            margin-bottom: 10px;
+        }
+
+        .modal-text {
+            font-size: 15px;
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .modal-stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 25px;
+            padding: 15px;
+            background: rgba(139, 90, 43, 0.1);
+            border-radius: 12px;
+        }
+
+        .modal-stat-label {
+            font-size: 12px;
+            color: #8B5A2B;
+        }
+
+        .modal-stat-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: #8B5A2B;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2D8C5A, #1F6B44);
+            color: #fff;
+            padding: 14px 40px;
+        }
+
+        /* 触控优化 */
+        .card {
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        .btn {
+            -webkit-tap-highlight-color: transparent;
+            min-height: 44px;
+        }
+        .btn:active {
+            transform: scale(0.97);
+        }
+        .card:active .card-inner {
+            transition: transform 0.15s ease;
+        }
+
+        @media (max-width: 768px) {
+            .card-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+            }
+
+            .card-name {
+                font-size: 13px;
+            }
+
+            .card-front::before {
+                font-size: 24px;
+            }
+
+            .game-header {
+                padding: 15px 20px;
+            }
+
+            .game-title {
+                font-size: 20px;
+            }
+
+            .game-stats {
+                gap: 15px;
+            }
+
+            .stat-value {
+                font-size: 18px;
+            }
+
+            .game-container {
+                padding: 20px 15px;
+            }
+
+            .game-footer {
+                flex-wrap: wrap;
+                gap: 10px;
+                padding: 15px;
+            }
+
+            .game-footer .btn {
+                flex: 1;
+                justify-content: center;
+                min-width: 0;
+                padding: 12px 16px;
+            }
+
+            .modal-content {
+                padding: 30px 20px;
+                margin: 0 16px;
+                max-width: calc(100vw - 32px);
+            }
+
+            .modal-stats {
+                gap: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-content {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+
+            .game-title {
+                font-size: 18px;
+            }
+
+            .stat-value {
+                font-size: 16px;
+            }
+
+            .stat-label {
+                font-size: 12px;
+            }
+
+            .stat-item {
+                min-width: 50px;
+            }
+
+            .card-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+            }
+
+            .card-type {
+                font-size: 9px;
+            }
+
+            .card-name {
+                font-size: 11px;
+            }
+
+            .card-front::before {
+                font-size: 20px;
+            }
+
+            .game-info {
+                font-size: 13px;
+                padding: 12px;
+            }
+
+            .modal-icon {
+                width: 70px;
+                height: 70px;
+                font-size: 36px;
+            }
+
+            .modal-title {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="game-header">
+        <a href="tcm-game-hub.html" style="position:absolute;top:10px;left:12px;z-index:10;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.9);display:flex;align-items:center;justify-content:center;text-decoration:none;color:#666;font-size:18px;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,0.1);">←</a>
+        <div class="header-content">
+            <h1 class="game-title">
+                <span>💊</span>
+                经方记忆翻牌
+            </h1>
+            <div class="game-stats">
+                <div class="stat-item">
+                    <div class="stat-label">配对进度</div>
+                    <div class="stat-value"><span id="matched">0</span>/6</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">翻牌次数</div>
+                    <div class="stat-value" id="moves">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">用时</div>
+                    <div class="stat-value" id="timer">00:00</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="game-container">
+        <div class="game-info">
+            💡 翻开卡片，找出方剂名称与主要功效的配对，全部配对成功即可通关！
+        </div>
+        <div class="card-grid" id="cardGrid"></div>
+    </main>
+
+    <footer class="game-footer">
+        <button class="btn btn-reset" onclick="resetGame()">
+            <span>↻</span>
+            重置
+        </button>
+        <button class="btn btn-hint" onclick="showHint()">
+            <span>💡</span>
+            提示
+        </button>
+        <button class="btn btn-back" onclick="goBack()">
+            <span>←</span>
+            返回
+        </button>
+    </footer>
+
+    <div class="modal-overlay" id="victoryModal">
+        <div class="modal-content">
+            <div class="modal-icon">🎉</div>
+            <h2 class="modal-title">恭喜通关！</h2>
+            <p class="modal-text">你已经记住了这些经典方剂！</p>
+            <div class="modal-stats">
+                <div>
+                    <div class="modal-stat-label">翻牌次数</div>
+                    <div class="modal-stat-value" id="finalMoves">0</div>
+                </div>
+                <div>
+                    <div class="modal-stat-label">用时</div>
+                    <div class="modal-stat-value" id="finalTime">00:00</div>
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="resetGame()">
+                再玩一次
+            </button>
+            <a href="tcm-game-hub.html" class="btn btn-back" style="margin-top:12px;display:inline-flex;text-decoration:none;">返回游戏大厅</a>
+        </div>
+    </div>
+
+    <script>
+        // 方剂数据
+        const prescriptions = [
+            { name: '桂枝汤', efficacy: '解肌发表，调和营卫', matchId: 1 },
+            { name: '麻黄汤', efficacy: '发汗解表，宣肺平喘', matchId: 2 },
+            { name: '小柴胡汤', efficacy: '和解少阳，调畅气机', matchId: 3 },
+            { name: '四物汤', efficacy: '补血调血，养血和营', matchId: 4 },
+            { name: '六味地黄丸', efficacy: '滋阴补肾，填精益髓', matchId: 5 },
+            { name: '归脾汤', efficacy: '益气补血，健脾养心', matchId: 6 }
+        ];
+
+        let gameState = {
+            flippedCards: [],
+            matchedPairs: 0,
+            moves: 0,
+            seconds: 0,
+            timerInterval: null,
+            isLocked: false
+        };
+
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function createCards() {
+            const cards = [];
+
+            prescriptions.forEach(prescription => {
+                // 方剂名称卡
+                cards.push({
+                    type: 'name',
+                    content: prescription.name,
+                    matchId: prescription.matchId
+                });
+
+                // 功效卡
+                cards.push({
+                    type: 'efficacy',
+                    content: prescription.efficacy,
+                    matchId: prescription.matchId
+                });
+            });
+
+            return shuffleArray(cards);
+        }
+
+        function renderCards() {
+            const cardGrid = document.getElementById('cardGrid');
+            cardGrid.innerHTML = '';
+
+            const cards = createCards();
+
+            cards.forEach((card, index) => {
+                const cardEl = document.createElement('div');
+                cardEl.className = 'card';
+                cardEl.dataset.index = index;
+                cardEl.dataset.matchId = card.matchId;
+                cardEl.innerHTML = `
+                    <div class="card-inner">
+                        <div class="card-front"></div>
+                        <div class="card-back">
+                            <div class="card-type">${card.type === 'name' ? '方剂' : '功效'}</div>
+                            <div class="card-name">${card.content}</div>
+                        </div>
+                    </div>
+                `;
+                cardEl.addEventListener('click', () => flipCard(cardEl));
+                cardGrid.appendChild(cardEl);
+            });
+        }
+
+        function flipCard(card) {
+            if (gameState.isLocked) return;
+            if (card.classList.contains('flipped') || card.classList.contains('matched')) return;
+
+            // 开始计时
+            if (!gameState.timerInterval && gameState.flippedCards.length === 0) {
+                startTimer();
+            }
+
+            card.classList.add('flipped');
+            gameState.flippedCards.push(card);
+
+            if (gameState.flippedCards.length === 2) {
+                gameState.moves++;
+                document.getElementById('moves').textContent = gameState.moves;
+                checkMatch();
+            }
+        }
+
+        function checkMatch() {
+            gameState.isLocked = true;
+
+            const [card1, card2] = gameState.flippedCards;
+            const matchId1 = card1.dataset.matchId;
+            const matchId2 = card2.dataset.matchId;
+
+            if (matchId1 === matchId2) {
+                // 配对成功
+                setTimeout(() => {
+                    card1.classList.add('matched');
+                    card2.classList.add('matched');
+                    card1.classList.remove('flipped');
+                    card2.classList.remove('flipped');
+
+                    gameState.matchedPairs++;
+                    document.getElementById('matched').textContent = gameState.matchedPairs;
+
+                    gameState.flippedCards = [];
+                    gameState.isLocked = false;
+
+                    if (gameState.matchedPairs === prescriptions.length) {
+                        setTimeout(showVictory, 500);
+                    }
+                }, 500);
+            } else {
+                // 配对失败
+                setTimeout(() => {
+                    card1.classList.remove('flipped');
+                    card2.classList.remove('flipped');
+                    gameState.flippedCards = [];
+                    gameState.isLocked = false;
+                }, 1000);
+            }
+        }
+
+        function startTimer() {
+            gameState.timerInterval = setInterval(() => {
+                gameState.seconds++;
+                const minutes = Math.floor(gameState.seconds / 60).toString().padStart(2, '0');
+                const seconds = (gameState.seconds % 60).toString().padStart(2, '0');
+                document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (gameState.timerInterval) {
+                clearInterval(gameState.timerInterval);
+            }
+        }
+
+        function showVictory() {
+            stopTimer();
+            const minutes = Math.floor(gameState.seconds / 60).toString().padStart(2, '0');
+            const seconds = (gameState.seconds % 60).toString().padStart(2, '0');
+            document.getElementById('finalMoves').textContent = gameState.moves;
+            document.getElementById('finalTime').textContent = `${minutes}:${seconds}`;
+            document.getElementById('victoryModal').classList.add('show');
+            // 提交分数到后端
+            const accuracy = Math.round((prescriptions.length / Math.max(gameState.moves, 1)) * 100);
+            const score = Math.max(0, 100 - gameState.moves * 5 - gameState.seconds);
+            submitScore(score, accuracy, gameState.seconds);
+        }
+
+        async function submitScore(score, accuracy, duration) {
+            try {
+                const token = localStorage.getItem('token') || '';
+                await fetch('/api/games/score', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify({ gameType: 'memory', score, accuracy, durationSeconds: duration })
+                });
+            } catch {}
+        }
+
+        function resetGame() {
+            stopTimer();
+
+            gameState = {
+                flippedCards: [],
+                matchedPairs: 0,
+                moves: 0,
+                seconds: 0,
+                timerInterval: null,
+                isLocked: false
+            };
+
+            document.getElementById('matched').textContent = '0';
+            document.getElementById('moves').textContent = '0';
+            document.getElementById('timer').textContent = '00:00';
+            document.getElementById('victoryModal').classList.remove('show');
+
+            renderCards();
+        }
+
+        function showHint() {
+            // 找到未配对的卡
+            const allCards = Array.from(document.querySelectorAll('.card'));
+            const unmatchedCards = allCards.filter(card =>
+                !card.classList.contains('matched') && !card.classList.contains('flipped')
+            );
+
+            if (unmatchedCards.length >= 2) {
+                // 暂时显示两个匹配的卡
+                const firstCard = unmatchedCards.find(card => card.dataset.matchId === unmatchedCards[0].dataset.matchId);
+                const matchId = firstCard.dataset.matchId;
+                const matchingCards = unmatchedCards.filter(card => card.dataset.matchId === matchId);
+
+                if (matchingCards.length === 2) {
+                    matchingCards.forEach(card => card.classList.add('flipped'));
+                    setTimeout(() => {
+                        matchingCards.forEach(card => card.classList.remove('flipped'));
+                    }, 1000);
+                }
+            }
+        }
+
+        function goBack() {
+            if (confirm('确定要退出当前游戏吗？')) {
+                window.history.back();
+            }
+        }
+
+        // 初始化游戏
+        document.addEventListener('DOMContentLoaded', renderCards);
+    </script>
+</body>
+</html>

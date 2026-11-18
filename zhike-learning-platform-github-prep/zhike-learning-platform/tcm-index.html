@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>智课精灵门户 - 2026 智能教学辅助平台</title>
+<script src="https://modao.cc/agent-py/static/source/js/tailwindcss.3.4.3.js"></script>
+<script src="https://modao.cc/agent-py/static/source/js/iconify-icon.min.1.0.7.js"></script>
+<script src="https://modao.cc/agent-py/static/source/js/echarts.min.5.4.3.js"></script>
+<style>
+        .glass-card { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(241, 245, 249, 1); }
+        .hover-lift { transition: transform 0.2s, box-shadow 0.2s; }
+        .hover-lift:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
+        .tcm-gradient { background: linear-gradient(135deg, #065f46 0%, #059669 50%, #34d399 100%); }
+    </style>
+</head>
+<body class="bg-amber-50/50 min-h-screen">
+<!-- 导航栏 -->
+<nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b">
+<div class="max-w-[1440px] mx-auto px-6 h-16 flex items-center justify-between">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
+<iconify-icon class="text-white text-xl" icon="solar:heart-pulse-bold"></iconify-icon>
+</div>
+<span class="font-bold text-xl tracking-tight text-slate-800">智研<span class="text-emerald-600 font-light">中医</span></span>
+</div>
+<div class="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
+<a class="px-4 py-1.5 rounded-md bg-white shadow-sm text-sm font-medium text-emerald-600" href="tcm-index.html">概览</a>
+<a class="px-4 py-1.5 rounded-md text-sm font-medium text-slate-500 hover:text-emerald-600" href="tcm-center.html">智能备课</a>
+<a class="px-4 py-1.5 rounded-md text-sm font-medium text-slate-500 hover:text-emerald-600" href="resources.html">资源中心</a>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<span class="text-xs text-slate-400 font-mono">Today: 2026.04.02</span>
+<div class="flex gap-4 border-l pl-6">
+<iconify-icon class="text-xl text-slate-400 cursor-pointer" icon="solar:magnifer-linear"></iconify-icon>
+<iconify-icon class="text-xl text-slate-400 cursor-pointer" icon="solar:settings-linear"></iconify-icon>
+<div class="w-8 h-8 rounded-full bg-slate-200 border overflow-hidden">
+<img alt="User Avatar" src="https://modao.cc/agent-py/media/generated_images/2026-04-02/f3acffddaadf427a80b6236ce9fd5417.jpg"/>
+</div>
+</div>
+</div>
+</div>
+</nav>
+<main class="max-w-[1440px] mx-auto px-6 py-8">
+<!-- 欢迎区 -->
+<div class="mb-10 flex justify-between items-end">
+<div>
+<h2 class="text-3xl font-bold text-slate-800 tracking-tight">下午好，李教授</h2>
+<p class="text-slate-500 mt-2">今天是 2026年4月2日，您有 4 个正在进行的备课项目和 3 个经典医案待整理。</p>
+</div>
+<a class="bg-emerald-600 text-white px-6 py-3 rounded-xl font-medium flex items-center gap-2 hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100" href="tcm-center.html">
+<iconify-icon icon="solar:add-circle-bold"></iconify-icon>
+                开启新备课
+            </a>
+</div>
+<!-- 关键指标卡片 -->
+<div class="grid grid-cols-4 gap-6 mb-10">
+<div class="glass-card p-6 rounded-2xl">
+<div class="flex justify-between items-start">
+<div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+<iconify-icon class="text-emerald-600 text-xl" icon="solar:document-bold"></iconify-icon>
+</div>
+<span class="text-xs text-green-500 bg-green-50 px-2 py-0.5 rounded font-medium">+18%</span>
+</div>
+<p class="text-slate-500 text-sm mt-4">已产出教学资源</p>
+<h3 class="text-2xl font-bold text-slate-800 mt-1">856 <span class="text-xs text-slate-400 font-normal">份</span></h3>
+</div>
+<div class="glass-card p-6 rounded-2xl">
+<div class="flex justify-between items-start">
+<div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
+<iconify-icon class="text-amber-600 text-xl" icon="solar:users-group-rounded-bold"></iconify-icon>
+</div>
+<span class="text-xs text-blue-500 bg-blue-50 px-2 py-0.5 rounded font-medium">Stable</span>
+</div>
+<p class="text-slate-500 text-sm mt-4">中医智能体协作</p>
+<h3 class="text-2xl font-bold text-slate-800 mt-1">6 <span class="text-xs text-slate-400 font-normal">Active</span></h3>
+</div>
+<div class="glass-card p-6 rounded-2xl">
+<div class="flex justify-between items-start">
+<div class="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center">
+<iconify-icon class="text-rose-600 text-xl" icon="solar:clock-circle-bold"></iconify-icon>
+</div>
+<span class="text-xs text-amber-500 bg-amber-50 px-2 py-0.5 rounded font-medium">-30h</span>
+</div>
+<p class="text-slate-500 text-sm mt-4">本周节省时间</p>
+<h3 class="text-2xl font-bold text-slate-800 mt-1">24.5 <span class="text-xs text-slate-400 font-normal">小时</span></h3>
+</div>
+<div class="glass-card p-6 rounded-2xl">
+<div class="flex justify-between items-start">
+<div class="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center">
+<iconify-icon class="text-teal-600 text-xl" icon="solar:star-bold"></iconify-icon>
+</div>
+<span class="text-xs text-rose-500 bg-rose-50 px-2 py-0.5 rounded font-medium">High</span>
+</div>
+<p class="text-slate-500 text-sm mt-4">学生满意度评分</p>
+<h3 class="text-2xl font-bold text-slate-800 mt-1">9.5 <span class="text-xs text-slate-400 font-normal">/ 10</span></h3>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-8">
+<!-- 左侧：项目看板 -->
+<div class="col-span-2 space-y-6">
+<div class="flex items-center justify-between">
+<h3 class="font-bold text-lg text-slate-800">活跃备课项目</h3>
+<button class="text-sm text-emerald-600 hover:underline">查看全部</button>
+</div>
+<div class="grid grid-cols-2 gap-6">
+<!-- 项目卡片 1 -->
+<div class="bg-white p-5 rounded-2xl border hover-lift cursor-pointer">
+<div class="flex justify-between mb-4">
+<span class="px-2 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded uppercase">专业核心课</span>
+<iconify-icon class="text-slate-300" icon="solar:menu-dots-bold"></iconify-icon>
+</div>
+<h4 class="font-bold text-slate-800 text-lg">中医基础理论</h4>
+<p class="text-sm text-slate-500 mt-1">当前进度：第三章 阴阳五行学说</p>
+<div class="mt-6 flex items-center justify-between">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full border-2 border-white bg-emerald-100 flex items-center justify-center text-[8px] font-bold text-emerald-600">AI</div>
+<div class="w-6 h-6 rounded-full border-2 border-white bg-slate-200"></div>
+</div>
+<span class="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded">75% 已完成</span>
+</div>
+</div>
+<!-- 项目卡片 2 -->
+<div class="bg-white p-5 rounded-2xl border hover-lift cursor-pointer">
+<div class="flex justify-between mb-4">
+<span class="px-2 py-1 bg-amber-50 text-amber-600 text-[10px] font-bold rounded uppercase">经典研读</span>
+<iconify-icon class="text-slate-300" icon="solar:menu-dots-bold"></iconify-icon>
+</div>
+<h4 class="font-bold text-slate-800 text-lg">黄帝内经选读</h4>
+<p class="text-sm text-slate-500 mt-1">当前进度：素问·阴阳应象大论</p>
+<div class="mt-6 flex items-center justify-between">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full border-2 border-white bg-emerald-100 flex items-center justify-center text-[8px] font-bold text-emerald-600">AI</div>
+</div>
+<span class="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-1 rounded">45% 研读中</span>
+</div>
+</div>
+<!-- 项目卡片 3 -->
+<div class="bg-white p-5 rounded-2xl border hover-lift cursor-pointer">
+<div class="flex justify-between mb-4">
+<span class="px-2 py-1 bg-rose-50 text-rose-600 text-[10px] font-bold rounded uppercase">临床课程</span>
+<iconify-icon class="text-slate-300" icon="solar:menu-dots-bold"></iconify-icon>
+</div>
+<h4 class="font-bold text-slate-800 text-lg">中医诊断学</h4>
+<p class="text-sm text-slate-500 mt-1">当前进度：八纲辨证</p>
+<div class="mt-6 flex items-center justify-between">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full border-2 border-white bg-emerald-100 flex items-center justify-center text-[8px] font-bold text-emerald-600">AI</div>
+<div class="w-6 h-6 rounded-full border-2 border-white bg-slate-200"></div>
+</div>
+<span class="text-xs font-medium text-rose-600 bg-rose-50 px-2 py-1 rounded">60% 进行中</span>
+</div>
+</div>
+<!-- 项目卡片 4 -->
+<div class="bg-white p-5 rounded-2xl border hover-lift cursor-pointer">
+<div class="flex justify-between mb-4">
+<span class="px-2 py-1 bg-teal-50 text-teal-600 text-[10px] font-bold rounded uppercase">方剂学</span>
+<iconify-icon class="text-slate-300" icon="solar:menu-dots-bold"></iconify-icon>
+</div>
+<h4 class="font-bold text-slate-800 text-lg">经方应用研究</h4>
+<p class="text-sm text-slate-500 mt-1">当前进度：桂枝汤类方</p>
+<div class="mt-6 flex items-center justify-between">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full border-2 border-white bg-emerald-100 flex items-center justify-center text-[8px] font-bold text-emerald-600">AI</div>
+</div>
+<span class="text-xs font-medium text-teal-600 bg-teal-50 px-2 py-1 rounded">20% 构思中</span>
+</div>
+</div>
+</div>
+<!-- 动态流 -->
+<div class="bg-white rounded-2xl border overflow-hidden">
+<div class="p-4 border-b bg-amber-50/50 flex justify-between items-center">
+<h3 class="font-bold text-sm text-slate-700">智能协作动态</h3>
+<iconify-icon class="text-slate-400 cursor-pointer hover:rotate-180 transition-all duration-500" icon="solar:refresh-linear"></iconify-icon>
+</div>
+<div class="divide-y">
+<div class="p-4 flex gap-4 items-start">
+<div class="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+<iconify-icon class="text-amber-600" icon="solar:book-bookmark-bold"></iconify-icon>
+</div>
+<div>
+<p class="text-sm text-slate-700 font-medium">经方专家智能体 <span class="text-slate-400 font-normal">整理了</span> 《伤寒论》第 12 条注释</p>
+<p class="text-xs text-slate-400 mt-1">15 分钟前 · 自动关联历代医家注疏</p>
+</div>
+</div>
+<div class="p-4 flex gap-4 items-start">
+<div class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
+<iconify-icon class="text-emerald-600" icon="solar:magic-stick-3-bold"></iconify-icon>
+</div>
+<div>
+<p class="text-sm text-slate-700 font-medium">国风设计智能体 <span class="text-slate-400 font-normal">完成了</span> 五行相生相克动态演示图</p>
+<p class="text-xs text-slate-400 mt-1">1 小时前 · 已适配课堂互动模式</p>
+</div>
+</div>
+<div class="p-4 flex gap-4 items-start">
+<div class="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center flex-shrink-0">
+<iconify-icon class="text-teal-600" icon="solar:heart-pulse-bold"></iconify-icon>
+</div>
+<div>
+<p class="text-sm text-slate-700 font-medium">诊疗顾问智能体 <span class="text-slate-400 font-normal">分析了</span> 3 个典型肝郁脾虚医案</p>
+<p class="text-xs text-slate-400 mt-1">2 小时前 · 辨证思路已可视化</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- 右侧：教学日历与效率统计 -->
+<div class="space-y-6">
+<div class="tcm-gradient rounded-2xl p-6 text-white">
+<h3 class="font-bold text-lg mb-4">2026年4月课程表</h3>
+<div class="space-y-4">
+<div class="flex gap-4 items-center bg-white/10 p-3 rounded-xl">
+<div class="text-center w-10 border-r border-white/20 pr-3">
+<p class="text-xs opacity-60">周四</p>
+<p class="text-lg font-bold">02</p>
+</div>
+<div>
+<p class="text-sm font-bold">中医基础理论</p>
+<p class="text-[10px] opacity-60">14:00 - 15:40 · 中医楼 201</p>
+</div>
+</div>
+<div class="flex gap-4 items-center bg-white/5 p-3 rounded-xl opacity-60">
+<div class="text-center w-10 border-r border-white/20 pr-3">
+<p class="text-xs opacity-60">周五</p>
+<p class="text-lg font-bold">03</p>
+</div>
+<div>
+<p class="text-sm font-bold">黄帝内经研读</p>
+<p class="text-[10px] opacity-60">09:00 - 10:40 · 国医堂 301</p>
+</div>
+</div>
+<div class="flex gap-4 items-center bg-white/5 p-3 rounded-xl opacity-60">
+<div class="text-center w-10 border-r border-white/20 pr-3">
+<p class="text-xs opacity-60">周一</p>
+<p class="text-lg font-bold">06</p>
+</div>
+<div>
+<p class="text-sm font-bold">方剂学实践</p>
+<p class="text-[10px] opacity-60">14:00 - 16:40 · 实验中心</p>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-white border rounded-2xl p-6">
+<h3 class="font-bold text-sm text-slate-700 mb-4">备课效率趋势</h3>
+<div class="h-40 w-full" id="mini-chart"></div>
+</div>
+<!-- 智能推荐 -->
+<div class="bg-white border rounded-2xl p-6">
+<h3 class="font-bold text-sm text-slate-700 mb-4">智能推荐</h3>
+<div class="space-y-3">
+<div class="flex items-center gap-3 p-2 bg-emerald-50 rounded-lg cursor-pointer hover:bg-emerald-100 transition-colors">
+<iconify-icon class="text-emerald-600" icon="solar:file-text-bold"></iconify-icon>
+<div class="flex-1">
+<p class="text-xs font-medium text-slate-700">《金匮要略》最新研究</p>
+<p class="text-[10px] text-slate-400">相关文献 12 篇</p>
+</div>
+</div>
+<div class="flex items-center gap-3 p-2 bg-amber-50 rounded-lg cursor-pointer hover:bg-amber-100 transition-colors">
+<iconify-icon class="text-amber-600" icon="solar:video-bold"></iconify-icon>
+<div class="flex-1">
+<p class="text-xs font-medium text-slate-700">针灸临床演示视频</p>
+<p class="text-[10px] text-slate-400">国医大师讲评</p>
+</div>
+</div>
+<div class="flex items-center gap-3 p-2 bg-teal-50 rounded-lg cursor-pointer hover:bg-teal-100 transition-colors">
+<iconify-icon class="text-teal-600" icon="solar:document-bold"></iconify-icon>
+<div class="flex-1">
+<p class="text-xs font-medium text-slate-700">温病学说对比分析</p>
+<p class="text-[10px] text-slate-400">AI 自动生成报告</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chartDom = document.getElementById('mini-chart');
+            const myChart = echarts.init(chartDom);
+            const option = {
+                grid: { left: '0%', right: '0%', bottom: '0%', top: '10%', containLabel: false },
+                xAxis: { type: 'category', show: false, data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] },
+                yAxis: { type: 'value', show: false },
+                series: [{
+                    data: [180, 240, 200, 160, 140, 220, 190],
+                    type: 'bar',
+                    itemStyle: { color: '#059669', borderRadius: [4, 4, 0, 0] },
+                    barWidth: '60%'
+                }]
+            };
+            myChart.setOption(option);
+            window.addEventListener('resize', () => myChart.resize());
+        });
+    </script>
+</body>
+</html>

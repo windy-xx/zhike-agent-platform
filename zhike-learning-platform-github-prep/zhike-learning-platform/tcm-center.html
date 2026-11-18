@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>智研 · 中医教研中心 - 2026 专业生产力平台</title>
+<script src="https://modao.cc/agent-py/static/source/js/tailwindcss.3.4.3.js"></script>
+<script src="https://modao.cc/agent-py/static/source/js/iconify-icon.min.1.0.7.js"></script>
+<script src="https://modao.cc/agent-py/static/source/js/echarts.min.5.4.3.js"></script>
+<style>
+        @font-face {
+            font-family: 'Inter';
+            src: url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #fef7f0;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        .agent-status-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+        .tab-active {
+            color: #059669;
+            border-bottom: 2px solid #059669;
+        }
+        .tcm-gradient {
+            background: linear-gradient(135deg, #065f46 0%, #059669 50%, #34d399 100%);
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+<!-- 顶部导航栏 -->
+<header class="h-14 border-b bg-white flex items-center justify-between px-6 z-50">
+<div class="flex items-center gap-4">
+<div class="bg-emerald-600 p-1.5 rounded-lg">
+<iconify-icon class="text-white text-xl" icon="solar:heart-pulse-bold"></iconify-icon>
+</div>
+<h1 class="font-bold text-lg text-slate-800 tracking-tight">智研 <span class="font-light text-slate-400 mx-1">|</span> 中医教研中心</h1>
+<div class="ml-8 flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded-full text-xs text-emerald-700">
+<iconify-icon icon="solar:folder-2-linear"></iconify-icon>
+<span>项目：2026年春季·中医基础理论课程</span>
+<iconify-icon icon="solar:alt-arrow-down-linear"></iconify-icon>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2 text-slate-500 text-sm">
+<iconify-icon icon="solar:calendar-linear"></iconify-icon>
+<span>2026年04月02日</span>
+</div>
+<div class="flex items-center gap-3 border-l pl-6">
+<button class="text-slate-500 hover:text-emerald-600"><iconify-icon class="text-xl" icon="solar:bell-linear"></iconify-icon></button>
+<button class="text-slate-500 hover:text-emerald-600"><iconify-icon class="text-xl" icon="solar:settings-linear"></iconify-icon></button>
+<div class="w-8 h-8 rounded-full bg-slate-200 overflow-hidden border">
+<img alt="User Avatar" class="w-full h-full object-cover" src="https://modao.cc/agent-py/media/generated_images/2026-04-02/37b7a89846a54a019fac9bc14f2909b4.jpg"/>
+</div>
+<button onclick="doLogout()" class="text-sm text-slate-400 hover:text-red-500 flex items-center gap-1" title="退出登录">
+<iconify-icon icon="solar:logout-2-linear" class="text-lg"></iconify-icon>
+</button>
+</div>
+</div>
+</header>
+<!-- 主体内容区 -->
+<main class="flex-1 flex overflow-hidden">
+<!-- 左侧：教师与智能体对话区 -->
+<section class="w-80 border-r bg-white flex flex-col">
+<div class="p-4 border-b flex justify-between items-center">
+<span class="text-sm font-semibold text-slate-700">中医智能助手</span>
+<button class="text-xs text-emerald-600 flex items-center gap-1 hover:underline">
+<iconify-icon icon="solar:history-linear"></iconify-icon>历史记录
+                </button>
+</div>
+<!-- 对话列表 -->
+<div class="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar">
+<!-- AI 消息 -->
+<div class="flex gap-3">
+<div class="w-7 h-7 rounded bg-emerald-100 flex items-center justify-center flex-shrink-0">
+<iconify-icon class="text-emerald-600" icon="solar:minimalistic-magnifer-bold"></iconify-icon>
+</div>
+<div class="space-y-2">
+<div class="bg-slate-50 p-3 rounded-r-xl rounded-bl-xl text-sm text-slate-700 leading-relaxed border">
+                            李教授，您好。我已经为您加载了《中医基础理论》最新教学大纲。今天的备课重点是"阴阳五行学说"这一章节吗？
+                        </div>
+<span class="text-[10px] text-slate-400">09:12 AM</span>
+</div>
+</div>
+<!-- 用户消息 -->
+<div class="flex gap-3 flex-row-reverse">
+<div class="w-7 h-7 rounded bg-slate-800 flex items-center justify-center flex-shrink-0">
+<iconify-icon class="text-white text-xs" icon="solar:user-bold"></iconify-icon>
+</div>
+<div class="space-y-2 text-right">
+<div class="bg-emerald-600 p-3 rounded-l-xl rounded-br-xl text-sm text-white leading-relaxed inline-block">
+                            是的。我需要生成一套适合本科生的课件，要包含五行生克制化关系的动态演示，以及中医病案分析的练习题。
+                        </div>
+<br/><span class="text-[10px] text-slate-400">09:15 AM</span>
+</div>
+</div>
+<!-- AI 消息 (进行中) -->
+<div class="flex gap-3">
+<div class="w-7 h-7 rounded bg-emerald-100 flex items-center justify-center flex-shrink-0">
+<iconify-icon class="text-emerald-600" icon="solar:magic-stick-3-bold"></iconify-icon>
+</div>
+<div class="space-y-2">
+<div class="bg-slate-50 p-3 rounded-r-xl rounded-bl-xl text-sm text-slate-700 leading-relaxed border">
+                            明白了。我正在调度"经方专家"生成经典医案分析，并让"可视化智能体"绘制五行相生相克动态图。预计30秒内完成。
+                        </div>
+<div class="flex gap-2">
+<span class="px-2 py-1 bg-emerald-50 text-[10px] text-emerald-600 rounded border border-emerald-100 flex items-center gap-1">
+<iconify-icon class="agent-status-pulse" icon="solar:upload-track-2-linear"></iconify-icon> 检索古籍文献中...
+                            </span>
+</div>
+</div>
+</div>
+</div>
+<!-- 输入框 -->
+<div class="p-4 border-t">
+<div class="relative bg-slate-50 rounded-xl border p-2 focus-within:ring-2 ring-emerald-100 transition-all">
+<textarea class="w-full bg-transparent border-none focus:ring-0 text-sm p-1 resize-none h-20 placeholder:text-slate-400" placeholder="描述您的备课需求..."></textarea>
+<div class="flex justify-between items-center mt-2">
+<div class="flex gap-2">
+<button class="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-white rounded-lg transition-colors"><iconify-icon icon="solar:gallery-linear"></iconify-icon></button>
+<button class="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-white rounded-lg transition-colors"><iconify-icon icon="solar:link-linear"></iconify-icon></button>
+<button class="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-white rounded-lg transition-colors"><iconify-icon icon="solar:microphone-linear"></iconify-icon></button>
+</div>
+<button class="bg-emerald-600 text-white p-1.5 rounded-lg hover:bg-emerald-700 transition-all">
+<iconify-icon icon="solar:plain-2-bold"></iconify-icon>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- 中间：智能体工作展示区 -->
+<section class="flex-1 bg-amber-50/30 flex flex-col">
+<!-- 标签页切换 -->
+<div class="px-6 bg-white border-b flex gap-8 items-center h-12">
+<button class="tab-active h-full text-sm font-medium px-2 flex items-center gap-2" id="tab-ppt" onclick="switchTab('ppt')">
+<iconify-icon icon="solar:presentation-graph-linear"></iconify-icon>多媒体课件
+                </button>
+<button class="text-slate-500 h-full text-sm font-medium px-2 flex items-center gap-2 hover:text-emerald-600" id="tab-quiz" onclick="switchTab('quiz')">
+<iconify-icon icon="solar:gamepad-linear"></iconify-icon>病案分析
+                </button>
+<button class="text-slate-500 h-full text-sm font-medium px-2 flex items-center gap-2 hover:text-emerald-600" id="tab-doc" onclick="switchTab('doc')">
+<iconify-icon icon="solar:document-text-linear"></iconify-icon>经典医案
+                </button>
+<button class="text-slate-500 h-full text-sm font-medium px-2 flex items-center gap-2 hover:text-emerald-600" id="tab-data" onclick="switchTab('data')">
+<iconify-icon icon="solar:graph-up-linear"></iconify-icon>数据报表
+                </button>
+</div>
+<!-- 展示内容区 -->
+<div class="flex-1 overflow-y-auto p-6 custom-scrollbar" id="display-container">
+<!-- PPT 预览内容 (Default) -->
+<div class="space-y-6" id="content-ppt">
+<div class="flex justify-between items-end">
+<div>
+<h2 class="text-xl font-bold text-slate-800">阴阳五行学说：中医理论的核心基石</h2>
+<p class="text-sm text-slate-500 mt-1">幻灯片序列 (共 15 页) · AI 已自动优化排版</p>
+</div>
+<div class="flex gap-2">
+<button class="bg-white border text-slate-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-slate-50 shadow-sm flex items-center gap-1">
+<iconify-icon icon="solar:download-linear"></iconify-icon>导出 PPTX
+                            </button>
+<button class="bg-emerald-600 text-white px-4 py-1.5 rounded-lg text-xs font-medium hover:bg-emerald-700 shadow-lg shadow-emerald-100 flex items-center gap-1">
+<iconify-icon icon="solar:play-circle-bold"></iconify-icon>放映预览
+                            </button>
+</div>
+</div>
+<!-- 幻灯片主体 -->
+<div class="grid grid-cols-1 gap-6">
+<div class="aspect-video bg-white rounded-2xl shadow-xl overflow-hidden border-4 border-white ring-1 ring-slate-200 relative group">
+<div class="absolute inset-0 tcm-gradient opacity-90"></div>
+<div class="absolute inset-0 p-12 flex flex-col justify-center">
+<div class="flex items-center gap-4 mb-6">
+<div class="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
+<iconify-icon class="text-white text-4xl" icon="solar:yin-yang-bold"></iconify-icon>
+</div>
+<div>
+<span class="text-emerald-100 font-mono text-sm">Lecture 03 / 2026 Spring</span>
+<h1 class="text-4xl font-extrabold text-white mt-2">阴阳五行学说</h1>
+</div>
+</div>
+<p class="text-white/80 text-lg max-w-2xl">探索中医理论的核心体系：阴阳的对立制约、互根互用，五行的生克制化规律及其在临床中的应用。</p>
+<div class="mt-8 flex gap-4">
+<span class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-white text-sm">《黄帝内经》核心理论</span>
+<span class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-white text-sm">中医基础理论</span>
+</div>
+</div>
+<div class="absolute bottom-4 right-4 text-white/50 text-[10px]">智研 AI 生成 · 中医国风风格</div>
+</div>
+<div class="grid grid-cols-3 gap-4">
+<div class="aspect-video bg-white rounded-lg border hover:border-emerald-400 cursor-pointer p-2 transition-all">
+<div class="bg-gradient-to-br from-amber-50 to-emerald-50 h-full rounded flex items-center justify-center relative">
+<span class="text-[10px] absolute top-1 left-1 text-slate-400">02</span>
+<div class="text-center">
+<iconify-icon class="text-2xl text-amber-500" icon="solar:sun-bold"></iconify-icon>
+<p class="text-[10px] text-slate-500 mt-1">阴阳的基本概念</p>
+</div>
+</div>
+</div>
+<div class="aspect-video bg-white rounded-lg border hover:border-emerald-400 cursor-pointer p-2 transition-all">
+<div class="bg-gradient-to-br from-emerald-50 to-teal-50 h-full rounded flex items-center justify-center relative">
+<span class="text-[10px] absolute top-1 left-1 text-slate-400">03</span>
+<div class="text-center">
+<iconify-icon class="text-2xl text-emerald-500" icon="solar:refresh-circle-bold"></iconify-icon>
+<p class="text-[10px] text-slate-500 mt-1">五行生克关系</p>
+</div>
+</div>
+</div>
+<div class="aspect-video bg-white rounded-lg border hover:border-emerald-400 cursor-pointer p-2 transition-all">
+<div class="bg-gradient-to-br from-rose-50 to-amber-50 h-full rounded flex items-center justify-center relative border-2 border-dashed border-slate-200">
+<iconify-icon class="text-2xl text-slate-300" icon="solar:add-circle-linear"></iconify-icon>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- 病案分析内容 (Hidden initially) -->
+<div class="hidden space-y-6" id="content-quiz">
+<div class="flex justify-between items-center">
+<h2 class="text-xl font-bold text-slate-800">经典医案分析</h2>
+<span class="text-xs bg-amber-50 text-amber-600 px-2 py-1 rounded border border-amber-100">难度：中级</span>
+</div>
+<div class="space-y-4">
+<div class="bg-white p-6 rounded-2xl border shadow-sm group hover:shadow-md transition-all">
+<div class="flex justify-between">
+<span class="text-xs font-mono text-emerald-600 font-semibold mb-2 block">医案 01 - 肝郁脾虚证</span>
+<div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-slate-400 hover:text-emerald-600"><iconify-icon icon="solar:refresh-linear"></iconify-icon></button>
+<button class="text-slate-400 hover:text-red-600"><iconify-icon icon="solar:trash-bin-trash-linear"></iconify-icon></button>
+</div>
+</div>
+<div class="bg-amber-50 p-4 rounded-xl mb-4">
+<p class="text-sm text-slate-700 leading-relaxed">
+<strong>患者：</strong>张某，女，35岁<br/>
+<strong>主诉：</strong>胁肋胀痛，情绪抑郁，食欲不振，舌苔薄白，脉弦缓<br/>
+<strong>病史：</strong>患者因工作压力大，近期情志不畅，逐渐出现胁肋部胀满不适...
+</p>
+</div>
+<h3 class="text-slate-800 font-medium mb-4">根据中医辨证论治原则，该患者的最佳治法是？</h3>
+<div class="grid grid-cols-1 gap-3">
+<label class="flex items-center gap-3 p-3 rounded-xl border bg-slate-50/50 hover:bg-emerald-50 hover:border-emerald-200 cursor-pointer transition-all">
+<div class="w-5 h-5 rounded-full border-2 border-slate-300 flex items-center justify-center text-[10px]">A</div>
+<span class="text-sm text-slate-600">疏肝解郁，健脾和营</span>
+</label>
+<label class="flex items-center gap-3 p-3 rounded-xl border border-emerald-500 bg-emerald-50 transition-all">
+<div class="w-5 h-5 rounded-full bg-emerald-600 flex items-center justify-center text-[10px] text-white">B</div>
+<span class="text-sm text-slate-800 font-medium">疏肝理气，健脾祛湿</span>
+</label>
+<label class="flex items-center gap-3 p-3 rounded-xl border bg-slate-50/50 hover:bg-emerald-50 cursor-pointer">
+<div class="w-5 h-5 rounded-full border-2 border-slate-300 flex items-center justify-center text-[10px]">C</div>
+<span class="text-sm text-slate-600">滋补肝肾，调理冲任</span>
+</label>
+</div>
+</div>
+<!-- 更多题目 -->
+<div class="bg-white p-6 rounded-2xl border border-dashed flex flex-col items-center justify-center py-12 text-slate-400">
+<iconify-icon class="text-3xl mb-2" icon="solar:magic-stick-linear"></iconify-icon>
+<p class="text-sm">正在从《伤寒杂病论》等经典中生成更多医案...</p>
+</div>
+</div>
+</div>
+<!-- 经典医案内容 (Hidden initially) -->
+<div class="hidden max-w-3xl mx-auto bg-white shadow-lg p-12 min-h-screen rounded-sm border" id="content-doc">
+<div class="prose prose-slate">
+<div class="text-center mb-8 border-b pb-6">
+<div class="flex justify-center mb-4">
+<div class="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
+<iconify-icon class="text-emerald-600 text-2xl" icon="solar:book-bookmark-bold"></iconify-icon>
+</div>
+</div>
+<h1 class="text-3xl font-bold text-slate-900">《中医基础理论》教学教案</h1>
+<p class="text-slate-500 mt-2">2026学年春季学期 · 第03讲 · 阴阳五行学说</p>
+</div>
+<div class="space-y-6">
+<section>
+<h3 class="text-lg font-bold text-emerald-600 border-l-4 border-emerald-600 pl-3">一、教学目标</h3>
+<ul class="list-disc ml-5 mt-2 text-slate-700 space-y-1 text-sm">
+<li>掌握阴阳的基本概念及其相互关系</li>
+<li>理解五行学说的基本内容：五行特性、生克制化</li>
+<li>能够运用阴阳五行理论解释人体生理病理现象</li>
+<li>熟悉《黄帝内经》中相关经典条文</li>
+</ul>
+</section>
+<section>
+<h3 class="text-lg font-bold text-emerald-600 border-l-4 border-emerald-600 pl-3">二、经典文献引用</h3>
+<div class="mt-3 bg-amber-50 p-4 rounded-lg border border-amber-200">
+<p class="text-xs text-amber-600 font-semibold mb-2">《素问·阴阳应象大论》</p>
+<p class="text-sm text-slate-700 leading-relaxed italic">"阴阳者，天地之道也，万物之纲纪，变化之父母，生杀之本始，神明之府也。"</p>
+</div>
+<div class="mt-3 bg-amber-50 p-4 rounded-lg border border-amber-200">
+<p class="text-xs text-amber-600 font-semibold mb-2">《素问·五运行大论》</p>
+<p class="text-sm text-slate-700 leading-relaxed italic">"燥胜则地干，暑胜则地热，风胜则地动，湿胜则地泥，寒胜则地裂。"</p>
+</div>
+</section>
+<section>
+<h3 class="text-lg font-bold text-emerald-600 border-l-4 border-emerald-600 pl-3">三、教学过程</h3>
+<div class="mt-4 space-y-4">
+<div class="flex gap-4">
+<div class="text-emerald-600 font-mono text-xs font-bold pt-1">00:00-00:15</div>
+<div>
+<p class="font-bold text-slate-800 text-sm">导入：从自然现象认识阴阳</p>
+<p class="text-xs text-slate-500 mt-1 leading-relaxed">通过日月交替、四季变化等自然现象，引导学生理解阴阳的对立统一关系，引出《内经》经典论述...</p>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="text-emerald-600 font-mono text-xs font-bold pt-1">00:15-00:40</div>
+<div>
+<p class="font-bold text-slate-800 text-sm">核心讲授：五行生克制化规律</p>
+<div class="my-2 bg-slate-50 p-3 rounded font-serif text-sm border-l-2 border-emerald-500">
+                                                相生：木→火→土→金→水→木<br/>
+                                                相克：木→土→水→火→金→木
+                                            </div>
+<p class="text-xs text-slate-500 leading-relaxed">结合人体五脏六腑的关系，讲解五行在中医理论中的应用，强调整体观念和平衡思想。</p>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="text-emerald-600 font-mono text-xs font-bold pt-1">00:40-00:50</div>
+<div>
+<p class="font-bold text-slate-800 text-sm">案例研讨：古今医案分析</p>
+<p class="text-xs text-slate-500 leading-relaxed">选取《伤寒杂病论》《脾胃论》等经典医案，分组讨论其辨证思路与五行理论的运用。</p>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+</div>
+<!-- 数据报表内容 (Hidden initially) -->
+<div class="hidden space-y-6" id="content-data">
+<div class="grid grid-cols-4 gap-4">
+<div class="bg-white p-4 rounded-xl border shadow-sm">
+<p class="text-xs text-slate-500">预期掌握率</p>
+<p class="text-2xl font-bold text-emerald-600 mt-1">88.5%</p>
+<div class="mt-2 flex items-center gap-1 text-[10px] text-green-500 font-medium">
+<iconify-icon icon="solar:arrow-right-up-linear"></iconify-icon> +5.2% 同比去年
+                            </div>
+</div>
+<div class="bg-white p-4 rounded-xl border shadow-sm">
+<p class="text-xs text-slate-500">经典文献覆盖</p>
+<p class="text-2xl font-bold text-slate-800 mt-1">95%</p>
+<div class="w-full bg-slate-100 h-1.5 rounded-full mt-3">
+<div class="bg-emerald-600 h-full rounded-full w-[95%]"></div>
+</div>
+</div>
+<div class="bg-white p-4 rounded-xl border shadow-sm">
+<p class="text-xs text-slate-500">AI 辅助参与度</p>
+<p class="text-2xl font-bold text-slate-800 mt-1">28min</p>
+<p class="text-[10px] text-slate-400 mt-2">古籍检索时间节省 80%</p>
+</div>
+<div class="bg-white p-4 rounded-xl border shadow-sm">
+<p class="text-xs text-slate-500">建议课时</p>
+<p class="text-2xl font-bold text-slate-800 mt-1">3.0h</p>
+<p class="text-[10px] text-slate-400 mt-2">建议配合实践演示</p>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-6 mt-6">
+<div class="bg-white p-6 rounded-2xl border shadow-sm">
+<h3 class="text-sm font-bold text-slate-700 mb-4">知识点能力分布</h3>
+<div class="h-64" id="chart-radar"></div>
+</div>
+<div class="bg-white p-6 rounded-2xl border shadow-sm">
+<h3 class="text-sm font-bold text-slate-700 mb-4">历代医家观点对比</h3>
+<div class="h-64" id="chart-bar"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 右侧：多智能体协作区 -->
+<section class="w-72 border-l bg-white flex flex-col">
+<div class="p-4 border-b flex items-center justify-between">
+<span class="text-sm font-semibold text-slate-700">Multi-Agent 协作链路</span>
+<span class="w-2 h-2 rounded-full bg-green-500 agent-status-pulse"></span>
+</div>
+<!-- 智能体状态卡片 -->
+<div class="p-4 space-y-4">
+<div class="bg-amber-50 border rounded-xl p-3 flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-amber-600 flex items-center justify-center">
+<iconify-icon class="text-white text-xl" icon="solar:book-bookmark-bold"></iconify-icon>
+</div>
+<div>
+<p class="text-xs font-bold text-slate-800">经方专家</p>
+<p class="text-[10px] text-green-600">在线 · 检索经典医案</p>
+</div>
+</div>
+<div class="bg-emerald-50 border rounded-xl p-3 flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-emerald-600 flex items-center justify-center">
+<iconify-icon class="text-white text-xl" icon="solar:palette-bold"></iconify-icon>
+</div>
+<div>
+<p class="text-xs font-bold text-slate-800">国风设计师</p>
+<p class="text-[10px] text-emerald-600">在线 · 制作中医风格课件</p>
+</div>
+</div>
+<div class="bg-teal-50 border rounded-xl p-3 flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-teal-600 flex items-center justify-center">
+<iconify-icon class="text-white text-xl" icon="solar:heart-pulse-bold"></iconify-icon>
+</div>
+<div>
+<p class="text-xs font-bold text-slate-800">诊疗顾问</p>
+<p class="text-[10px] text-teal-600">在线 · 分析辨证逻辑</p>
+</div>
+</div>
+<div class="bg-slate-50 border rounded-xl p-3 flex items-center gap-3 opacity-60">
+<div class="w-10 h-10 rounded-lg bg-slate-600 flex items-center justify-center">
+<iconify-icon class="text-white text-xl" icon="solar:check-read-bold"></iconify-icon>
+</div>
+<div>
+<p class="text-xs font-bold text-slate-800">文献审核</p>
+<p class="text-[10px] text-slate-500">空闲 · 等待审核任务</p>
+</div>
+</div>
+</div>
+<div class="px-4 py-2 bg-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                实时协作日志
+            </div>
+<!-- 协作日志流 -->
+<div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+<div class="relative pl-4 border-l-2 border-slate-100 space-y-6">
+<div class="relative">
+<div class="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-emerald-600 border-2 border-white"></div>
+<p class="text-[11px] font-bold text-slate-700">任务下达 09:15:02</p>
+<p class="text-[10px] text-slate-500 mt-1 leading-normal">教师请求生成《阴阳五行学说》课件包，风格要求：中医国风。</p>
+</div>
+<div class="relative">
+<div class="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-amber-500 border-2 border-white"></div>
+<p class="text-[11px] font-bold text-slate-700">文献检索 09:15:08</p>
+<p class="text-[10px] text-slate-500 mt-1 leading-normal">经方专家已从《黄帝内经》《伤寒杂病论》中提取相关条文 36 条。</p>
+</div>
+<div class="relative">
+<div class="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white"></div>
+<p class="text-[11px] font-bold text-slate-700">视觉生成 09:15:15</p>
+<p class="text-[10px] text-slate-500 mt-1 leading-normal">国风设计师已应用"水墨丹青"模板，完成五行相生相克动态图渲染。</p>
+</div>
+<div class="relative">
+<div class="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-teal-500 border-2 border-white"></div>
+<p class="text-[11px] font-bold text-slate-700">辨证分析 09:15:32</p>
+<p class="text-[10px] text-slate-500 mt-1 leading-normal">诊疗顾问已完成 3 个典型医案的辨证逻辑分析。</p>
+</div>
+<div class="relative">
+<div class="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-white"></div>
+<p class="text-[11px] font-bold text-slate-700">状态：就绪 09:15:45</p>
+<p class="text-[10px] text-slate-500 mt-1 leading-normal">所有模块已生成并同步至中间工作区，等待教师复核。</p>
+</div>
+</div>
+</div>
+<!-- 系统负载监控 -->
+<div class="p-4 border-t bg-slate-50">
+<div class="flex justify-between items-center text-[10px] text-slate-500 mb-2">
+<span>古籍数据库负载</span>
+<span>45%</span>
+</div>
+<div class="w-full bg-slate-200 h-1 rounded-full overflow-hidden">
+<div class="bg-emerald-500 h-full w-[45%]"></div>
+</div>
+</div>
+</section>
+</main>
+<script>
+        // 标签切换逻辑
+        function switchTab(tabName) {
+            // 隐藏所有内容
+            const contents = ['ppt', 'quiz', 'doc', 'data'];
+            contents.forEach(name => {
+                document.getElementById('content-' + name).classList.add('hidden');
+                document.getElementById('tab-' + name).classList.remove('tab-active');
+                document.getElementById('tab-' + name).classList.add('text-slate-500');
+            });
+
+            // 显示选中内容
+            document.getElementById('content-' + tabName).classList.remove('hidden');
+            const activeTab = document.getElementById('tab-' + tabName);
+            activeTab.classList.add('tab-active');
+            activeTab.classList.remove('text-slate-500');
+
+            // 特殊逻辑：初始化图表
+            if (tabName === 'data') {
+                initCharts();
+            }
+        }
+
+        // 初始化图表
+        function initCharts() {
+            // 雷达图
+            const radarDom = document.getElementById('chart-radar');
+            const radarChart = echarts.init(radarDom);
+            const radarOption = {
+                radar: {
+                    indicator: [
+                        { name: '理论理解', max: 100 },
+                        { name: '经典背诵', max: 100 },
+                        { name: '辨证能力', max: 100 },
+                        { name: '方剂运用', max: 100 },
+                        { name: '临床思维', max: 100 }
+                    ],
+                    splitArea: { show: false }
+                },
+                series: [{
+                    name: '能力分布',
+                    type: 'radar',
+                    data: [{
+                        value: [90, 70, 65, 55, 75],
+                        name: '本课目标',
+                        itemStyle: { color: '#059669' },
+                        areaStyle: { color: 'rgba(5, 150, 105, 0.2)' }
+                    }]
+                }]
+            };
+            radarChart.setOption(radarOption);
+
+            // 柱状图
+            const barDom = document.getElementById('chart-bar');
+            const barChart = echarts.init(barDom);
+            const barOption = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' }
+                },
+                legend: {
+                    data: ['伤寒派', '温病派', '火神派', '滋阴派']
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['阴阳', '五行', '脏腑', '气血', '津液']
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '论述次数'
+                },
+                series: [
+                    {
+                        name: '伤寒派',
+                        type: 'bar',
+                        data: [120, 85, 95, 88, 65],
+                        itemStyle: { color: '#059669' }
+                    },
+                    {
+                        name: '温病派',
+                        type: 'bar',
+                        data: [95, 72, 85, 78, 92],
+                        itemStyle: { color: '#f59e0b' }
+                    },
+                    {
+                        name: '火神派',
+                        type: 'bar',
+                        data: [85, 68, 72, 95, 58],
+                        itemStyle: { color: '#ef4444' }
+                    },
+                    {
+                        name: '滋阴派',
+                        type: 'bar',
+                        data: [78, 82, 88, 65, 85],
+                        itemStyle: { color: '#6366f1' }
+                    }
+                ]
+            };
+            barChart.setOption(barOption);
+
+            window.addEventListener('resize', () => {
+                radarChart.resize();
+                barChart.resize();
+            });
+        }
+    function doLogout() { localStorage.removeItem('token'); window.location.href = 'tcm-login.html'; }
+    </script>
+</body>
+</html>

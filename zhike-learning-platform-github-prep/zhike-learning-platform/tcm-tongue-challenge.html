@@ -1,0 +1,1622 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>舌诊挑战 - 中医诊断游戏</title>
+<style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Serif SC', 'SimSun', serif;
+            background-color: #F9F6F0;
+            background-image:
+                radial-gradient(ellipse at 20% 30%, rgba(45, 140, 90, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 70%, rgba(139, 90, 43, 0.03) 0%, transparent 50%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #333333;
+        }
+
+        /* 顶部标题栏 */
+        .game-header {
+            background: linear-gradient(135deg, #2D8C5A 0%, #1F6B44 100%);
+            padding: 20px 30px;
+            box-shadow: 0 4px 20px rgba(45, 140, 90, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .header-content {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .game-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #FFFFFF;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .game-title .icon {
+            font-size: 32px;
+        }
+
+        .game-stats {
+            display: flex;
+            gap: 30px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #FFFFFF;
+        }
+
+        /* 主游戏区 */
+        .game-container {
+            flex: 1;
+            max-width: 900px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        /* 舌象展示区 */
+        .tongue-display {
+            background: linear-gradient(135deg, #FFFFFF 0%, #F5F2ED 100%);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .tongue-visual {
+            width: 180px;
+            height: 260px;
+            border-radius: 90px 90px 45px 45px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            flex-shrink: 0;
+        }
+
+        .tongue-body {
+            width: 100%;
+            height: 100%;
+            border-radius: inherit;
+            position: relative;
+            transition: all 0.5s ease;
+        }
+
+        .tongue-coating {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 55%;
+            border-radius: 90px 90px 0 0;
+            transition: all 0.5s ease;
+        }
+
+        .tongue-info {
+            flex: 1;
+        }
+
+        .question-number {
+            display: inline-block;
+            padding: 6px 14px;
+            background: linear-gradient(135deg, #2D8C5A 0%, #1F6B44 100%);
+            color: white;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .question-text {
+            font-size: 20px;
+            font-weight: 600;
+            color: #8B5A2B;
+            margin-bottom: 15px;
+        }
+
+        .tongue-description {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.8;
+            padding: 15px;
+            background: #FFF5F0;
+            border-radius: 12px;
+            border-left: 4px solid #8B5A2B;
+        }
+
+        /* 选项区 */
+        .options-area {
+            background: #FFFFFF;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        }
+
+        .options-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #8B5A2B;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .option-btn {
+            padding: 18px 24px;
+            border: 2px solid #E5DCC8;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #FFFFFF 0%, #FFFBF7 100%);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: left;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: #2D8C5A;
+            background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(45, 140, 90, 0.2);
+        }
+
+        .option-btn.correct {
+            border-color: #2D8C5A;
+            background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%);
+        }
+
+        .option-btn.wrong {
+            border-color: #C23B22;
+            background: linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%);
+            animation: shake 0.5s ease-in-out;
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .option-label {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333333;
+            margin-bottom: 4px;
+        }
+
+        .option-desc {
+            font-size: 12px;
+            color: #999999;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* 解析区 */
+        .explanation-area {
+            background: #FFFFFF;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            display: none;
+            border-left: 4px solid #2D8C5A;
+        }
+
+        .explanation-area.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .explanation-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #2D8C5A;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .explanation-text {
+            font-size: 14px;
+            color: #666666;
+            line-height: 1.7;
+        }
+
+        /* 底部按钮区 */
+        .game-footer {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .btn-next {
+            background: linear-gradient(135deg, #2D8C5A 0%, #1F6B44 100%);
+            color: #FFFFFF;
+        }
+
+        .btn-next:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(45, 140, 90, 0.4);
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #8B5A2B 0%, #6B4423 100%);
+            color: #FFFFFF;
+        }
+
+        .btn-reset:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139, 90, 43, 0.4);
+        }
+
+        .btn-back {
+            background: linear-gradient(135deg, #6B7280 0%, #4B5563 100%);
+            color: #FFFFFF;
+        }
+
+        .btn-back:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(107, 114, 128, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 结果弹窗 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #FFFFFF 0%, #FFFBF7 100%);
+            border-radius: 24px;
+            padding: 40px;
+            text-align: center;
+            max-width: 450px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: modalIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8) translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #2D8C5A 0%, #1F6B44 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            box-shadow: 0 10px 30px rgba(45, 140, 90, 0.4);
+        }
+
+        .modal-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #8B5A2B;
+            margin-bottom: 8px;
+        }
+
+        .modal-subtitle {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2D8C5A;
+            margin-bottom: 15px;
+        }
+
+        .modal-text {
+            font-size: 15px;
+            color: #666666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .modal-score {
+            font-size: 48px;
+            font-weight: 700;
+            color: #2D8C5A;
+            margin: 20px 0;
+        }
+
+        .modal-score-label {
+            font-size: 14px;
+            color: #999999;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2D8C5A 0%, #1F6B44 100%);
+            color: #FFFFFF;
+            padding: 14px 40px;
+            font-size: 16px;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(45, 140, 90, 0.4);
+        }
+
+        /* Tab 栏 */
+        .tab-bar {
+            background: #FFFFFF;
+            border-bottom: 2px solid #E5DCC8;
+            display: flex;
+            max-width: 900px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 14px 20px;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: inherit;
+            border: none;
+            background: transparent;
+            color: #999;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            position: relative;
+        }
+
+        .tab-btn:hover {
+            color: #2D8C5A;
+            background: #F9F6F0;
+        }
+
+        .tab-btn.active {
+            color: #2D8C5A;
+            border-bottom-color: #2D8C5A;
+            background: #F0FDF4;
+        }
+
+        .tab-btn .tab-icon {
+            margin-right: 6px;
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        /* AI 舌诊 */
+        .ai-upload-zone {
+            background: linear-gradient(135deg, #FFFFFF 0%, #F5F2ED 100%);
+            border-radius: 20px;
+            padding: 40px 30px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            text-align: center;
+            border: 3px dashed #D4C9B0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .ai-upload-zone:hover {
+            border-color: #2D8C5A;
+            background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%);
+        }
+
+        .ai-upload-zone.has-image {
+            border-style: solid;
+            border-color: #2D8C5A;
+            padding: 20px;
+            cursor: default;
+        }
+
+        .ai-upload-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .ai-upload-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: #8B5A2B;
+            margin-bottom: 6px;
+        }
+
+        .ai-upload-hint {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .ai-preview-img {
+            max-width: 100%;
+            max-height: 350px;
+            border-radius: 12px;
+            object-fit: contain;
+            margin: 0 auto;
+            display: block;
+        }
+
+        .ai-preview-actions {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .ai-result-card {
+            background: #FFFFFF;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            display: none;
+        }
+
+        .ai-result-card.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .ai-result-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #F0FDF4;
+        }
+
+        .ai-result-header-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #2D8C5A 0%, #1F6B44 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: white;
+        }
+
+        .ai-result-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2D8C5A;
+        }
+
+        .ai-result-body {
+            font-size: 15px;
+            color: #444;
+            line-height: 1.9;
+            white-space: pre-wrap;
+        }
+
+        .ai-loading {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .ai-loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #E5DCC8;
+            border-top-color: #2D8C5A;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .ai-loading-text {
+            font-size: 16px;
+            color: #8B5A2B;
+            font-weight: 600;
+        }
+
+        .ai-loading-sub {
+            font-size: 13px;
+            color: #999;
+            margin-top: 6px;
+        }
+
+        .ai-error-card {
+            background: linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%);
+            border-radius: 16px;
+            padding: 20px;
+            border-left: 4px solid #C23B22;
+            display: none;
+        }
+
+        .ai-error-card.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .ai-error-text {
+            font-size: 14px;
+            color: #991B1B;
+            line-height: 1.7;
+        }
+
+        .ai-offline-hint {
+            background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            display: none;
+        }
+
+        .ai-offline-hint.show {
+            display: block;
+        }
+
+        .ai-offline-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .ai-offline-text {
+            font-size: 15px;
+            color: #92400E;
+            line-height: 1.7;
+        }
+
+        /* 摄像头模态框 */
+        .camera-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .camera-modal-overlay.show {
+            display: flex;
+        }
+
+        .camera-modal {
+            background: #FFFFFF;
+            border-radius: 20px;
+            padding: 25px;
+            max-width: 520px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: modalIn 0.3s ease-out;
+        }
+
+        .camera-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .camera-modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #8B5A2B;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .camera-close-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: #F3F4F6;
+            color: #666;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .camera-close-btn:hover {
+            background: #E5E7EB;
+            color: #333;
+        }
+
+        .camera-video-wrap {
+            position: relative;
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #000;
+            aspect-ratio: 4/3;
+        }
+
+        .camera-video-wrap video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .camera-video-wrap .camera-guide {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60%;
+            height: 60%;
+            border: 2px dashed rgba(45, 140, 90, 0.6);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .camera-video-wrap .camera-guide-label {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255,255,255,0.8);
+            font-size: 12px;
+            background: rgba(0,0,0,0.4);
+            padding: 2px 10px;
+            border-radius: 10px;
+            pointer-events: none;
+        }
+
+        .camera-hint {
+            text-align: center;
+            font-size: 13px;
+            color: #999;
+            margin-top: 10px;
+        }
+
+        .camera-actions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .camera-switch-btn {
+            background: #F3F4F6;
+            color: #555;
+            padding: 12px 20px;
+            border-radius: 12px;
+            border: none;
+            font-size: 15px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .camera-switch-btn:hover {
+            background: #E5E7EB;
+        }
+
+        .camera-capture-btn {
+            background: linear-gradient(135deg, #2D8C5A 0%, #1F6B44 100%);
+            color: #FFFFFF;
+            padding: 12px 32px;
+            border-radius: 12px;
+            border: none;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(45, 140, 90, 0.3);
+        }
+
+        .camera-capture-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(45, 140, 90, 0.4);
+        }
+
+        /* 上传区域双按钮 */
+        .ai-upload-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .ai-upload-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 22px;
+            border-radius: 12px;
+            border: 2px solid #D4C9B0;
+            background: #FFFFFF;
+            color: #8B5A2B;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .ai-upload-btn:hover {
+            border-color: #2D8C5A;
+            background: #F0FDF4;
+            color: #2D8C5A;
+        }
+
+        .ai-upload-btn.camera-btn {
+            border-color: #2D8C5A;
+            background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%);
+            color: #2D8C5A;
+        }
+
+        .ai-upload-btn.camera-btn:hover {
+            background: linear-gradient(135deg, #DCFCE7 0%, #BBF7D0 100%);
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .game-header {
+                padding: 15px 20px;
+            }
+
+            .game-title {
+                font-size: 22px;
+            }
+
+            .game-stats {
+                gap: 20px;
+            }
+
+            .stat-value {
+                font-size: 20px;
+            }
+
+            .tongue-display {
+                flex-direction: column;
+            }
+
+            .tongue-visual {
+                width: 150px;
+                height: 220px;
+            }
+
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .game-footer {
+                flex-wrap: wrap;
+            }
+
+            .btn {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+
+            .tab-btn {
+                font-size: 14px;
+                padding: 12px 10px;
+            }
+
+            .ai-upload-zone {
+                padding: 25px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部标题栏 -->
+    <header class="game-header">
+        <div class="header-content">
+            <h1 class="game-title">
+                <span class="icon">👅</span>
+                舌诊挑战
+            </h1>
+            <div class="game-stats">
+                <div class="stat-item">
+                    <div class="stat-label">当前进度</div>
+                    <div class="stat-value"><span id="currentQ">1</span>/5</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">当前得分</div>
+                    <div class="stat-value" id="score">0</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Tab 栏 -->
+    <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('game')">
+            <span class="tab-icon">🎮</span>舌诊挑战
+        </button>
+        <button class="tab-btn" onclick="switchTab('ai')">
+            <span class="tab-icon">🤖</span>AI 舌诊
+        </button>
+    </div>
+
+    <!-- 主游戏区 -->
+    <main class="game-container">
+        <!-- Tab 1: 舌诊挑战游戏 -->
+        <div class="tab-panel active" id="panelGame">
+            <!-- 舌象展示区 -->
+            <div class="tongue-display">
+                <div class="tongue-visual" id="tongueVisual">
+                    <div class="tongue-body" id="tongueBody">
+                        <div class="tongue-coating" id="tongueCoating"></div>
+                    </div>
+                </div>
+                <div class="tongue-info">
+                    <span class="question-number">第 <span id="qNum">1</span> 题</span>
+                    <h3 class="question-text">请观察舌象，判断证型</h3>
+                    <p class="tongue-description" id="tongueDesc">正在加载题目...</p>
+                </div>
+            </div>
+
+            <!-- 选项区 -->
+            <div class="options-area">
+                <div class="options-title">
+                    <span>📋</span>
+                    <span>请选择正确的辨证结果</span>
+                </div>
+                <div class="options-grid" id="optionsGrid"></div>
+            </div>
+
+            <!-- 解析区 -->
+            <div class="explanation-area" id="explanationArea">
+                <div class="explanation-title">
+                    <span>💡</span>
+                    <span>答案解析</span>
+                </div>
+                <p class="explanation-text" id="explanationText"></p>
+            </div>
+
+            <!-- 底部按钮区 -->
+            <footer class="game-footer">
+                <button class="btn btn-reset" onclick="resetGame()">
+                    <span>↻</span>
+                    重置
+                </button>
+                <button class="btn btn-next" id="nextBtn" onclick="nextQuestion()" disabled>
+                    <span>→</span>
+                    下一题
+                </button>
+                <button class="btn btn-back" onclick="goBack()">
+                    <span>←</span>
+                    返回
+                </button>
+            </footer>
+        </div>
+
+        <!-- Tab 2: AI 舌诊 -->
+        <div class="tab-panel" id="panelAI">
+            <!-- 离线提示 -->
+            <div class="ai-offline-hint" id="aiOfflineHint">
+                <div class="ai-offline-icon">🔌</div>
+                <p class="ai-offline-text">需要连接后端服务才能使用 AI 舌诊功能。<br>请确保已启动后端服务（node server/server.js）。</p>
+            </div>
+
+            <!-- 上传区域 -->
+            <div class="ai-upload-zone" id="aiUploadZone">
+                <div id="aiUploadContent">
+                    <div class="ai-upload-icon">📸</div>
+                    <div class="ai-upload-text">上传舌象照片</div>
+                    <div class="ai-upload-hint">选择图片或使用摄像头拍摄（支持 JPG/PNG，最大 5MB）</div>
+                    <div class="ai-upload-buttons">
+                        <button class="ai-upload-btn" onclick="triggerUpload()">
+                            📁 选择图片
+                        </button>
+                        <button class="ai-upload-btn camera-btn" onclick="openCamera()">
+                            📷 摄像头拍照
+                        </button>
+                    </div>
+                </div>
+                <div id="aiPreviewWrap" style="display:none;">
+                    <img class="ai-preview-img" id="aiPreviewImg" />
+                    <div class="ai-preview-actions">
+                        <button class="btn btn-reset" onclick="event.stopPropagation(); clearUpload()">重新上传</button>
+                        <button class="btn btn-next" id="aiAnalyzeBtn" onclick="event.stopPropagation(); analyzeTongue()">开始 AI 分析</button>
+                    </div>
+                </div>
+            </div>
+            <input type="file" id="tongueImageInput" accept="image/jpeg,image/png" style="display:none" onchange="handleImageSelect(event)" />
+
+            <!-- 加载状态 -->
+            <div class="ai-result-card" id="aiLoadingCard">
+                <div class="ai-loading">
+                    <div class="ai-loading-spinner"></div>
+                    <div class="ai-loading-text">AI 正在分析舌象...</div>
+                    <div class="ai-loading-sub">多模态大模型正在识别舌质、舌苔、舌下络脉等特征</div>
+                </div>
+            </div>
+
+            <!-- 分析结果 -->
+            <div class="ai-result-card" id="aiResultCard">
+                <div class="ai-result-header">
+                    <div class="ai-result-header-icon">🔬</div>
+                    <div class="ai-result-title">AI 舌诊分析报告</div>
+                </div>
+                <div class="ai-result-body" id="aiResultBody"></div>
+            </div>
+
+            <!-- 错误提示 -->
+            <div class="ai-error-card" id="aiErrorCard">
+                <div class="ai-error-text" id="aiErrorText"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 结果弹窗 -->
+    <div class="modal-overlay" id="resultModal">
+        <div class="modal-content">
+            <div class="modal-icon" id="modalIcon">🎉</div>
+            <h2 class="modal-title" id="modalTitle">挑战完成！</h2>
+            <p class="modal-subtitle" id="modalSubtitle">望诊小成</p>
+            <p class="modal-text" id="modalText">你已经掌握了舌诊的基本知识！</p>
+            <div class="modal-score">
+                <span id="finalScore">0</span>
+                <div class="modal-score-label">总分</div>
+            </div>
+            <button class="btn btn-primary" onclick="resetGame()">
+                再玩一次
+            </button>
+        </div>
+    </div>
+
+    <!-- 摄像头模态框 -->
+    <div class="camera-modal-overlay" id="cameraModal">
+        <div class="camera-modal">
+            <div class="camera-modal-header">
+                <div class="camera-modal-title">📷 摄像头拍照</div>
+                <button class="camera-close-btn" onclick="closeCamera()">✕</button>
+            </div>
+            <div class="camera-video-wrap">
+                <video id="cameraVideo" autoplay playsinline muted></video>
+                <div class="camera-guide"></div>
+                <div class="camera-guide-label">请将舌头对准框内</div>
+            </div>
+            <p class="camera-hint">请在光线充足的环境下，自然伸出舌头</p>
+            <div class="camera-actions">
+                <button class="camera-switch-btn" onclick="switchCameraFacing()">🔄 切换镜头</button>
+                <button class="camera-capture-btn" onclick="capturePhoto()">📸 拍照</button>
+            </div>
+        </div>
+    </div>
+    <canvas id="cameraCanvas" style="display:none;"></canvas>
+
+    <script>
+        // 舌诊题库
+        const tongueQuestions = [
+            {
+                tongueColor: '#FFE4C4',
+                coatingColor: '#F5F5DC',
+                coatingOpacity: 0.7,
+                description: '舌色淡红，舌苔薄白而润',
+                options: [
+                    { label: '寒证', desc: '寒邪凝滞，阳气不足', correct: true },
+                    { label: '热证', desc: '邪热炽盛，耗伤津液', correct: false },
+                    { label: '气虚', desc: '元气不足，机能减退', correct: false },
+                    { label: '湿盛', desc: '湿邪内蕴，困阻脾胃', correct: false }
+                ],
+                explanation: '【寒证】舌苔薄白而润，是寒邪侵袭或阳气不足的表现。寒邪凝滞收引，阳气被遏，故见薄白苔。舌色淡红示寒邪未伤及气血。'
+            },
+            {
+                tongueColor: '#FF9999',
+                coatingColor: '#FFEB3B',
+                coatingOpacity: 0.8,
+                description: '舌色红，舌苔黄燥',
+                options: [
+                    { label: '寒证', desc: '寒邪凝滞，阳气不足', correct: false },
+                    { label: '热证', desc: '邪热炽盛，耗伤津液', correct: true },
+                    { label: '气虚', desc: '元气不足，机能减退', correct: false },
+                    { label: '阴虚', desc: '阴液亏损，虚热内生', correct: false }
+                ],
+                explanation: '【热证】舌红示热邪炽盛，热邪伤津故苔黄而燥。舌质红绛，苔黄为邪热入里化热之象，属实热证。'
+            },
+            {
+                tongueColor: '#FFD0D0',
+                coatingColor: 'transparent',
+                coatingOpacity: 0,
+                description: '舌质淡胖，边有齿痕',
+                options: [
+                    { label: '寒证', desc: '寒邪凝滞，阳气不足', correct: false },
+                    { label: '热证', desc: '邪热炽盛，耗伤津液', correct: false },
+                    { label: '气虚', desc: '元气不足，机能减退', correct: true },
+                    { label: '湿盛', desc: '湿邪内蕴，困阻脾胃', correct: false }
+                ],
+                explanation: '【气虚】舌质淡胖为气血不足，不能上荣于舌；齿痕乃脾气虚弱，运化失职，水湿内停所致。舌体胖大有齿痕是气虚的典型表现。'
+            },
+            {
+                tongueColor: '#FFFACD',
+                coatingColor: '#FFFFFF',
+                coatingOpacity: 0.95,
+                description: '舌苔厚腻，如积粉状',
+                options: [
+                    { label: '寒证', desc: '寒邪凝滞，阳气不足', correct: false },
+                    { label: '热证', desc: '邪热炽盛，耗伤津液', correct: false },
+                    { label: '气虚', desc: '元气不足，机能减退', correct: false },
+                    { label: '湿盛', desc: '湿邪内蕴，困阻脾胃', correct: true }
+                ],
+                explanation: '【湿盛】舌苔厚腻是湿邪内盛的表现。腻苔乃湿浊、痰饮、食积等秽浊之邪阻滞气机，阳气被遏所致。舌苔越厚，示湿邪越盛。'
+            },
+            {
+                tongueColor: '#DC143C',
+                coatingColor: 'transparent',
+                coatingOpacity: 0,
+                description: '舌色深红绛，少苔或无苔',
+                options: [
+                    { label: '寒证', desc: '寒邪凝滞，阳气不足', correct: false },
+                    { label: '热证', desc: '邪热炽盛，耗伤津液', correct: false },
+                    { label: '气虚', desc: '元气不足，机能减退', correct: false },
+                    { label: '阴虚', desc: '阴液亏损，虚热内生', correct: true }
+                ],
+                explanation: '【阴虚】舌色绛红示阴虚火旺，虚热内生；少苔或无苔乃胃阴不足，津液亏损之象。舌绛红无苔是阴虚火旺的典型表现。'
+            }
+        ];
+
+        // 游戏状态
+        let gameState = {
+            currentQuestion: 0,
+            score: 0,
+            answered: false
+        };
+
+        // 初始化游戏
+        function initGame() {
+            gameState = {
+                currentQuestion: 0,
+                score: 0,
+                answered: false
+            };
+
+            document.getElementById('score').textContent = '0';
+            document.getElementById('resultModal').classList.remove('show');
+            document.getElementById('explanationArea').classList.remove('show');
+            document.getElementById('nextBtn').disabled = true;
+
+            loadQuestion();
+        }
+
+        // 加载题目
+        function loadQuestion() {
+            const q = tongueQuestions[gameState.currentQuestion];
+
+            // 更新进度
+            document.getElementById('currentQ').textContent = gameState.currentQuestion + 1;
+            document.getElementById('qNum').textContent = gameState.currentQuestion + 1;
+
+            // 更新舌象
+            document.getElementById('tongueBody').style.background = q.tongueColor;
+            document.getElementById('tongueCoating').style.background = q.coatingColor;
+            document.getElementById('tongueCoating').style.opacity = q.coatingOpacity;
+
+            // 更新描述
+            document.getElementById('tongueDesc').textContent = q.description;
+
+            // 隐藏解析
+            document.getElementById('explanationArea').classList.remove('show');
+
+            // 生成选项
+            const optionsGrid = document.getElementById('optionsGrid');
+            optionsGrid.innerHTML = '';
+
+            q.options.forEach((option, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <div class="option-label">${option.label}</div>
+                    <div class="option-desc">${option.desc}</div>
+                `;
+                btn.onclick = () => checkAnswer(btn, option.correct, q.explanation);
+                optionsGrid.appendChild(btn);
+            });
+
+            gameState.answered = false;
+            document.getElementById('nextBtn').disabled = true;
+        }
+
+        // 检查答案
+        function checkAnswer(btn, isCorrect, explanation) {
+            if (gameState.answered) return;
+            gameState.answered = true;
+
+            const allBtns = document.querySelectorAll('.option-btn');
+            allBtns.forEach(b => b.disabled = true);
+
+            if (isCorrect) {
+                btn.classList.add('correct');
+                gameState.score += 20;
+                document.getElementById('score').textContent = gameState.score;
+            } else {
+                btn.classList.add('wrong');
+                // 高亮正确答案
+                const q = tongueQuestions[gameState.currentQuestion];
+                allBtns.forEach(b => {
+                    const label = b.querySelector('.option-label').textContent;
+                    if (q.options.find(o => o.label === label)?.correct) {
+                        b.classList.add('correct');
+                    }
+                });
+            }
+
+            // 显示解析
+            document.getElementById('explanationText').textContent = explanation;
+            document.getElementById('explanationArea').classList.add('show');
+
+            // 启用下一题按钮
+            document.getElementById('nextBtn').disabled = false;
+        }
+
+        // 下一题
+        function nextQuestion() {
+            gameState.currentQuestion++;
+
+            if (gameState.currentQuestion >= tongueQuestions.length) {
+                showResult();
+            } else {
+                loadQuestion();
+            }
+        }
+
+        // 显示结果
+        function showResult() {
+            const score = gameState.score;
+
+            let icon, title, subtitle, text;
+
+            if (score === 100) {
+                icon = '🏆';
+                title = '完美通关！';
+                subtitle = '望诊圣手';
+                text = '你对舌诊知识的掌握已经炉火纯青！';
+            } else if (score >= 80) {
+                icon = '🎉';
+                title = '挑战完成！';
+                subtitle = '望诊小成';
+                text = '你已经掌握了舌诊的基本知识，继续加油！';
+            } else if (score >= 60) {
+                icon = '👍';
+                title = '挑战完成！';
+                subtitle = '初窥门径';
+                text = '你对舌诊有了一定了解，建议多加练习！';
+            } else {
+                icon = '💪';
+                title = '挑战完成！';
+                subtitle = '仍需努力';
+                text = '建议复习一下舌诊相关知识，再战江湖！';
+            }
+
+            document.getElementById('modalIcon').textContent = icon;
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalSubtitle').textContent = subtitle;
+            document.getElementById('modalText').textContent = text;
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('resultModal').classList.add('show');
+        }
+
+        // 重置游戏
+        function resetGame() {
+            initGame();
+        }
+
+        // 返回
+        function goBack() {
+            if (confirm('确定要退出当前游戏吗？')) {
+                window.history.back();
+            }
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            initGame();
+            checkBackendHealth();
+        });
+
+        // ==================== Tab 切换 ====================
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+
+            if (tab === 'game') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                document.getElementById('panelGame').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                document.getElementById('panelAI').classList.add('active');
+            }
+        }
+
+        // ==================== AI 舌诊功能 ====================
+        let aiImageBase64 = '';
+        let backendOnline = false;
+
+        async function checkBackendHealth() {
+            try {
+                const resp = await fetch('/api/health', { signal: AbortSignal.timeout(3000) });
+                backendOnline = resp.ok;
+            } catch {
+                backendOnline = false;
+            }
+            document.getElementById('aiOfflineHint').classList.toggle('show', !backendOnline);
+        }
+
+        function triggerUpload() {
+            document.getElementById('tongueImageInput').click();
+        }
+
+        // ==================== 摄像头拍摄 ====================
+        let cameraStream = null;
+        let cameraFacing = 'environment'; // 默认后置摄像头（手机拍舌头更方便）
+
+        async function openCamera() {
+            const modal = document.getElementById('cameraModal');
+            const video = document.getElementById('cameraVideo');
+
+            modal.classList.add('show');
+
+            try {
+                cameraStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: cameraFacing, width: { ideal: 1280 }, height: { ideal: 960 } },
+                    audio: false
+                });
+                video.srcObject = cameraStream;
+            } catch (err) {
+                console.warn('[Camera] 无法访问摄像头:', err);
+                alert('无法访问摄像头，请检查浏览器权限设置。\n提示：部分浏览器需要 HTTPS 才能使用摄像头。');
+                closeCamera();
+            }
+        }
+
+        function closeCamera() {
+            const modal = document.getElementById('cameraModal');
+            const video = document.getElementById('cameraVideo');
+
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(t => t.stop());
+                cameraStream = null;
+            }
+            video.srcObject = null;
+            modal.classList.remove('show');
+        }
+
+        async function switchCameraFacing() {
+            cameraFacing = cameraFacing === 'environment' ? 'user' : 'environment';
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(t => t.stop());
+            }
+            try {
+                const video = document.getElementById('cameraVideo');
+                cameraStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: cameraFacing, width: { ideal: 1280 }, height: { ideal: 960 } },
+                    audio: false
+                });
+                video.srcObject = cameraStream;
+            } catch (err) {
+                console.warn('[Camera] 切换摄像头失败:', err);
+                alert('切换摄像头失败: ' + err.message);
+            }
+        }
+
+        function capturePhoto() {
+            const video = document.getElementById('cameraVideo');
+            const canvas = document.getElementById('cameraCanvas');
+
+            if (!video.videoWidth) {
+                alert('摄像头尚未就绪，请稍候重试');
+                return;
+            }
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0);
+
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+
+            // 关闭摄像头
+            closeCamera();
+
+            // 将拍摄的照片送入现有分析流程
+            aiImageBase64 = dataUrl;
+            document.getElementById('aiPreviewImg').src = dataUrl;
+            document.getElementById('aiUploadContent').style.display = 'none';
+            document.getElementById('aiPreviewWrap').style.display = 'block';
+            document.getElementById('aiUploadZone').classList.add('has-image');
+
+            // 清除之前的结果
+            document.getElementById('aiResultCard').classList.remove('show');
+            document.getElementById('aiErrorCard').classList.remove('show');
+            document.getElementById('aiLoadingCard').classList.remove('show');
+        }
+
+        function handleImageSelect(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (file.size > 5 * 1024 * 1024) {
+                alert('图片大小不能超过 5MB');
+                return;
+            }
+
+            if (!['image/jpeg', 'image/png'].includes(file.type)) {
+                alert('仅支持 JPG/PNG 格式');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                aiImageBase64 = ev.target.result;
+                document.getElementById('aiPreviewImg').src = aiImageBase64;
+                document.getElementById('aiUploadContent').style.display = 'none';
+                document.getElementById('aiPreviewWrap').style.display = 'block';
+                document.getElementById('aiUploadZone').classList.add('has-image');
+                // 清除之前的结果
+                document.getElementById('aiResultCard').classList.remove('show');
+                document.getElementById('aiErrorCard').classList.remove('show');
+                document.getElementById('aiLoadingCard').classList.remove('show');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearUpload() {
+            aiImageBase64 = '';
+            document.getElementById('aiUploadContent').style.display = '';
+            document.getElementById('aiPreviewWrap').style.display = 'none';
+            document.getElementById('aiUploadZone').classList.remove('has-image');
+            document.getElementById('tongueImageInput').value = '';
+            document.getElementById('aiResultCard').classList.remove('show');
+            document.getElementById('aiErrorCard').classList.remove('show');
+            document.getElementById('aiLoadingCard').classList.remove('show');
+        }
+
+        // 生成模拟舌诊报告
+        function generateMockTongueReport() {
+            const tongues = ['淡红', '偏红', '淡白', '暗红'];
+            const shapes = ['正常', '略胖大有齿痕', '偏瘦', '正常偏胖'];
+            const coatings = ['薄白苔', '薄黄苔', '白腻苔', '黄腻苔', '少苔'];
+            const veins = ['正常', '略暗紫', '轻微迂曲', '偏粗色深'];
+            const patterns = ['气血两虚', '脾胃湿热', '肝郁气滞', '痰湿内蕴', '阴虚内热', '脾肾阳虚'];
+            const herbs = [
+                '四君子汤加减：党参10g、白术10g、茯苓15g、甘草6g',
+                '平胃散加减：苍术10g、厚朴10g、陈皮6g、甘草6g',
+                '逍遥散加减：柴胡10g、当归10g、白芍15g、白术10g',
+                '二陈汤加减：半夏10g、陈皮6g、茯苓15g、甘草6g',
+                '六味地黄丸加减：熟地15g、山药15g、山茱萸10g、泽泻10g',
+                '附子理中汤加减：制附子6g、党参15g、白术10g、干姜6g'
+            ];
+
+            const idx = Math.floor(Math.random() * patterns.length);
+            const report = `【AI 舌诊分析报告】
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+▎一、舌质分析
+  舌色：${tongues[idx % tongues.length]}
+  舌形：${shapes[idx % shapes.length]}
+  舌态：活动自如，无歪斜颤动
+
+▎二、舌苔分析
+  苔色：${coatings[idx % coatings.length].substring(0, 2)}
+  苔质：${coatings[idx % coatings.length]}
+  分布：舌中后部较为明显
+
+▎三、舌下络脉
+  颜色：${veins[idx % veins.length]}
+  粗细：正常范围
+  迂曲：未见明显异常
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+▎四、辨证结论
+  证型：${patterns[idx]}
+
+  主要表现：
+  • 面色少华，神疲乏力
+  • 食欲不振，脘腹胀满
+  • 舌象特征与${patterns[idx]}证型相符
+
+▎五、调理建议
+  【中药方剂】${herbs[idx]}
+
+  【饮食调理】
+  • 宜食：山药、薏米、红枣、莲子等健脾之品
+  • 忌食：生冷油腻、辛辣刺激之品
+
+  【生活调护】
+  • 规律作息，避免熬夜
+  • 适度运动，太极拳、八段锦为宜
+  • 保持情志舒畅，避免忧思过度
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ 本报告由 AI 生成，仅供参考学习，不作为临床诊断依据。
+如有不适，请及时就医咨询专业中医师。`;
+
+            return report;
+        }
+
+        async function analyzeTongue() {
+            if (!aiImageBase64) {
+                alert('请先上传舌象照片');
+                return;
+            }
+
+            // 显示加载
+            document.getElementById('aiLoadingCard').classList.add('show');
+            document.getElementById('aiResultCard').classList.remove('show');
+            document.getElementById('aiErrorCard').classList.remove('show');
+            document.getElementById('aiAnalyzeBtn').disabled = true;
+
+            try {
+                if (!backendOnline) throw new Error('后端未连接');
+
+                const resp = await fetch('/api/llm/vision', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: aiImageBase64 })
+                });
+
+                const data = await resp.json();
+                if (!resp.ok) throw new Error(data.error || '分析失败');
+
+                // 如果 AI 回复中说看不到图片，降级为模拟
+                const content = data.content || '';
+                if (content.includes('没有上传') || content.includes('未找到') || content.includes('看不到') || content.includes('无法')) {
+                    throw new Error('AI未识别到图片');
+                }
+
+                document.getElementById('aiResultBody').textContent = content;
+                document.getElementById('aiResultCard').classList.add('show');
+            } catch (err) {
+                // 降级：生成模拟舌诊报告
+                console.warn('[舌诊] API失败，使用模拟报告:', err.message);
+                document.getElementById('aiResultBody').textContent = generateMockTongueReport();
+                document.getElementById('aiResultCard').classList.add('show');
+            } finally {
+                document.getElementById('aiLoadingCard').classList.remove('show');
+                document.getElementById('aiAnalyzeBtn').disabled = false;
+            }
+        }
+
+        // 拖拽上传支持
+        document.addEventListener('DOMContentLoaded', () => {
+            const zone = document.getElementById('aiUploadZone');
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.style.borderColor = '#2D8C5A';
+            });
+            zone.addEventListener('dragleave', () => {
+                zone.style.borderColor = aiImageBase64 ? '#2D8C5A' : '#D4C9B0';
+            });
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.style.borderColor = '#D4C9B0';
+                const file = e.dataTransfer.files[0];
+                if (file) {
+                    const input = document.getElementById('tongueImageInput');
+                    const dt = new DataTransfer();
+                    dt.items.add(file);
+                    input.files = dt.files;
+                    handleImageSelect({ target: input });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

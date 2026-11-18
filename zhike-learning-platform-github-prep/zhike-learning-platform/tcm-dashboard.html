@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>智课精灵 - 项目看板与智能体广场</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.7/dist/iconify-icon.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', 'Noto Serif SC', serif;
+            background-color: #F9F6F0;
+        }
+        .tcm-primary { color: #8B5A2B; }
+        .tcm-accent { color: #C23B22; }
+        .bg-tcm-primary { background-color: #8B5A2B; }
+        .bg-tcm-accent { background-color: #C23B22; }
+        .bg-tcm-light { background-color: #F9F6F0; }
+        .border-tcm-primary { border-color: #8B5A2B; }
+        .hover-tcm:hover { background-color: #8B5A2B; color: white; }
+        .agent-card { transition: all 0.3s ease; }
+        .agent-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(139, 90, 43, 0.15); }
+        .project-card { transition: all 0.3s ease; }
+        .project-card:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08); }
+        .status-online { animation: pulse 2s infinite; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #E5DCC8; border-radius: 10px; }
+        .ink-border { border-image: linear-gradient(135deg, #8B5A2B 0%, #C23B22 100%) 1; }
+    </style>
+</head>
+<body class="min-h-screen">
+<!-- 顶部导航栏 -->
+<nav class="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-amber-100 shadow-sm">
+<div class="max-w-[1440px] mx-auto px-3 md:px-6 h-14 md:h-16 flex items-center justify-between">
+<div class="flex items-center gap-4 md:gap-8">
+<div class="flex items-center gap-2 md:gap-3">
+<div class="w-8 h-8 md:w-10 md:h-10 bg-tcm-primary rounded-lg flex items-center justify-center">
+<iconify-icon class="text-white text-lg md:text-2xl" icon="solar:body-bold"></iconify-icon>
+</div>
+<div>
+<span class="font-bold text-base md:text-xl tracking-tight" style="color: #8B5A2B;">智课精灵</span>
+<span class="text-xs text-slate-400 ml-1 hidden md:inline">智能教学辅助系统</span>
+</div>
+</div>
+<div class="hidden lg:flex items-center gap-1 bg-amber-50 p-1 rounded-lg">
+<a class="px-4 py-2 rounded-md bg-white shadow-sm text-sm font-medium tcm-primary" href="tcm-dashboard.html">
+<iconify-icon icon="solar:widget-bold" class="mr-1"></iconify-icon>看板
+                    </a>
+<a class="px-4 py-2 rounded-md text-sm font-medium text-slate-500 hover:text-tcm-primary" href="tcm-workspace.html">
+<iconify-icon icon="solar:keyboard-bold" class="mr-1"></iconify-icon>工作台
+                    </a>
+<a class="px-4 py-2 rounded-md text-sm font-medium text-slate-500 hover:text-tcm-primary" href="tcm-ppt.html">
+<iconify-icon icon="solar:presentation-graph-bold" class="mr-1"></iconify-icon>课件
+                    </a>
+<a class="px-4 py-2 rounded-md text-sm font-medium text-slate-500 hover:text-tcm-primary" href="tcm-lesson.html">
+<iconify-icon icon="solar:document-text-bold" class="mr-1"></iconify-icon>教案
+                    </a>
+<a class="px-4 py-2 rounded-md text-sm font-medium text-slate-500 hover:text-tcm-primary" href="tcm-interaction.html">
+<iconify-icon icon="solar:gamepad-bold" class="mr-1"></iconify-icon>互动
+                    </a>
+<a class="px-4 py-2 rounded-md text-sm font-medium text-slate-500 hover:text-tcm-primary" href="tcm-rag.html">
+<iconify-icon icon="solar:database-bold" class="mr-1"></iconify-icon>知识库
+                    </a>
+</div>
+</div>
+<div class="flex items-center gap-3 md:gap-6">
+<div class="text-right hidden md:block">
+<p class="text-xs text-slate-400">当前学期</p>
+<p class="text-sm font-medium tcm-primary">2026春季</p>
+</div>
+<div class="h-8 w-px bg-amber-200 hidden md:block"></div>
+<div class="flex items-center gap-3 md:gap-4">
+<iconify-icon class="text-lg md:text-xl text-slate-400 hover:text-tcm-primary cursor-pointer" icon="solar:magnifer-linear"></iconify-icon>
+<iconify-icon class="text-lg md:text-xl text-slate-400 hover:text-tcm-primary cursor-pointer hidden sm:block" icon="solar:bell-linear"></iconify-icon>
+<div id="userArea" class="flex items-center gap-2">
+<div class="w-8 h-8 md:w-9 md:h-9 rounded-full bg-amber-100 flex items-center justify-center border-2 border-amber-200 cursor-pointer" id="userAvatar" onclick="toggleUserMenu()">
+<span class="text-xs md:text-sm font-medium tcm-primary" id="avatarText">李</span>
+</div>
+<div id="userMenu" class="hidden absolute top-12 right-4 bg-white rounded-lg shadow-lg border border-amber-100 py-2 min-w-[140px] z-50">
+<div class="px-4 py-2 border-b border-amber-50">
+<p class="text-sm font-medium tcm-primary" id="menuUserName">未登录</p>
+<p class="text-xs text-slate-400" id="menuUserRole"></p>
+</div>
+<a href="tcm-dashboard.html" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-600 hover:bg-amber-50"><iconify-icon icon="solar:widget-linear" class="text-base"></iconify-icon>看板</a>
+<a href="tcm-workspace.html" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-600 hover:bg-amber-50"><iconify-icon icon="solar:keyboard-linear" class="text-base"></iconify-icon>工作台</a>
+<a id="adminLink" href="tcm-admin.html" style="display:none" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-600 hover:bg-amber-50"><iconify-icon icon="solar:shield-keyhole-linear" class="text-base"></iconify-icon>管理后台</a>
+<div class="border-t border-amber-50 mt-1 pt-1">
+<button onclick="doLogout()" class="flex items-center gap-2 px-4 py-2 text-sm text-red-500 hover:bg-red-50 w-full text-left"><iconify-icon icon="solar:logout-2-linear" class="text-base"></iconify-icon>退出登录</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- 手机端底部导航 -->
+<div class="lg:hidden border-t border-amber-100 bg-white/95 backdrop-blur-sm fixed bottom-0 left-0 right-0 z-50 flex justify-around py-2 px-1">
+<a class="flex flex-col items-center gap-0.5 px-2 py-1 tcm-primary" href="tcm-dashboard.html"><iconify-icon icon="solar:widget-bold" class="text-lg"></iconify-icon><span class="text-[10px]">看板</span></a>
+<a class="flex flex-col items-center gap-0.5 px-2 py-1 text-slate-400" href="tcm-workspace.html"><iconify-icon icon="solar:keyboard-bold" class="text-lg"></iconify-icon><span class="text-[10px]">工作台</span></a>
+<a class="flex flex-col items-center gap-0.5 px-2 py-1 text-slate-400" href="tcm-ppt.html"><iconify-icon icon="solar:presentation-graph-bold" class="text-lg"></iconify-icon><span class="text-[10px]">课件</span></a>
+<a class="flex flex-col items-center gap-0.5 px-2 py-1 text-slate-400" href="tcm-lesson.html"><iconify-icon icon="solar:document-text-bold" class="text-lg"></iconify-icon><span class="text-[10px]">教案</span></a>
+<a class="flex flex-col items-center gap-0.5 px-2 py-1 text-slate-400" href="tcm-game-hub.html"><iconify-icon icon="solar:gamepad-bold" class="text-lg"></iconify-icon><span class="text-[10px]">互动</span></a>
+<a class="flex flex-col items-center gap-0.5 px-2 py-1 text-slate-400" href="tcm-rag.html"><iconify-icon icon="solar:database-bold" class="text-lg"></iconify-icon><span class="text-[10px]">知识库</span></a>
+</div>
+</nav>
+
+<!-- 主内容区 -->
+<main class="max-w-[1440px] mx-auto px-3 md:px-6 py-4 md:py-8 pb-24 lg:pb-8">
+<!-- 欢迎区域 -->
+<div class="mb-4 md:mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3">
+<div>
+<h1 class="text-xl md:text-3xl font-bold" style="color: #333333;">下午好，李教授</h1>
+<p class="mt-1 md:mt-2 text-sm md:text-base text-slate-500">您有 3 个正在进行的项目和 5 个待处理的智能体任务</p>
+</div>
+<div class="flex gap-3 md:gap-4">
+<button class="px-4 md:px-6 py-2 md:py-3 text-sm md:text-base bg-tcm-accent text-white rounded-xl font-medium hover:opacity-90 transition-all flex items-center gap-2 shadow-lg">
+<iconify-icon icon="solar:add-circle-bold"></iconify-icon>
+                    创建新项目
+                </button>
+<button class="px-4 md:px-6 py-2 md:py-3 text-sm md:text-base bg-white border-2 border-tcm-primary text-tcm-primary rounded-xl font-medium hover:bg-tcm-primary hover:text-white transition-all flex items-center gap-2 hidden sm:flex">
+<iconify-icon icon="solar:user-plus-bold"></iconify-icon>
+                    邀请协作
+                </button>
+<a id="adminLink" href="tcm-admin.html" class="px-4 md:px-6 py-2 md:py-3 text-sm md:text-base bg-tcm-primary text-white rounded-xl font-medium hover:opacity-90 transition-all items-center gap-2 hidden" style="display:none;">
+<iconify-icon icon="solar:shield-check-bold"></iconify-icon>
+                    管理后台
+                </a>
+</div>
+</div>
+
+<!-- 数据概览卡片 -->
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-6 mb-4 md:mb-8">
+<div class="bg-white rounded-2xl p-6 shadow-sm border border-amber-100">
+<div class="flex items-center justify-between mb-4">
+<div class="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center">
+<iconify-icon class="text-2xl tcm-primary" icon="solar:document-bold"></iconify-icon>
+</div>
+<span id="statProjectsBadge" class="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">-</span>
+</div>
+<p class="text-slate-500 text-sm">教学项目</p>
+<p class="text-3xl font-bold mt-1" style="color: #333333;"><span id="statProjects">-</span> <span class="text-base text-slate-400">个</span></p>
+</div>
+<div class="bg-white rounded-2xl p-6 shadow-sm border border-amber-100">
+<div class="flex items-center justify-between mb-4">
+<div class="w-12 h-12 bg-rose-50 rounded-xl flex items-center justify-center">
+<iconify-icon class="text-2xl text-rose-500" icon="solar:users-group-rounded-bold"></iconify-icon>
+</div>
+<span id="statUsersBadge" class="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">-</span>
+</div>
+<p class="text-slate-500 text-sm">注册用户</p>
+<p class="text-3xl font-bold mt-1" style="color: #333333;"><span id="statUsers">-</span> <span class="text-base text-slate-400">人</span></p>
+</div>
+<div class="bg-white rounded-2xl p-6 shadow-sm border border-amber-100">
+<div class="flex items-center justify-between mb-4">
+<div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center">
+<iconify-icon class="text-2xl text-emerald-500" icon="solar:clock-circle-bold"></iconify-icon>
+</div>
+<span id="statTodayBadge" class="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-1 rounded-full">今日</span>
+</div>
+<p class="text-slate-500 text-sm">今日生成</p>
+<p class="text-3xl font-bold mt-1" style="color: #333333;"><span id="statToday">-</span> <span class="text-base text-slate-400">次</span></p>
+</div>
+<div class="bg-white rounded-2xl p-6 shadow-sm border border-amber-100">
+<div class="flex items-center justify-between mb-4">
+<div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
+<iconify-icon class="text-2xl text-blue-500" icon="solar:star-bold"></iconify-icon>
+</div>
+<span id="statGenBadge" class="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">累计</span>
+</div>
+<p class="text-slate-500 text-sm">AI生成总次数</p>
+<p class="text-3xl font-bold mt-1" style="color: #333333;"><span id="statGen">-</span> <span class="text-base text-slate-400">次</span></p>
+</div>
+<div class="bg-white rounded-2xl p-6 shadow-sm border border-amber-100">
+<div class="flex items-center justify-between mb-4">
+<div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center">
+<iconify-icon class="text-2xl text-purple-500" icon="solar:upload-bold"></iconify-icon>
+</div>
+<span id="statUploadBadge" class="text-xs font-medium text-purple-600 bg-purple-50 px-2 py-1 rounded-full">文件</span>
+</div>
+<p class="text-slate-500 text-sm">上传文件</p>
+<p class="text-3xl font-bold mt-1" style="color: #333333;"><span id="statUpload">-</span> <span class="text-base text-slate-400">个</span></p>
+</div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+<!-- 左侧：项目列表 -->
+<div class="lg:col-span-2">
+<div class="flex items-center justify-between mb-6">
+<h2 class="text-xl font-bold" style="color: #333333;">活跃项目</h2>
+<div class="flex gap-2">
+<button onclick="loadProjects('all')" class="px-4 py-2 text-sm bg-white border border-amber-200 rounded-lg text-slate-600 hover:border-tcm-primary hover:text-tcm-primary">全部</button>
+<button onclick="loadProjects('active')" class="px-4 py-2 text-sm bg-tcm-primary text-white rounded-lg">进行中</button>
+<button onclick="loadProjects('completed')" class="px-4 py-2 text-sm bg-white border border-amber-200 rounded-lg text-slate-600 hover:border-tcm-primary hover:text-tcm-primary">已完成</button>
+</div>
+</div>
+<div id="projectGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+<!-- 动态加载 -->
+</div>
+</div>
+
+<!-- 右侧：智能体广场 -->
+<div class="col-span-1">
+<div class="flex items-center justify-between mb-6">
+<h2 class="text-xl font-bold" style="color: #333333;">智能体广场</h2>
+<button class="text-sm tcm-primary hover:underline flex items-center gap-1">
+<iconify-icon icon="solar:add-circle-bold"></iconify-icon>
+                    添加智能体
+                </button>
+</div>
+<div class="space-y-4">
+<!-- 智能体卡片 1 -->
+<div class="agent-card bg-white rounded-2xl p-5 shadow-sm border border-amber-100">
+<div class="flex items-start gap-4">
+<div class="w-14 h-14 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center flex-shrink-0">
+<iconify-icon class="text-white text-2xl" icon="solar:book-bookmark-bold"></iconify-icon>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between mb-1">
+<h3 class="font-bold" style="color: #333333;">经方专家</h3>
+<span class="w-2.5 h-2.5 rounded-full bg-green-500 status-online"></span>
+</div>
+<p class="text-xs text-slate-500 mb-2">经典文献检索与方剂解析</p>
+<div class="flex items-center gap-2 mb-2">
+<span class="text-[10px] px-2 py-0.5 bg-amber-50 text-amber-600 rounded">伤寒论</span>
+<span class="text-[10px] px-2 py-0.5 bg-rose-50 text-rose-600 rounded">金匮要略</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-xs text-slate-400">已处理 128 个任务</span>
+<span class="text-xs text-green-600">在线</span>
+</div>
+</div>
+</div>
+</div>
+
+<!-- 智能体卡片 2 -->
+<div class="agent-card bg-white rounded-2xl p-5 shadow-sm border border-amber-100">
+<div class="flex items-start gap-4">
+<div class="w-14 h-14 bg-gradient-to-br from-rose-400 to-rose-600 rounded-xl flex items-center justify-center flex-shrink-0">
+<iconify-icon class="text-white text-2xl" icon="solar:palette-bold"></iconify-icon>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between mb-1">
+<h3 class="font-bold" style="color: #333333;">国风设计师</h3>
+<span class="w-2.5 h-2.5 rounded-full bg-green-500 status-online"></span>
+</div>
+<p class="text-xs text-slate-500 mb-2">中医风格课件与视觉设计</p>
+<div class="flex items-center gap-2 mb-2">
+<span class="text-[10px] px-2 py-0.5 bg-purple-50 text-purple-600 rounded">水墨风格</span>
+<span class="text-[10px] px-2 py-0.5 bg-blue-50 text-blue-600 rounded">五行配色</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-xs text-slate-400">已处理 86 个任务</span>
+<span class="text-xs text-green-600">在线</span>
+</div>
+</div>
+</div>
+</div>
+
+<!-- 智能体卡片 3 -->
+<div class="agent-card bg-white rounded-2xl p-5 shadow-sm border border-amber-100">
+<div class="flex items-start gap-4">
+<div class="w-14 h-14 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
+<iconify-icon class="text-white text-2xl" icon="solar:graph-up-bold"></iconify-icon>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between mb-1">
+<h3 class="font-bold" style="color: #333333;">可视化师</h3>
+<span class="w-2.5 h-2.5 rounded-full bg-green-500 status-online"></span>
+</div>
+<p class="text-xs text-slate-500 mb-2">知识图谱与数据可视化</p>
+<div class="flex items-center gap-2 mb-2">
+<span class="text-[10px] px-2 py-0.5 bg-teal-50 text-teal-600 rounded">经络图</span>
+<span class="text-[10px] px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded">五行图</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-xs text-slate-400">已处理 64 个任务</span>
+<span class="text-xs text-green-600">在线</span>
+</div>
+</div>
+</div>
+</div>
+
+<!-- 智能体卡片 4 -->
+<div class="agent-card bg-white rounded-2xl p-5 shadow-sm border border-amber-100">
+<div class="flex items-start gap-4">
+<div class="w-14 h-14 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
+<iconify-icon class="text-white text-2xl" icon="solar:check-read-bold"></iconify-icon>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between mb-1">
+<h3 class="font-bold" style="color: #333333;">质检员</h3>
+<span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+</div>
+<p class="text-xs text-slate-500 mb-2">内容审核与质量把控</p>
+<div class="flex items-center gap-2 mb-2">
+<span class="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-600 rounded">准确性</span>
+<span class="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-600 rounded">规范性</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-xs text-slate-400">已处理 156 个任务</span>
+<span class="text-xs text-amber-600">空闲</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- 协作日志 -->
+<div class="mt-6 bg-white rounded-2xl p-5 shadow-sm border border-amber-100">
+<h3 class="font-bold mb-4" style="color: #333333;">最新动态</h3>
+<div id="activityLog" class="space-y-3 max-h-48 overflow-y-auto custom-scrollbar">
+<div class="text-sm text-slate-400 text-center py-4">加载中...</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+
+<script>
+        const AUTH = { token: localStorage.getItem('token') || '', user: null };
+
+        function authHeaders() {
+            return AUTH.token ? { 'Authorization': 'Bearer ' + AUTH.token } : {};
+        }
+
+        // ==================== 统计数据 ====================
+        async function loadStats() {
+            try {
+                const resp = await fetch('/api/projects/stats/dashboard', { headers: authHeaders() });
+                if (!resp.ok) return;
+                const s = await resp.json();
+
+                document.getElementById('statProjects').textContent = s.projectCount || 0;
+                document.getElementById('statUsers').textContent = s.userCount || 0;
+                document.getElementById('statGen').textContent = s.genCount || 0;
+                document.getElementById('statToday').textContent = s.todayGen || 0;
+                document.getElementById('statUpload').textContent = s.uploadCount || 0;
+
+                document.getElementById('statProjectsBadge').textContent = s.projectCount > 0 ? `${s.projectCount} 个` : '暂无';
+                document.getElementById('statUsersBadge').textContent = s.userCount > 0 ? `${s.userCount} 人` : '暂无';
+                document.getElementById('statGenBadge').textContent = `累计 ${s.genCount || 0}`;
+                document.getElementById('statTodayBadge').textContent = `今日 ${s.todayGen || 0}`;
+                document.getElementById('statUploadBadge').textContent = `${s.uploadCount || 0} 个`;
+            } catch {}
+        }
+
+        // ==================== 项目列表 ====================
+        // 静态降级卡片（API为空或后端不可用时显示）
+        const FALLBACK_PROJECTS = [
+            { title: '阴阳五行学说', topic: '中医基础理论', tag: '基础理论', color: 'amber', status: 'active', progress: 75 },
+            { title: '黄帝内经选读', topic: '素问·阴阳应象大论', tag: '经典研读', color: 'rose', status: 'active', progress: 45 },
+            { title: '中医诊断学', topic: '八纲辨证专题', tag: '临床诊断', color: 'emerald', status: 'pending', progress: 0 },
+            { title: '经方应用研究', topic: '桂枝汤类方解析', tag: '方剂学', color: 'blue', status: 'active', progress: 90 },
+        ];
+
+        function renderProjectCards(projects) {
+            const grid = document.getElementById('projectGrid');
+            if (!projects || projects.length === 0) {
+                grid.innerHTML = '<div class="col-span-2 text-center py-12 text-slate-400"><iconify-icon icon="solar:folder-open-linear" class="text-4xl mb-2"></iconify-icon><p class="text-sm">暂无项目，前往工作台创建</p></div>';
+                return;
+            }
+            grid.innerHTML = projects.map((p, i) => {
+                const c = p.color || ['amber','rose','emerald','blue','purple'][i % 5];
+                const tag = p.tag || p.topic || '教学项目';
+                const isActive = p.status === 'active';
+                const dotColor = isActive ? 'bg-green-500 status-online' : (p.status === 'completed' ? 'bg-blue-400' : 'bg-amber-400');
+                const statusText = isActive ? '进行中' : (p.status === 'completed' ? '已完成' : '待开始');
+                const barColor = isActive ? 'bg-tcm-primary' : 'bg-slate-300';
+                const progress = p.progress || (isActive ? 60 : 0);
+                const updated = p.updated_at ? timeAgo(p.updated_at) : (p.timeAgo || '刚刚');
+                return `
+                <div class="project-card bg-white rounded-2xl p-6 shadow-sm border border-amber-100 cursor-pointer" onclick="window.location.href='tcm-workspace.html'">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="px-3 py-1 bg-${c}-50 text-${c}-700 text-xs font-medium rounded-full">${tag}</span>
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full ${dotColor}"></span>
+                            <span class="text-xs text-slate-400">${statusText}</span>
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-bold mb-2" style="color: #333333;">${p.title}</h3>
+                    <p class="text-sm text-slate-500 mb-4">${p.topic || '教学项目'}</p>
+                    <div class="flex items-center justify-between text-xs text-slate-400 mb-4">
+                        <span>${updated}</span>
+                    </div>
+                    <div class="w-full bg-amber-100 h-2 rounded-full overflow-hidden">
+                        <div class="${barColor} h-full rounded-full" style="width: ${progress}%"></div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        async function loadProjects(filter) {
+            // 更新按钮样式
+            document.querySelectorAll('[onclick^="loadProjects"]').forEach(btn => {
+                btn.className = btn.getAttribute('onclick').includes(`'${filter}'`)
+                    ? 'px-4 py-2 text-sm bg-tcm-primary text-white rounded-lg'
+                    : 'px-4 py-2 text-sm bg-white border border-amber-200 rounded-lg text-slate-600 hover:border-tcm-primary hover:text-tcm-primary';
+            });
+
+            try {
+                const resp = await fetch('/api/projects', { headers: authHeaders() });
+                if (!resp.ok) throw new Error();
+                let projects = await resp.json();
+
+                if (filter === 'active') projects = projects.filter(p => p.status === 'active');
+                else if (filter === 'completed') projects = projects.filter(p => p.status === 'completed');
+
+                if (projects.length === 0) {
+                    // API返回空，显示静态降级卡片
+                    let fallback = FALLBACK_PROJECTS;
+                    if (filter === 'active') fallback = fallback.filter(p => p.status === 'active');
+                    else if (filter === 'completed') fallback = fallback.filter(p => p.status === 'completed');
+                    renderProjectCards(fallback);
+                } else {
+                    renderProjectCards(projects.slice(0, 8));
+                }
+            } catch {
+                // 后端不可用，显示静态降级卡片
+                let fallback = FALLBACK_PROJECTS;
+                if (filter === 'active') fallback = fallback.filter(p => p.status === 'active');
+                else if (filter === 'completed') fallback = fallback.filter(p => p.status === 'completed');
+                renderProjectCards(fallback);
+            }
+        }
+
+        function timeAgo(dateStr) {
+            const diff = Date.now() - new Date(dateStr).getTime();
+            const mins = Math.floor(diff / 60000);
+            if (mins < 1) return '刚刚';
+            if (mins < 60) return `${mins}分钟前`;
+            const hrs = Math.floor(mins / 60);
+            if (hrs < 24) return `${hrs}小时前`;
+            const days = Math.floor(hrs / 24);
+            return `${days}天前`;
+        }
+
+        // ==================== 最近动态 ====================
+        async function loadActivity() {
+            const logDiv = document.getElementById('activityLog');
+            try {
+                const resp = await fetch('/api/projects/stats/recent-activity', { headers: authHeaders() });
+                if (!resp.ok) throw new Error();
+                const logs = await resp.json();
+                if (logs.length === 0) {
+                    logDiv.innerHTML = '<div class="text-sm text-slate-400 text-center py-4">暂无动态</div>';
+                    return;
+                }
+
+                const typeIcons = {
+                    generate_ppt: { icon: 'solar:presentation-graph-bold', color: 'amber', label: 'PPT' },
+                    generate_lesson: { icon: 'solar:document-text-bold', color: 'blue', label: '教案' },
+                    generate_cases: { icon: 'solar:medical-kit-bold', color: 'rose', label: '医案' },
+                    generate_quiz: { icon: 'solar:check-circle-bold', color: 'emerald', label: '测验' },
+                    generate_knowledge: { icon: 'solar:graph-up-bold', color: 'purple', label: '图谱' },
+                    generate_chat: { icon: 'solar:chat-round-dots-bold', color: 'teal', label: '对话' },
+                    user_login: { icon: 'solar:user-check-bold', color: 'green', label: '登录' },
+                    project_create: { icon: 'solar:add-folder-bold', color: 'amber', label: '创建项目' },
+                };
+
+                logDiv.innerHTML = logs.map(log => {
+                    const info = typeIcons[log.action] || { icon: 'solar:bolt-bold', color: 'slate', label: log.action };
+                    return `
+                    <div class="flex gap-3 items-start">
+                        <div class="w-8 h-8 rounded-lg bg-${info.color}-100 flex items-center justify-center flex-shrink-0">
+                            <iconify-icon class="text-${info.color}-600 text-sm" icon="${info.icon}"></iconify-icon>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm">${log.detail || (info.label + '操作')}</p>
+                            <p class="text-xs text-slate-400 mt-1">${timeAgo(log.created_at)}</p>
+                        </div>
+                    </div>`;
+                }).join('');
+            } catch {
+                logDiv.innerHTML = '<div class="text-sm text-slate-400 text-center py-4">暂无动态</div>';
+            }
+        }
+
+        // ==================== 用户菜单 ====================
+        function toggleUserMenu() {
+            const menu = document.getElementById('userMenu');
+            menu.classList.toggle('hidden');
+        }
+        document.addEventListener('click', function(e) {
+            const area = document.getElementById('userArea');
+            const menu = document.getElementById('userMenu');
+            if (area && !area.contains(e.target)) menu.classList.add('hidden');
+        });
+
+        function doLogout() {
+            if (AUTH.token) {
+                fetch('/api/auth/logout', { method: 'POST', headers: authHeaders() }).catch(() => {});
+            }
+            localStorage.removeItem('token');
+            window.location.href = 'tcm-login.html';
+        }
+
+        // ==================== 初始化 ====================
+        document.addEventListener('DOMContentLoaded', async function() {
+            // 检查登录状态
+            try {
+                const resp = await fetch('/api/health');
+                if (resp.ok && AUTH.token) {
+                    const meResp = await fetch('/api/auth/me', { headers: authHeaders() });
+                    if (meResp.ok) {
+                        AUTH.user = await meResp.json();
+
+                        // 显示管理后台入口
+                        if (AUTH.user.role === 'admin') {
+                            const adminLink = document.getElementById('adminLink');
+                            if (adminLink) adminLink.style.display = 'flex';
+                        }
+
+                        // 更新欢迎语和头像
+                        const h1 = document.querySelector('h1');
+                        if (h1 && AUTH.user.displayName) {
+                            const hour = new Date().getHours();
+                            const greeting = hour < 6 ? '夜深了' : hour < 12 ? '上午好' : hour < 18 ? '下午好' : '晚上好';
+                            h1.textContent = `${greeting}，${AUTH.user.displayName}`;
+                        }
+                        // 更新头像文字
+                        const avatarText = document.getElementById('avatarText');
+                        if (avatarText && AUTH.user.displayName) {
+                            avatarText.textContent = AUTH.user.displayName.charAt(0);
+                        }
+                        // 更新菜单用户信息
+                        const menuName = document.getElementById('menuUserName');
+                        const menuRole = document.getElementById('menuUserRole');
+                        if (menuName) menuName.textContent = AUTH.user.displayName || AUTH.user.username;
+                        if (menuRole) {
+                            const roleMap = { admin: '管理员', teacher: '教师', student: '学生' };
+                            menuRole.textContent = roleMap[AUTH.user.role] || '';
+                        }
+                    }
+                }
+            } catch {}
+
+            // 加载动态数据
+            loadStats();
+            loadProjects('all');
+            loadActivity();
+        });
+    </script>
+</body>
+</html>

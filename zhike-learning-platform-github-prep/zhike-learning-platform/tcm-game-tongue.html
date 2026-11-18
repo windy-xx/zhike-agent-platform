@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>舌诊挑战 - 中医诊断游戏</title>
+<style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Serif SC', 'SimSun', serif;
+            background: linear-gradient(135deg, #FFF5F0 0%, #F9F6F0 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #333;
+        }
+
+        .game-header {
+            background: linear-gradient(135deg, #E57373 0%, #C23B22 100%);
+            padding: 20px 30px;
+            box-shadow: 0 4px 20px rgba(194, 59, 34, 0.3);
+            position: relative;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .game-title {
+            font-size: 26px;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .game-stats {
+            display: flex;
+            gap: 25px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .game-container {
+            flex: 1;
+            max-width: 1000px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        /* 舌象展示区 */
+        .tongue-display {
+            background: #fff;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .tongue-visual {
+            width: 200px;
+            height: 280px;
+            border-radius: 100px 100px 50px 50px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        }
+
+        .tongue-body {
+            width: 100%;
+            height: 100%;
+            border-radius: inherit;
+            position: relative;
+        }
+
+        .tongue-coating {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60%;
+            border-radius: 100px 100px 0 0;
+        }
+
+        .tongue-info {
+            flex: 1;
+        }
+
+        .question-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: #8B5A2B;
+            margin-bottom: 15px;
+        }
+
+        .tongue-description {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.8;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #FFF5F0;
+            border-radius: 10px;
+        }
+
+        /* 选项按钮 */
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .option-btn {
+            padding: 18px 24px;
+            border: 2px solid #E0E0E0;
+            border-radius: 14px;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: #C23B22;
+            background: #FEF2F2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(194, 59, 34, 0.2);
+        }
+
+        .option-btn.correct {
+            border-color: #2D8C5A;
+            background: #F0FDF4;
+        }
+
+        .option-btn.wrong {
+            border-color: #C23B22;
+            background: #FEF2F2;
+            animation: shake 0.5s ease;
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .option-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .option-desc {
+            font-size: 12px;
+            color: #999;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        /* 底部按钮 */
+        .game-footer {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #8B5A2B, #6B4423);
+            color: #fff;
+        }
+
+        .btn-hint {
+            background: linear-gradient(135deg, #F59E0B, #D97706);
+            color: #fff;
+        }
+
+        .btn-back {
+            background: linear-gradient(135deg, #6B7280, #4B5563);
+            color: #fff;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* 胜利弹窗 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #fff, #FFFBF7);
+            border-radius: 24px;
+            padding: 40px;
+            text-align: center;
+            max-width: 420px;
+            animation: modalIn 0.5s ease;
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-icon {
+            width: 90px;
+            height: 90px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #2D8C5A, #1F6B44);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 44px;
+        }
+
+        .modal-title {
+            font-size: 26px;
+            font-weight: 700;
+            color: #8B5A2B;
+            margin-bottom: 10px;
+        }
+
+        .modal-text {
+            font-size: 15px;
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .modal-stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 25px;
+            padding: 15px;
+            background: rgba(45, 140, 90, 0.1);
+            border-radius: 12px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2D8C5A, #1F6B44);
+            color: #fff;
+            padding: 14px 40px;
+        }
+
+        .feedback-toast {
+            position: fixed;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            opacity: 0;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            z-index: 999;
+        }
+
+        .feedback-toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .feedback-toast.correct {
+            background: #2D8C5A;
+            color: #fff;
+        }
+
+        .feedback-toast.wrong {
+            background: #C23B22;
+            color: #fff;
+        }
+
+        @media (max-width: 768px) {
+            .tongue-display {
+                flex-direction: column;
+            }
+
+            .tongue-visual {
+                width: 150px;
+                height: 210px;
+            }
+
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .game-header {
+                padding: 15px 20px;
+            }
+
+            .game-title {
+                font-size: 20px;
+            }
+
+            .game-stats {
+                gap: 15px;
+            }
+
+            .stat-value {
+                font-size: 18px;
+            }
+
+            .game-container {
+                padding: 20px 15px;
+                gap: 20px;
+            }
+
+            .game-footer {
+                flex-wrap: wrap;
+                gap: 10px;
+                padding: 15px;
+            }
+
+            .game-footer .btn {
+                flex: 1;
+                justify-content: center;
+                min-width: 0;
+                padding: 12px 16px;
+            }
+
+            .modal-content {
+                padding: 30px 20px;
+                margin: 0 16px;
+                max-width: calc(100vw - 32px);
+            }
+
+            .modal-stats {
+                gap: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-content {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+
+            .game-title {
+                font-size: 18px;
+            }
+
+            .stat-value {
+                font-size: 16px;
+            }
+
+            .stat-label {
+                font-size: 12px;
+            }
+
+            .stat-item {
+                min-width: 50px;
+            }
+
+            .tongue-display {
+                padding: 20px;
+            }
+
+            .question-text {
+                font-size: 16px;
+            }
+
+            .option-btn {
+                padding: 14px 18px;
+                min-height: 44px;
+                -webkit-tap-highlight-color: transparent;
+                touch-action: manipulation;
+            }
+
+            .modal-icon {
+                width: 70px;
+                height: 70px;
+                font-size: 36px;
+            }
+
+            .modal-title {
+                font-size: 22px;
+            }
+        }
+
+        /* 触控优化 */
+        .option-btn, .btn {
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        .btn {
+            min-height: 44px;
+        }
+        .btn:active {
+            transform: scale(0.97);
+        }
+    </style>
+</head>
+<body>
+    <header class="game-header">
+        <a href="tcm-game-hub.html" style="position:absolute;top:10px;left:12px;z-index:10;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.9);display:flex;align-items:center;justify-content:center;text-decoration:none;color:#666;font-size:18px;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,0.1);">←</a>
+        <div class="header-content">
+            <h1 class="game-title">
+                <span>👅</span>
+                舌诊挑战
+            </h1>
+            <div class="game-stats">
+                <div class="stat-item">
+                    <div class="stat-label">答题进度</div>
+                    <div class="stat-value"><span id="currentQ">1</span>/10</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">得分</div>
+                    <div class="stat-value" id="score">0</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="game-container">
+        <div class="tongue-display">
+            <div class="tongue-visual" id="tongueVisual">
+                <div class="tongue-body" id="tongueBody">
+                    <div class="tongue-coating" id="tongueCoating"></div>
+                </div>
+            </div>
+            <div class="tongue-info">
+                <h3 class="question-text" id="questionText">请根据舌象判断证型</h3>
+                <p class="tongue-description" id="tongueDesc">舌色淡红，舌苔薄白，润泽适中</p>
+                <div class="options-grid" id="optionsGrid"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="game-footer">
+        <button class="btn btn-reset" onclick="resetGame()">
+            <span>↻</span>
+            重置
+        </button>
+        <button class="btn btn-hint" onclick="showHint()">
+            <span>💡</span>
+            提示
+        </button>
+        <button class="btn btn-back" onclick="goBack()">
+            <span>←</span>
+            返回
+        </button>
+    </footer>
+
+    <div class="modal-overlay" id="resultModal">
+        <div class="modal-content">
+            <div class="modal-icon" id="modalIcon">🎉</div>
+            <h2 class="modal-title" id="modalTitle">恭喜完成！</h2>
+            <p class="modal-text" id="modalText">你已经掌握了舌诊的基本知识！</p>
+            <div class="modal-stats">
+                <div class="stat-item">
+                    <div class="stat-label">正确率</div>
+                    <div class="stat-value" id="accuracy">0%</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">得分</div>
+                    <div class="stat-value" id="finalScore">0</div>
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="resetGame()">
+                再玩一次
+            </button>
+            <a href="tcm-game-hub.html" class="btn btn-back" style="margin-top:12px;display:inline-flex;text-decoration:none;">返回游戏大厅</a>
+        </div>
+    </div>
+
+    <div class="feedback-toast" id="feedbackToast"></div>
+
+    <script>
+        // 舌诊题目库
+        const tongueQuestions = [
+            {
+                tongueColor: '#FFE4C4',
+                coatingColor: '#F5F5DC',
+                coatingOpacity: 0.7,
+                description: '舌色淡红，舌苔薄白，润泽适中',
+                options: [
+                    { label: '正常舌象', desc: '健康人的舌象表现', correct: true },
+                    { label: '寒证', desc: '阳气不足，寒邪内生', correct: false },
+                    { label: '热证', desc: '邪热亢盛，耗伤津液', correct: false },
+                    { label: '虚证', desc: '正气不足，机能衰退', correct: false }
+                ]
+            },
+            {
+                tongueColor: '#FFD0D0',
+                coatingColor: '#FFE4E1',
+                coatingOpacity: 0.5,
+                description: '舌色淡白，舌苔白而湿润',
+                options: [
+                    { label: '阳虚证', desc: '阳气虚衰，温煦失职', correct: true },
+                    { label: '阴虚证', desc: '阴液亏损，虚热内生', correct: false },
+                    { label: '实热证', desc: '火热炽盛，耗津伤液', correct: false },
+                    { label: '湿热证', desc: '湿热蕴结，缠绵难愈', correct: false }
+                ]
+            },
+            {
+                tongueColor: '#FF9999',
+                coatingColor: '#FFEB3B',
+                coatingOpacity: 0.8,
+                description: '舌色红绛，舌苔黄燥',
+                options: [
+                    { label: '实热证', desc: '邪热亢盛，里热炽盛', correct: true },
+                    { label: '寒湿证', desc: '寒邪与湿邪相合', correct: false },
+                    { label: '气虚证', desc: '元气不足，机能减退', correct: false },
+                    { label: '血虚证', desc: '血液亏虚，脏腑失养', correct: false }
+                ]
+            },
+            {
+                tongueColor: '#FF6B6B',
+                coatingColor: 'transparent',
+                coatingOpacity: 0,
+                description: '舌色深红，少苔或无苔',
+                options: [
+                    { label: '阴虚火旺', desc: '肾阴不足，虚火上炎', correct: true },
+                    { label: '气血两虚', desc: '气与血均不足', correct: false },
+                    { label: '痰湿内阻', desc: '痰湿蕴结于体内', correct: false },
+                    { label: '食积胃肠', desc: '饮食积滞，胃肠失和', correct: false }
+                ]
+            },
+            {
+                tongueColor: '#87CEEB',
+                coatingColor: '#FFFFFF',
+                coatingOpacity: 0.9,
+                description: '舌色淡青紫，舌苔白滑',
+                options: [
+                    { label: '寒凝血瘀', desc: '寒邪凝滞，血行不畅', correct: true },
+                    { label: '气滞血瘀', desc: '气机郁滞，血行受阻', correct: false },
+                    { label: '痰热扰心', desc: '痰热内扰，心神不宁', correct: false },
+                    { label: '肝火上炎', desc: '肝气郁结化火', correct: false }
+                ]
+            },
+            {
+                tongueColor: '#CD5C5C',
+                coatingColor: '#8B4513',
+                coatingOpacity: 0.7,
+                description: '舌色红，舌苔黄腻',
+                options: [
+                    { label: '湿热蕴结', desc: '湿热之邪蕴结于体内', correct: true },
+                    { label: '风寒束表', desc: '风寒之邪侵袭肌表', correct: false },
+                    { label: '脾肾阳虚', desc: '脾肾两脏阳气亏虚', correct: false },
+                    { label: '肝气郁结', desc: '肝失疏泄，气机郁滞', correct: false }
+                ]
+            },
+            {
+                tongueColor: '#F0E68C',
+                coatingColor: '#90EE90',
+                coatingOpacity: 0.6,
+                description: '舌色淡红，舌苔剥落如地图',
+                options: [
+                    { label: '胃阴不足', desc: '胃阴亏虚，胃络失养', correct: true },
+                    { label: '脾胃湿热', desc: '湿热困阻脾胃', correct: false },
+                    { label: '肝胃不和', desc: '肝气犯胃，胃失和降', correct: false },
+                    { label: '食滞胃脘', desc: '饮食停滞胃脘', correct: false }
+                ]
+            },
+            {
+                tongueColor: '#DDA0DD',
+                coatingColor: '#D8BFD8',
+                coatingOpacity: 0.5,
+                description: '舌色紫暗，有瘀点瘀斑',
+                options: [
+                    { label: '瘀血内阻', desc: '瘀血阻滞，气血不畅', correct: true },
+                    { label: '气虚血瘀', desc: '气虚运血无力，血行瘀滞', correct: false },
+                    { label: '痰瘀互结', desc: '痰浊与瘀血相互搏结', correct: false },
+                    { label: '热毒蕴结', desc: '热毒炽盛，蕴结于内', correct: false }
+                ]
+            },
+            {
+                tongueColor: '#FFFACD',
+                coatingColor: '#FFFFFF',
+                coatingOpacity: 0.95,
+                description: '舌体胖大，舌苔厚白腻',
+                options: [
+                    { label: '痰湿内盛', desc: '痰湿蕴盛，困阻脾胃', correct: true },
+                    { label: '阴虚火旺', desc: '阴液亏损，虚火内生', correct: false },
+                    { label: '血虚生风', desc: '血虚不能濡养筋脉', correct: false },
+                    { label: '热入营血', desc: '热邪深入营血分', correct: false }
+                ]
+            },
+            {
+                tongueColor: '#FFB6C1',
+                coatingColor: '#FFE4B5',
+                coatingOpacity: 0.3,
+                description: '舌质瘦薄，舌苔少或有裂纹',
+                options: [
+                    { label: '气血两虚', desc: '气血不足，舌体失养', correct: true },
+                    { label: '痰火扰心', desc: '痰火内扰，心神不安', correct: false },
+                    { label: '肝胆湿热', desc: '湿热蕴结肝胆', correct: false },
+                    { label: '大肠湿热', desc: '湿热下注大肠', correct: false }
+                ]
+            }
+        ];
+
+        let gameState = {
+            currentQuestion: 0,
+            score: 0,
+            correctCount: 0,
+            questions: []
+        };
+
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function initGame() {
+            gameState.questions = shuffleArray([...tongueQuestions]).slice(0, 10);
+            gameState.currentQuestion = 0;
+            gameState.score = 0;
+            gameState.correctCount = 0;
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const q = gameState.questions[gameState.currentQuestion];
+
+            // 更新舌象
+            document.getElementById('tongueBody').style.background = q.tongueColor;
+            document.getElementById('tongueCoating').style.background = q.coatingColor;
+            document.getElementById('tongueCoating').style.opacity = q.coatingOpacity;
+
+            // 更新文本
+            document.getElementById('questionText').textContent = `第 ${gameState.currentQuestion + 1} 题：请根据舌象判断证型`;
+            document.getElementById('tongueDesc').textContent = q.description;
+            document.getElementById('currentQ').textContent = gameState.currentQuestion + 1;
+
+            // 随机化选项顺序
+            const shuffledOptions = shuffleArray([...q.options]);
+
+            // 生成选项按钮
+            const optionsGrid = document.getElementById('optionsGrid');
+            optionsGrid.innerHTML = '';
+
+            shuffledOptions.forEach((option, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <div class="option-label">${option.label}</div>
+                    <div class="option-desc">${option.desc}</div>
+                `;
+                btn.onclick = () => checkAnswer(btn, option.correct);
+                optionsGrid.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(btn, isCorrect) {
+            const allBtns = document.querySelectorAll('.option-btn');
+            allBtns.forEach(b => b.disabled = true);
+
+            if (isCorrect) {
+                btn.classList.add('correct');
+                gameState.score += 10;
+                gameState.correctCount++;
+                showFeedback('正确！+10分', 'correct');
+            } else {
+                btn.classList.add('wrong');
+                // 高亮正确答案
+                const q = gameState.questions[gameState.currentQuestion];
+                allBtns.forEach(b => {
+                    const label = b.querySelector('.option-label').textContent;
+                    if (q.options.find(o => o.label === label)?.correct) {
+                        b.classList.add('correct');
+                    }
+                });
+                showFeedback('错误！正确答案已标出', 'wrong');
+            }
+
+            document.getElementById('score').textContent = gameState.score;
+
+            setTimeout(() => {
+                gameState.currentQuestion++;
+                if (gameState.currentQuestion < gameState.questions.length) {
+                    loadQuestion();
+                } else {
+                    showResult();
+                }
+            }, 1500);
+        }
+
+        function showFeedback(message, type) {
+            const toast = document.getElementById('feedbackToast');
+            toast.textContent = message;
+            toast.className = `feedback-toast ${type} show`;
+            setTimeout(() => toast.classList.remove('show'), 1200);
+        }
+
+        function showResult() {
+            const accuracy = Math.round((gameState.correctCount / gameState.questions.length) * 100);
+            document.getElementById('accuracy').textContent = accuracy + '%';
+            document.getElementById('finalScore').textContent = gameState.score;
+
+            const modalIcon = document.getElementById('modalIcon');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalText = document.getElementById('modalText');
+
+            if (accuracy >= 80) {
+                modalIcon.textContent = '🎉';
+                modalTitle.textContent = '太棒了！';
+                modalText.textContent = '你已经掌握了舌诊的基本知识！';
+            } else if (accuracy >= 60) {
+                modalIcon.textContent = '👍';
+                modalTitle.textContent = '不错哦！';
+                modalText.textContent = '继续学习，你会更棒的！';
+            } else {
+                modalIcon.textContent = '💪';
+                modalTitle.textContent = '继续努力！';
+                modalText.textContent = '建议复习一下舌诊相关知识再挑战！';
+            }
+
+            document.getElementById('resultModal').classList.add('show');
+            // 提交分数到后端
+            submitGameScore(gameState.score, accuracy, 0);
+        }
+
+        async function submitGameScore(score, accuracy, duration) {
+            try {
+                const token = localStorage.getItem('token') || '';
+                await fetch('/api/games/score', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify({ gameType: 'tongue', score, accuracy, durationSeconds: duration })
+                });
+            } catch {}
+        }
+
+        function resetGame() {
+            document.getElementById('resultModal').classList.remove('show');
+            document.getElementById('score').textContent = '0';
+            initGame();
+        }
+
+        function showHint() {
+            const q = gameState.questions[gameState.currentQuestion];
+            const correctOption = q.options.find(o => o.correct);
+            showFeedback(`提示：${correctOption.desc}`, 'correct');
+        }
+
+        function goBack() {
+            if (confirm('确定要退出当前游戏吗？')) {
+                window.history.back();
+            }
+        }
+
+        // 初始化游戏
+        document.addEventListener('DOMContentLoaded', initGame);
+    </script>
+</body>
+</html>

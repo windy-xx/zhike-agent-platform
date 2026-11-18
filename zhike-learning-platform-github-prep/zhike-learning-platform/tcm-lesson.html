@@ -1,0 +1,3465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>智课精灵 - 教案详情</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.7/dist/iconify-icon.min.js"></script>
+<style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', 'Noto Serif SC', serif;
+            background-color: #F9F6F0;
+        }
+        .tcm-primary { color: #8B5A2B; }
+        .tcm-accent { color: #C23B22; }
+        .bg-tcm-primary { background-color: #8B5A2B; }
+        .bg-tcm-accent { background-color: #C23B22; }
+        .annotation-marker {
+            background-color: #FEF3C7;
+            border-bottom: 2px dashed #F59E0B;
+            cursor: pointer;
+        }
+        .annotation-marker:hover {
+            background-color: #FDE68A;
+        }
+        .section-card {
+            border-left: 4px solid #8B5A2B;
+        }
+        /* Toast 通知样式 */
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 24px;
+            z-index: 9999;
+        }
+        .toast {
+            background: white;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.3s ease-out;
+            min-width: 320px;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .toast.removing {
+            animation: slideOut 0.3s ease-out forwards;
+        }
+        @keyframes slideOut {
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        /* 模态框样式 */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 85vh;
+            overflow: hidden;
+            animation: modalIn 0.3s ease-out;
+        }
+        @keyframes modalIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .modal-body {
+            max-height: calc(85vh - 140px);
+            overflow-y: auto;
+            padding: 24px;
+        }
+        /* 知识图谱样式 */
+        .knowledge-graph {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(135deg, #fef9f3 0%, #f0fdf4 100%);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        .wuxing-node {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .wuxing-node:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+        .wuxing-edge {
+            position: absolute;
+            pointer-events: none;
+        }
+        .wuxing-label {
+            position: absolute;
+            font-size: 12px;
+            background: white;
+            padding: 2px 8px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        /* 互动卡片样式 */
+        .activity-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .activity-card:hover {
+            border-color: #8B5A2B;
+            box-shadow: 0 8px 25px rgba(139,90,43,0.15);
+        }
+        .activity-card.selected {
+            border-color: #8B5A2B;
+            background: linear-gradient(135deg, #fef3c7 0%, #f0fdf4 100%);
+        }
+        /* 经典引文样式 */
+        .quote-item {
+            border-left: 4px solid #e5e7eb;
+            padding-left: 16px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .quote-item:hover {
+            border-left-color: #8B5A2B;
+            background: #fef9f3;
+        }
+        .quote-item.selected {
+            border-left-color: #8B5A2B;
+            background: #fef3c7;
+        }
+        /* 加载动画 */
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e5e7eb;
+            border-top-color: #8B5A2B;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 语音输入样式 */
+        .voice-input-wrapper {
+            display: none;
+        }
+        .voice-input-wrapper.active {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .text-input-wrapper {
+            display: block;
+        }
+        .text-input-wrapper.hidden {
+            display: none;
+        }
+        .voice-wave-mini {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            height: 24px;
+        }
+        .voice-wave-bar-mini {
+            width: 3px;
+            background: linear-gradient(to top, #8B5A2B, #C23B22);
+            border-radius: 2px;
+            animation: wave 0.5s ease-in-out infinite;
+        }
+        .voice-wave-bar-mini:nth-child(1) { animation-delay: 0s; height: 12px; }
+        .voice-wave-bar-mini:nth-child(2) { animation-delay: 0.1s; height: 18px; }
+        .voice-wave-bar-mini:nth-child(3) { animation-delay: 0.2s; height: 24px; }
+        .voice-wave-bar-mini:nth-child(4) { animation-delay: 0.3s; height: 18px; }
+        .voice-wave-bar-mini:nth-child(5) { animation-delay: 0.4s; height: 12px; }
+
+        @keyframes wave {
+            0%, 100% { transform: scaleY(0.5); }
+            50% { transform: scaleY(1); }
+        }
+
+        .voice-wave-bar-mini.paused {
+            animation: none;
+            height: 6px !important;
+            background: #d4a574;
+        }
+
+        .input-toggle-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px;
+            background: #fef9f3;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .input-toggle-btn {
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: #6b7280;
+        }
+
+        .input-toggle-btn.active {
+            background: #8B5A2B;
+            color: white;
+        }
+
+        .input-toggle-btn:not(.active):hover {
+            background: white;
+            color: #8B5A2B;
+        }
+
+        .voice-input-box {
+            background: white;
+            border: 1px dashed #d4a574;
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .voice-input-status {
+            text-align: center;
+            font-size: 12px;
+            color: #6b7280;
+            padding: 6px;
+        }
+
+        .transcription-area {
+            background: #fef9f3;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px;
+            min-height: 50px;
+            font-size: 13px;
+            color: #333;
+            line-height: 1.5;
+        }
+        .transcription-area.empty {
+            color: #9ca3af;
+            font-style: italic;
+        }
+
+        /* 设置模态框样式 */
+        .settings-tab-btn {
+            transition: all 0.3s;
+            color: #6B7280;
+        }
+        .settings-tab-btn.active {
+            color: #8B5A2B;
+            border-bottom: 2px solid #8B5A2B;
+        }
+        .settings-tab-btn:hover:not(.active) {
+            color: #8B5A2B;
+            background: #FEF3C7;
+        }
+
+        /* 通知动画 */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 引文样式 */
+        .new-quote-item {
+            animation: quoteSlideIn 0.5s ease-out forwards;
+        }
+
+        @keyframes quoteSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 引文选中状态 */
+        .quote-item {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .quote-item:hover {
+            background-color: #FEF9F3;
+        }
+
+        .quote-item.selected {
+            background-color: #ECFDF5;
+            border-color: #10B981;
+        }
+
+        .quote-item.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 24px;
+            height: 24px;
+            background: #10B981;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* 知识图谱样式 */
+        .wuxing-card {
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        /* 移动端响应式 */
+        @media (max-width: 640px) {
+            .section-card {
+                padding: 16px !important;
+            }
+            .section-card h2 {
+                font-size: 1.125rem !important;
+            }
+            .knowledge-graph {
+                height: 280px;
+            }
+            .wuxing-node {
+                width: 60px;
+                height: 60px;
+            }
+            .wuxing-node .node-label {
+                font-size: 12px;
+            }
+            .wuxing-edge {
+                display: none;
+            }
+            /* 头部信息行 */
+            .p-4.md\:p-8 .flex.justify-center.gap-6 {
+                flex-direction: column;
+                gap: 8px !important;
+                align-items: center;
+            }
+            /* 底部固定栏 */
+            .fixed.bottom-0 .flex.items-center.gap-4 {
+                flex-wrap: wrap;
+                gap: 8px !important;
+            }
+            .fixed.bottom-0 .flex.items-center.gap-4 .flex-1 {
+                min-width: 100%;
+            }
+            .fixed.bottom-0 .absolute.right-2 {
+                position: static !important;
+                transform: none !important;
+                display: flex;
+                gap: 8px;
+                margin-top: 8px;
+            }
+            .fixed.bottom-0 input {
+                padding-right: 16px !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+<!-- 顶部导航栏 -->
+<nav class="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-amber-100 shadow-sm">
+<div class="max-w-[1440px] mx-auto px-3 md:px-6 h-14 md:h-16 flex items-center justify-between">
+<div class="flex items-center gap-2 md:gap-6">
+<a class="flex items-center gap-1 md:gap-2" href="tcm-workspace.html">
+<iconify-icon class="text-xl tcm-primary" icon="solar:alt-arrow-left-linear"></iconify-icon>
+<span class="font-medium tcm-primary text-sm hidden sm:inline">返回工作台</span>
+</a>
+<div class="h-6 w-px bg-amber-200 hidden md:block"></div>
+<div class="flex items-center gap-2 bg-amber-50 px-3 py-1.5 md:py-2 rounded-full">
+<iconify-icon class="tcm-primary" icon="solar:document-text-bold"></iconify-icon>
+<span class="text-sm font-medium tcm-primary truncate max-w-[140px] md:max-w-none">阴阳五行学说 · 教学教案</span>
+</div>
+</div>
+<div class="flex items-center gap-1 md:gap-3">
+<button class="px-2 md:px-4 py-2 text-sm text-slate-600 hover:text-tcm-primary flex items-center gap-1 md:gap-2 hidden md:flex">
+<iconify-icon icon="solar:history-linear"></iconify-icon>
+                    历史版本
+                </button>
+<button class="px-2 md:px-4 py-2 text-sm text-slate-600 hover:text-tcm-primary flex items-center gap-1 md:gap-2 hidden md:flex">
+<iconify-icon icon="solar:users-group-rounded-bold"></iconify-icon>
+                    协作
+                </button>
+<button onclick="openSettings()" class="px-2 md:px-4 py-2 text-sm text-slate-600 hover:text-tcm-primary flex items-center gap-1 md:gap-2 hidden sm:flex">
+<iconify-icon icon="solar:settings-linear"></iconify-icon>
+                    设置
+                </button>
+<div class="h-6 w-px bg-amber-200 hidden md:block"></div>
+<button onclick="exportToWord()" class="px-3 md:px-5 py-2 bg-white border-2 border-tcm-primary text-tcm-primary rounded-lg text-sm font-medium hover:bg-tcm-primary hover:text-white transition-all flex items-center gap-1 md:gap-2">
+<iconify-icon icon="solar:download-linear"></iconify-icon>
+<span class="hidden sm:inline">导出Word</span>
+</button>
+<button class="px-3 md:px-5 py-2 bg-tcm-primary text-white rounded-lg text-sm font-medium hover:opacity-90 transition-all flex items-center gap-1 md:gap-2">
+<iconify-icon icon="solar:printer-bold"></iconify-icon>
+<span class="hidden sm:inline">打印</span>
+</button>
+<div class="h-6 w-px bg-amber-200 hidden md:block"></div>
+<button onclick="doLogout()" class="px-2 py-2 text-slate-400 hover:text-red-500" title="退出登录">
+<iconify-icon icon="solar:logout-2-linear" class="text-lg"></iconify-icon>
+</button>
+</div>
+</div>
+</nav>
+
+<!-- AI操作栏 -->
+<div class="bg-gradient-to-r from-amber-50 to-rose-50 border-b border-amber-100">
+<div class="max-w-[1440px] mx-auto px-3 md:px-6 h-12 flex items-center gap-3 md:gap-4 overflow-x-auto">
+<span class="text-xs font-bold text-slate-500">AI助手</span>
+<div class="h-4 w-px bg-amber-200"></div>
+<button onclick="aiOptimize()" class="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg text-sm text-slate-600 hover:text-tcm-primary border border-amber-200 transition-all hover:bg-amber-50">
+<iconify-icon icon="solar:magic-stick-2-linear"></iconify-icon>
+                    AI优化
+                </button>
+<button onclick="addClassicQuote()" class="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg text-sm text-slate-600 hover:text-tcm-primary border border-amber-200 transition-all hover:bg-amber-50">
+<iconify-icon icon="solar:diploma-verified-bold"></iconify-icon>
+                    添加经典引文
+                </button>
+<button onclick="generateKnowledgeGraph()" class="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg text-sm text-slate-600 hover:text-tcm-primary border border-amber-200 transition-all hover:bg-amber-50">
+<iconify-icon icon="solar:graph-up-bold"></iconify-icon>
+                    生成知识图谱
+                </button>
+<button onclick="designInteractiveActivity()" class="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg text-sm text-slate-600 hover:text-tcm-primary border border-amber-200 transition-all hover:bg-amber-50">
+<iconify-icon icon="solar:gamepad-bold"></iconify-icon>
+                    设计互动环节
+                </button>
+</div>
+</div>
+
+<!-- 主内容区 -->
+<main class="max-w-[1440px] mx-auto px-3 md:px-6 py-4 md:py-8 flex flex-col lg:flex-row gap-4 md:gap-8" style="padding-bottom: 220px;">
+<!-- 教案主体 -->
+<div class="flex-1">
+<div class="bg-white rounded-2xl shadow-lg border border-amber-100 overflow-hidden">
+<!-- 教案头部 -->
+<div class="bg-gradient-to-r from-amber-50 to-emerald-50 p-4 md:p-8 border-b border-amber-100 text-center">
+<div class="flex justify-center mb-4">
+<div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg">
+<iconify-icon class="tcm-primary text-4xl" icon="solar:document-text-bold"></iconify-icon>
+</div>
+</div>
+<h1 class="text-xl md:text-3xl font-bold mb-2" style="color: #333333; font-family: 'Noto Serif SC', serif;">《中医基础理论》教学教案</h1>
+<p class="text-slate-500">2026学年春季学期 · 第3讲 · 阴阳五行学说</p>
+<div class="flex justify-center gap-6 mt-6 text-sm">
+<div class="flex items-center gap-2">
+<iconify-icon class="tcm-primary" icon="solar:calendar-linear"></iconify-icon>
+<span style="color: #333333;">授课时间：2026年4月2日</span>
+</div>
+<div class="flex items-center gap-2">
+<iconify-icon class="tcm-primary" icon="solar:clock-circle-linear"></iconify-icon>
+<span style="color: #333333;">课时安排：3学时</span>
+</div>
+<div class="flex items-center gap-2">
+<iconify-icon class="tcm-primary" icon="solar:users-group-rounded-bold"></iconify-icon>
+<span style="color: #333333;">授课对象：本科生</span>
+</div>
+</div>
+</div>
+
+<!-- 教案内容 -->
+<div class="p-4 md:p-8 space-y-6 md:space-y-8">
+<!-- 教学目标 -->
+<div class="section-card rounded-xl p-6" style="background:linear-gradient(135deg,#FFFBEB 0%,#FEF3C7 50%,#FDE68A 100%);border:1px solid #E5DCC8;">
+<div class="flex items-center justify-between mb-5">
+<h2 class="text-2xl font-bold tcm-primary flex items-center gap-2">
+<iconify-icon icon="solar:target-bold"></iconify-icon>
+                        一、教学目标
+                    </h2>
+<button class="text-slate-400 hover:text-tcm-primary">
+<iconify-icon icon="solar:pen-new-square-linear"></iconify-icon>
+</button>
+</div>
+<!-- 三维目标大卡片 -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+<!-- 知识目标 -->
+<div class="bg-white rounded-2xl p-5 shadow-md border-t-4 border-amber-500 flex flex-col" style="min-height:260px;">
+<div class="flex items-center gap-3 mb-4">
+<div class="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
+<iconify-icon class="text-amber-600 text-2xl" icon="solar:book-bold"></iconify-icon>
+</div>
+<h3 class="text-lg font-bold text-amber-700">知识目标</h3>
+</div>
+<ul class="space-y-3 flex-1" style="color:#333333;">
+<li class="flex items-start gap-2.5"><span class="w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">1</span><span class="text-sm leading-relaxed">掌握阴阳的基本概念及其相互关系（对立制约、互根互用、消长平衡、相互转化）</span></li>
+<li class="flex items-start gap-2.5"><span class="w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">2</span><span class="text-sm leading-relaxed">理解五行学说的基本内容：五行特性、五行生克制化规律</span></li>
+<li class="flex items-start gap-2.5"><span class="w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">3</span><span class="text-sm leading-relaxed">熟悉五行与脏腑、经络、形体、官窍的对应关系</span></li>
+</ul>
+</div>
+<!-- 能力目标 -->
+<div class="bg-white rounded-2xl p-5 shadow-md border-t-4 border-blue-500 flex flex-col" style="min-height:260px;">
+<div class="flex items-center gap-3 mb-4">
+<div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
+<iconify-icon class="text-blue-600 text-2xl" icon="solar:lightbulb-bolt-bold"></iconify-icon>
+</div>
+<h3 class="text-lg font-bold text-blue-700">能力目标</h3>
+</div>
+<ul class="space-y-3 flex-1" style="color:#333333;">
+<li class="flex items-start gap-2.5"><span class="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">1</span><span class="text-sm leading-relaxed">能够运用阴阳五行理论解释人体生理病理现象，指导临床辨证论治</span></li>
+<li class="flex items-start gap-2.5"><span class="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">2</span><span class="text-sm leading-relaxed">能够运用五行生克关系分析脏腑传变规律并确定治则治法</span></li>
+<li class="flex items-start gap-2.5"><span class="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">3</span><span class="text-sm leading-relaxed">能够绘制五行生克关系图并进行口头阐释与临床推理</span></li>
+</ul>
+</div>
+<!-- 素养目标 -->
+<div class="bg-white rounded-2xl p-5 shadow-md border-t-4 border-emerald-500 flex flex-col" style="min-height:260px;">
+<div class="flex items-center gap-3 mb-4">
+<div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
+<iconify-icon class="text-emerald-600 text-2xl" icon="solar:star-shine-bold"></iconify-icon>
+</div>
+<h3 class="text-lg font-bold text-emerald-700">素养目标</h3>
+</div>
+<ul class="space-y-3 flex-1" style="color:#333333;">
+<li class="flex items-start gap-2.5"><span class="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">1</span><span class="text-sm leading-relaxed">熟悉《黄帝内经》中相关经典条文，培养中医思维与文化自信</span></li>
+<li class="flex items-start gap-2.5"><span class="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">2</span><span class="text-sm leading-relaxed">培养系统思维、联系思维的能力，理解整体观念与辩证法</span></li>
+<li class="flex items-start gap-2.5"><span class="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">3</span><span class="text-sm leading-relaxed">增强对中华优秀传统文化的认同感与传承创新意识</span></li>
+</ul>
+</div>
+</div>
+<!-- 底部课程信息条 -->
+<div class="mt-5 flex items-center justify-center gap-6 bg-white/70 backdrop-blur-sm rounded-xl px-6 py-3">
+<div class="flex items-center gap-2"><iconify-icon class="text-amber-600" icon="solar:clock-circle-bold"></iconify-icon><span class="text-xs font-bold text-slate-500">课时</span><span class="text-sm font-bold tcm-primary">3课时（135分钟）</span></div>
+<div class="w-px h-5 bg-amber-300"></div>
+<div class="flex items-center gap-2"><iconify-icon class="text-amber-600" icon="solar:users-group-rounded-bold"></iconify-icon><span class="text-xs font-bold text-slate-500">对象</span><span class="text-sm font-bold tcm-primary">中医学专业二年级</span></div>
+<div class="w-px h-5 bg-amber-300"></div>
+<div class="flex items-center gap-2"><iconify-icon class="text-amber-600" icon="solar:presentation-graph-bold"></iconify-icon><span class="text-xs font-bold text-slate-500">方法</span><span class="text-sm font-bold tcm-primary">讲授 + 案例讨论 + 多媒体演示</span></div>
+</div>
+</div>
+
+<!-- 教学重点难点 -->
+<div class="section-card bg-rose-50 rounded-xl p-6">
+<div class="flex items-center justify-between mb-4">
+<h2 class="text-xl font-bold text-rose-600 flex items-center gap-2">
+<iconify-icon icon="solar:star-bold"></iconify-icon>
+                        二、教学重点与难点
+                    </h2>
+<button class="text-slate-400 hover:text-tcm-primary">
+<iconify-icon icon="solar:pen-new-square-linear"></iconify-icon>
+</button>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<div class="bg-white rounded-lg p-4 border border-rose-200">
+<div class="flex items-center gap-2 mb-2">
+<iconify-icon class="text-amber-500" icon="solar:bookmark-bold"></iconify-icon>
+<p class="text-sm font-bold" style="color: #333333;">教学重点</p>
+</div>
+<ul class="space-y-2 text-sm" style="color: #333333;">
+<li>• 阴阳的基本概念和相互关系</li>
+<li>• 五行生克制化规律</li>
+<li>• 五行与脏腑的对应关系</li>
+<li>• 阴阳五行在临床中的应用</li>
+</ul>
+</div>
+<div class="bg-white rounded-lg p-4 border border-rose-200">
+<div class="flex items-center gap-2 mb-2">
+<iconify-icon class="text-rose-500" icon="solar:danger-triangle-bold"></iconify-icon>
+<p class="text-sm font-bold" style="color: #333333;">教学难点</p>
+</div>
+<ul class="space-y-2 text-sm" style="color: #333333;">
+<li>• 阴阳相互转化的机理</li>
+<li>• 五行生克关系的理解</li>
+<li class="annotation-marker px-1">• 五行乘侮关系的把握</li>
+<li>• 理论与临床的衔接</li>
+</ul>
+</div>
+</div>
+</div>
+
+<!-- 经典文献引用 -->
+<div class="section-card bg-emerald-50 rounded-xl p-6">
+<div class="flex items-center justify-between mb-4">
+<h2 class="text-xl font-bold text-emerald-600 flex items-center gap-2">
+<iconify-icon icon="solar:book-bookmark-bold"></iconify-icon>
+                        三、经典文献引用
+                    </h2>
+<button onclick="addClassicQuote()" class="flex items-center gap-1 text-xs bg-white text-emerald-600 px-3 py-1.5 rounded-full border border-emerald-200 hover:bg-emerald-50">
+<iconify-icon icon="solar:magic-stick-2-linear"></iconify-icon>
+                        AI推荐引文
+                    </button>
+</div>
+<div class="space-y-3" id="quoteContainer">
+<div class="bg-white rounded-lg p-4 border-l-4 border-emerald-500">
+<div class="flex items-center gap-2 mb-2">
+<span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">《素问·阴阳应象大论》</span>
+<span class="text-xs text-slate-400">AI推荐</span>
+</div>
+<p class="text-sm italic text-slate-600 leading-relaxed">"阴阳者，天地之道也，万物之纲纪，变化之父母，生杀之本始，神明之府也。"</p>
+</div>
+<div class="bg-white rounded-lg p-4 border-l-4 border-amber-500">
+<div class="flex items-center gap-2 mb-2">
+<span class="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">《素问·五运行大论》</span>
+</div>
+<p class="text-sm italic text-slate-600 leading-relaxed">"燥胜则地干，暑胜则地热，风胜则地动，湿胜则地泥，寒胜则地裂。"</p>
+</div>
+</div>
+</div>
+
+<!-- 教学过程 -->
+<div class="section-card bg-blue-50 rounded-xl p-6">
+<div class="flex items-center justify-between mb-4">
+<h2 class="text-xl font-bold text-blue-600 flex items-center gap-2">
+<iconify-icon icon="solar:playlist-bold"></iconify-icon>
+                        四、教学过程
+                    </h2>
+<button class="text-slate-400 hover:text-tcm-primary">
+<iconify-icon icon="solar:pen-new-square-linear"></iconify-icon>
+</button>
+</div>
+<div class="space-y-4">
+<div class="bg-white rounded-lg p-4 border border-blue-200">
+<div class="flex items-center gap-3 mb-3">
+<span class="px-3 py-1 bg-blue-500 text-white text-xs font-bold rounded">导入</span>
+<span class="text-xs text-slate-400">00:00 - 00:15 (15分钟)</span>
+</div>
+<h3 class="font-bold text-sm mb-2" style="color: #333333;">从自然现象认识阴阳</h3>
+<p class="text-sm text-slate-600 leading-relaxed">通过日月交替、四季变化、昼夜更替等自然现象，引导学生理解阴阳的对立统一关系。引出《内经》经典论述："阴阳者，天地之道也..."</p>
+</div>
+
+<div class="bg-white rounded-lg p-4 border border-blue-200">
+<div class="flex items-center gap-3 mb-3">
+<span class="px-3 py-1 bg-tcm-primary text-white text-xs font-bold rounded">讲授</span>
+<span class="text-xs text-slate-400">00:15 - 00:45 (30分钟)</span>
+</div>
+<h3 class="font-bold text-sm mb-2" style="color: #333333;">阴阳的基本概念和相互关系</h3>
+<div class="space-y-3">
+<div class="flex items-start gap-2">
+<span class="text-xs font-bold tcm-primary w-16 flex-shrink-0">① 对立制约：</span>
+<p class="text-sm text-slate-600">阴阳双方相互排斥、相互斗争，维持动态平衡</p>
+</div>
+<div class="flex items-start gap-2">
+<span class="text-xs font-bold tcm-primary w-16 flex-shrink-0">② 互根互用：</span>
+<p class="text-sm text-slate-600">阴阳相互依存，任何一方不能脱离另一方而存在</p>
+</div>
+<div class="flex items-start gap-2">
+<span class="text-xs font-bold tcm-primary w-16 flex-shrink-0">③ 消长平衡：</span>
+<p class="text-sm text-slate-600">阴阳双方不断消长变化，维持相对平衡</p>
+</div>
+<div class="flex items-start gap-2">
+<span class="text-xs font-bold tcm-primary w-16 flex-shrink-0">④ 相互转化：</span>
+<p class="text-sm text-slate-600">在一定条件下，阴阳可以相互转化</p>
+</div>
+</div>
+</div>
+
+<div class="bg-white rounded-lg p-4 border border-blue-200">
+<div class="flex items-center gap-3 mb-3">
+<span class="px-3 py-1 bg-tcm-primary text-white text-xs font-bold rounded">讲授</span>
+<span class="text-xs text-slate-400">00:45 - 01:30 (45分钟)</span>
+</div>
+<h3 class="font-bold text-sm mb-2" style="color: #333333;">五行学说的基本内容</h3>
+<p class="text-sm text-slate-600 mb-3">讲解五行的特性、五行生克制化规律，结合人体五脏六腑的关系，强调整体观念和平衡思想。</p>
+<div class="bg-amber-50 p-3 rounded-lg text-sm font-serif" style="color: #333333;">
+                        相生：木→火→土→金→水→木<br/>
+                        相克：木→土→水→火→金→木
+                    </div>
+</div>
+
+<div class="bg-white rounded-lg p-4 border border-blue-200">
+<div class="flex items-center gap-3 mb-3">
+<span class="px-3 py-1 bg-emerald-500 text-white text-xs font-bold rounded">互动</span>
+<span class="text-xs text-slate-400">01:30 - 02:00 (30分钟)</span>
+</div>
+<h3 class="font-bold text-sm mb-2" style="color: #333333;">课堂互动与案例分析</h3>
+<p class="text-sm text-slate-600">选取《伤寒杂病论》《脾胃论》等经典医案，分组讨论其辨证思路与五行理论的运用。使用五行配对游戏加深理解。</p>
+</div>
+
+<div class="bg-white rounded-lg p-4 border border-blue-200">
+<div class="flex items-center gap-3 mb-3">
+<span class="px-3 py-1 bg-rose-500 text-white text-xs font-bold rounded">总结</span>
+<span class="text-xs text-slate-400">02:00 - 02:15 (15分钟)</span>
+</div>
+<h3 class="font-bold text-sm mb-2" style="color: #333333;">课堂总结与思考题</h3>
+<p class="text-sm text-slate-600">总结本节课重点内容，布置课后思考题：</p>
+<ul class="text-sm text-slate-600 mt-2 space-y-1">
+<li>• 如何理解"阴平阳秘，精神乃治"？</li>
+<li>• 五行乘侮关系在临床中有何意义？</li>
+<li>• 如何运用阴阳五行理论指导养生？</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- 右侧批注面板 -->
+<div class="w-80 flex-shrink-0 space-y-6">
+<!-- 批注列表 -->
+<div class="bg-white rounded-2xl shadow-sm border border-amber-100">
+<div class="p-4 border-b border-amber-100 flex items-center justify-between">
+<h3 class="font-bold text-sm" style="color: #333333;">批注列表</h3>
+<span class="text-xs text-slate-400">共3条</span>
+</div>
+<div class="p-4 space-y-3">
+<div class="bg-amber-50 rounded-lg p-3">
+<div class="flex items-center justify-between mb-2">
+<span class="text-xs font-bold text-amber-600">李教授</span>
+<span class="text-[10px] text-slate-400">今天 10:30</span>
+</div>
+<p class="text-xs text-slate-600 mb-2">五行乘侮关系这部分比较难理解，建议增加更多临床案例。</p>
+<div class="flex gap-2">
+<button class="text-[10px] text-tcm-primary hover:underline">回复</button>
+<button class="text-[10px] text-slate-400 hover:text-tcm-primary">编辑</button>
+</div>
+</div>
+
+<div class="bg-rose-50 rounded-lg p-3">
+<div class="flex items-center justify-between mb-2">
+<span class="text-xs font-bold text-rose-600">经方专家 (AI)</span>
+<span class="text-[10px] text-slate-400">今天 11:15</span>
+</div>
+<p class="text-xs text-slate-600 mb-2">已为您找到3个典型医案，建议添加到教学过程中。</p>
+<div class="flex gap-2">
+<button class="text-[10px] text-tcm-primary hover:underline">查看</button>
+<button class="text-[10px] text-slate-400 hover:text-tcm-primary">采纳</button>
+</div>
+</div>
+
+<div class="bg-emerald-50 rounded-lg p-3">
+<div class="flex items-center justify-between mb-2">
+<span class="text-xs font-bold text-emerald-600">国风设计师 (AI)</span>
+<span class="text-[10px] text-slate-400">今天 11:30</span>
+</div>
+<p class="text-xs text-slate-600 mb-2">五行生克关系的配图已完成，是否需要调整样式？</p>
+<div class="flex gap-2">
+<button class="text-[10px] text-tcm-primary hover:underline">预览</button>
+<button class="text-[10px] text-slate-400 hover:text-tcm-primary">确认</button>
+</div>
+</div>
+</div>
+
+<!-- 知识图谱展示区域 -->
+<div class="section-card bg-purple-50 rounded-xl" id="knowledgeGraphSection" style="display: none; padding: 20px;">
+    <div class="flex items-center justify-between mb-2">
+        <h2 class="text-base font-bold text-purple-600 flex items-center gap-1.5">
+            <iconify-icon icon="solar:graph-up-bold"></iconify-icon>
+                        五、知识图谱
+                    </h2>
+        <button onclick="removeKnowledgeGraph()" class="text-slate-400 hover:text-rose-500" title="删除知识图谱">
+            <iconify-icon icon="solar:trash-bin-trash-linear" style="font-size: 16px;"></iconify-icon>
+        </button>
+    </div>
+    <div class="knowledge-graph-container relative" id="insertedKnowledgeGraph" style="padding: 0; margin: 0;">
+        <!-- 知识图谱将在这里显示 -->
+    </div>
+    <div class="grid grid-cols-2 gap-2 mt-2">
+        <div class="bg-emerald-50 rounded-lg p-1.5">
+            <h4 class="font-bold text-emerald-600 mb-0.5 text-xs flex items-center gap-1">
+                <iconify-icon icon="solar:arrow-right-up-bold"></iconify-icon>
+                相生关系
+            </h4>
+            <p class="text-xs text-slate-600">木生火 → 火生土 → 土生金 → 金生水 → 水生木</p>
+        </div>
+        <div class="bg-rose-50 rounded-lg p-1.5">
+            <h4 class="font-bold text-rose-600 mb-0.5 text-xs flex items-center gap-1">
+                <iconify-icon icon="solar:close-circle-bold"></iconify-icon>
+                相克关系
+            </h4>
+            <p class="text-xs text-slate-600">木克土 → 土克水 → 水克火 → 火克金 → 金克木</p>
+        </div>
+    </div>
+</div>
+
+<!-- 添加批注 -->
+<div class="p-4 border-t border-amber-100">
+<button class="w-full py-2 bg-tcm-primary text-white rounded-lg text-sm font-medium hover:opacity-90 flex items-center justify-center gap-2">
+<iconify-icon icon="solar:chat-dots-bold"></iconify-icon>
+                    添加批注
+                </button>
+</div>
+</div>
+
+<!-- AI优化建议 -->
+<div class="bg-white rounded-2xl shadow-sm border border-amber-100">
+<div class="p-4 border-b border-amber-100 flex items-center justify-between">
+<h3 class="font-bold text-sm" style="color: #333333;">AI优化建议</h3>
+<iconify-icon class="text-tcm-primary" icon="solar:magic-stick-2-linear"></iconify-icon>
+</div>
+<div class="p-4 space-y-2">
+<button onclick="showQuoteSuggestion()" class="w-full text-left p-3 bg-amber-50 rounded-lg text-sm hover:bg-amber-100 transition-colors" style="color: #333333">
+<div class="flex items-center gap-2 mb-1">
+<iconify-icon class="text-emerald-500" icon="solar:check-read-bold"></iconify-icon>
+<span class="font-bold">补充经典条文</span>
+</div>
+<p class="text-xs text-slate-500">建议在"五行学说"部分添加《素问·五运行大论》相关内容</p>
+</button>
+
+<button onclick="showActivitySuggestion()" class="w-full text-left p-3 bg-rose-50 rounded-lg text-sm hover:bg-rose-100 transition-colors" style="color: #333333">
+<div class="flex items-center gap-2 mb-1">
+<iconify-icon class="text-amber-500" icon="solar:gamepad-bold"></iconify-icon>
+<span class="font-bold">设计互动环节</span>
+</div>
+<p class="text-xs text-slate-500">可增加"五行配对游戏"提升学生参与度</p>
+</button>
+
+<button onclick="showKnowledgeSuggestion()" class="w-full text-left p-3 bg-blue-50 rounded-lg text-sm hover:bg-blue-100 transition-colors" style="color: #333333">
+<div class="flex items-center gap-2 mb-1">
+<iconify-icon class="text-blue-500" icon="solar:graph-up-bold"></iconify-icon>
+<span class="font-bold">生成知识图谱</span>
+</div>
+<p class="text-xs text-slate-500">自动生成五行生克关系可视化图表</p>
+</button>
+</div>
+</div>
+
+<!-- 协作成员 -->
+<div class="bg-white rounded-2xl shadow-sm border border-amber-100">
+<div class="p-4 border-b border-amber-100">
+<h3 class="font-bold text-sm" style="color: #333333;">协作成员</h3>
+</div>
+<div class="p-4 space-y-3">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center border-2 border-amber-200">
+<span class="text-xs font-bold tcm-primary">李</span>
+</div>
+<div class="flex-1">
+<p class="text-sm font-medium" style="color: #333333;">李教授</p>
+<p class="text-[10px] text-slate-400">创建者</p>
+</div>
+<span class="w-2 h-2 rounded-full bg-green-500"></span>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center border-2 border-emerald-200">
+<iconify-icon class="text-emerald-600 text-xs" icon="solar:robot-bold"></iconify-icon>
+</div>
+<div class="flex-1">
+<p class="text-sm font-medium" style="color: #333333;">经方专家</p>
+<p class="text-[10px] text-slate-400">AI助手</p>
+</div>
+<span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center border-2 border-rose-200">
+<iconify-icon class="text-rose-600 text-xs" icon="solar:palette-bold"></iconify-icon>
+</div>
+<div class="flex-1">
+<p class="text-sm font-medium" style="color: #333333;">国风设计师</p>
+<p class="text-[10px] text-slate-400">AI助手</p>
+</div>
+<span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+</div>
+</div>
+</div>
+</div>
+</main>
+
+<!-- 智能修改指令栏 -->
+<div class="fixed bottom-0 left-0 right-0 bg-white border-t border-amber-100 shadow-lg p-4 z-50">
+<div class="max-w-[1440px] mx-auto">
+<div class="flex items-center gap-4 mb-3">
+<div class="flex items-center gap-2 text-sm text-slate-400">
+<iconify-icon icon="solar:magic-stick-2-linear"></iconify-icon>
+<span>智能修改</span>
+</div>
+<!-- 输入方式切换 -->
+<div class="input-toggle-group">
+    <button class="input-toggle-btn active" id="lessonTextModeBtn" onclick="switchLessonInputMode('text')">
+        <iconify-icon icon="solar:keyboard-linear"></iconify-icon>
+        文字输入
+    </button>
+    <button class="input-toggle-btn" id="lessonVoiceModeBtn" onclick="switchLessonInputMode('voice')">
+        <iconify-icon icon="solar:microphone-bold"></iconify-icon>
+        语音输入
+    </button>
+</div>
+</div>
+
+<!-- 文字输入 -->
+<div class="text-input-wrapper" id="lessonTextInputWrapper">
+<div class="flex items-center gap-4">
+<div class="flex-1 relative">
+<input id="lessonTextInput" class="w-full bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 pr-32 focus:border-tcm-primary focus:outline-none" style="color: #333333;" placeholder="例如：在教学重点中增加五行乘侮关系的详细说明..." onkeypress="handleLessonInputKey(event)"/>
+<div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+<button class="px-3 py-1.5 text-xs text-slate-500 hover:text-tcm-primary bg-white rounded-lg border border-amber-200">
+<iconify-icon icon="solar:gallery-linear"></iconify-icon>
+                            配图
+                        </button>
+<button class="px-3 py-1.5 text-xs text-slate-500 hover:text-tcm-primary bg-white rounded-lg border border-amber-200">
+<iconify-icon icon="solar:link-linear"></iconify-icon>
+                            引用
+                        </button>
+<button onclick="sendLessonCommand()" class="px-4 py-1.5 bg-tcm-primary text-white rounded-lg text-sm font-medium hover:opacity-90 flex items-center gap-1">
+<iconify-icon icon="solar:plain-2-bold"></iconify-icon>
+                            发送
+                        </button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- 语音输入 -->
+<div class="voice-input-wrapper" id="lessonVoiceInputWrapper">
+<div class="voice-input-box">
+    <div class="flex items-center justify-between mb-3">
+        <div class="voice-wave-mini" id="lessonVoiceWave">
+            <div class="voice-wave-bar-mini paused"></div>
+            <div class="voice-wave-bar-mini paused"></div>
+            <div class="voice-wave-bar-mini paused"></div>
+            <div class="voice-wave-bar-mini paused"></div>
+            <div class="voice-wave-bar-mini paused"></div>
+        </div>
+        <div class="voice-input-status" id="lessonVoiceStatus">点击按钮开始录音</div>
+    </div>
+
+    <div class="transcription-area empty mb-3" id="lessonTranscription">等待语音输入...</div>
+
+    <div class="flex justify-center gap-3">
+        <button class="flex items-center gap-2 px-5 py-2.5 bg-tcm-primary text-white rounded-lg hover:opacity-90 transition-all text-sm" id="lessonStartVoiceBtn" onclick="startLessonVoice()">
+            <iconify-icon icon="solar:microphone-bold"></iconify-icon>
+            开始录音
+        </button>
+        <button class="flex items-center gap-2 px-5 py-2.5 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition-all text-sm hidden" id="lessonStopVoiceBtn" onclick="stopLessonVoice()">
+            <iconify-icon icon="solar:stop-circle-bold"></iconify-icon>
+            停止录音
+        </button>
+        <button class="flex items-center gap-2 px-5 py-2.5 bg-tcm-primary text-white rounded-lg hover:opacity-90 transition-all text-sm hidden" id="lessonSendVoiceBtn" onclick="sendLessonVoice()">
+            <iconify-icon icon="solar:plain-2-bold"></iconify-icon>
+            发送
+        </button>
+        <button class="flex items-center gap-2 px-5 py-2.5 bg-white border border-amber-200 text-slate-600 rounded-lg hover:bg-amber-50 transition-all text-sm hidden" id="lessonRetryVoiceBtn" onclick="retryLessonVoice()">
+            <iconify-icon icon="solar:refresh-bold"></iconify-icon>
+            重新录音
+        </button>
+    </div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Toast 容器 -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- 经典引文模态框 -->
+<div class="modal-overlay" id="quoteModal">
+    <div class="modal-content">
+        <div class="p-6 border-b border-amber-100 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <iconify-icon class="text-2xl text-emerald-600" icon="solar:diploma-verified-bold"></iconify-icon>
+                <div>
+                    <h2 class="text-xl font-bold" style="color: #333333;">添加经典引文</h2>
+                    <p class="text-sm text-slate-500">AI 为您推荐以下中医经典文献</p>
+                </div>
+            </div>
+            <button onclick="closeModal('quoteModal')" class="text-slate-400 hover:text-slate-600">
+                <iconify-icon icon="solar:close-circle-bold" style="font-size: 28px;"></iconify-icon>
+            </button>
+        </div>
+        <div class="modal-body" id="quoteModalBody">
+            <!-- 动态内容 -->
+        </div>
+        <div class="p-6 border-t border-amber-100 flex items-center justify-between bg-amber-50">
+            <div class="text-sm text-slate-500">
+                <iconify-icon icon="solar:info-circle-linear"></iconify-icon>
+                选择引文后点击"添加到教案"
+            </div>
+            <div class="flex gap-3">
+                <button onclick="closeModal('quoteModal')" class="px-6 py-2.5 text-slate-600 hover:bg-white rounded-lg text-sm font-medium border border-amber-200 transition-all">
+                    取消
+                </button>
+                <button onclick="addSelectedQuotes()" class="px-6 py-2.5 bg-tcm-primary text-white rounded-lg text-sm font-medium hover:opacity-90 transition-all flex items-center gap-2">
+                    <iconify-icon icon="solar:add-circle-bold"></iconify-icon>
+                    添加到教案
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 知识图谱模态框 -->
+<div class="modal-overlay" id="knowledgeModal">
+    <div class="modal-content">
+        <div class="p-6 border-b border-amber-100 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <iconify-icon class="text-2xl text-blue-600" icon="solar:graph-up-bold"></iconify-icon>
+                <div>
+                    <h2 class="text-xl font-bold" style="color: #333333;">五行知识图谱</h2>
+                    <p class="text-sm text-slate-500">五行相生相克关系可视化</p>
+                </div>
+            </div>
+            <button onclick="closeModal('knowledgeModal')" class="text-slate-400 hover:text-slate-600">
+                <iconify-icon icon="solar:close-circle-bold" style="font-size: 28px;"></iconify-icon>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="knowledge-graph" id="knowledgeGraph">
+                <!-- 动态生成图谱 -->
+            </div>
+            <div class="mt-4 grid grid-cols-2 gap-4">
+                <div class="bg-emerald-50 rounded-lg p-4">
+                    <h4 class="font-bold text-emerald-600 mb-2 flex items-center gap-2">
+                        <iconify-icon icon="solar:arrow-right-up-bold"></iconify-icon>
+                        相生关系
+                    </h4>
+                    <p class="text-sm text-slate-600">木生火 → 火生土 → 土生金 → 金生水 → 水生木</p>
+                </div>
+                <div class="bg-rose-50 rounded-lg p-4">
+                    <h4 class="font-bold text-rose-600 mb-2 flex items-center gap-2">
+                        <iconify-icon icon="solar:close-circle-bold"></iconify-icon>
+                        相克关系
+                    </h4>
+                    <p class="text-sm text-slate-600">木克土 → 土克水 → 水克火 → 火克金 → 金克木</p>
+                </div>
+            </div>
+        </div>
+        <div class="p-6 border-t border-amber-100 flex items-center justify-between bg-amber-50">
+            <div class="text-sm text-slate-500">
+                <iconify-icon icon="solar:info-circle-linear"></iconify-icon>
+                可拖拽节点调整位置，点击节点查看详情
+            </div>
+            <div class="flex gap-3">
+                <button onclick="closeModal('knowledgeModal')" class="px-6 py-2.5 text-slate-600 hover:bg-white rounded-lg text-sm font-medium border border-amber-200 transition-all">
+                    关闭
+                </button>
+                <button onclick="insertKnowledgeGraph()" class="px-6 py-2.5 bg-tcm-primary text-white rounded-lg text-sm font-medium hover:opacity-90 transition-all flex items-center gap-2">
+                    <iconify-icon icon="solar:add-circle-bold"></iconify-icon>
+                    插入到教案
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 互动环节模态框 -->
+<div class="modal-overlay" id="activityModal">
+    <div class="modal-content">
+        <div class="p-6 border-b border-amber-100 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <iconify-icon class="text-2xl text-amber-600" icon="solar:gamepad-bold"></iconify-icon>
+                <div>
+                    <h2 class="text-xl font-bold" style="color: #333333;">设计互动环节</h2>
+                    <p class="text-sm text-slate-500">AI 为您推荐以下互动教学方案</p>
+                </div>
+            </div>
+            <button onclick="closeModal('activityModal')" class="text-slate-400 hover:text-slate-600">
+                <iconify-icon icon="solar:close-circle-bold" style="font-size: 28px;"></iconify-icon>
+            </button>
+        </div>
+        <div class="modal-body" id="activityModalBody">
+            <!-- 动态内容 -->
+        </div>
+        <div class="p-6 border-t border-amber-100 flex items-center justify-between bg-amber-50">
+            <div class="text-sm text-slate-500">
+                <iconify-icon icon="solar:info-circle-linear"></iconify-icon>
+                选择方案后点击"添加到教案"
+            </div>
+            <div class="flex gap-3">
+                <button onclick="closeModal('activityModal')" class="px-6 py-2.5 text-slate-600 hover:bg-white rounded-lg text-sm font-medium border border-amber-200 transition-all">
+                    取消
+                </button>
+                <button onclick="addSelectedActivity()" class="px-6 py-2.5 bg-tcm-primary text-white rounded-lg text-sm font-medium hover:opacity-90 transition-all flex items-center gap-2">
+                    <iconify-icon icon="solar:add-circle-bold"></iconify-icon>
+                    添加到教案
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI优化模态框 -->
+<div class="modal-overlay" id="optimizeModal">
+    <div class="modal-content">
+        <div class="p-6 border-b border-amber-100 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <iconify-icon class="text-2xl" style="color: #8B5A2B;" icon="solar:magic-stick-2-linear"></iconify-icon>
+                <div>
+                    <h2 class="text-xl font-bold" style="color: #333333;">AI 智能优化</h2>
+                    <p class="text-sm text-slate-500">AI 正在分析教案并提供优化建议</p>
+                </div>
+            </div>
+            <button onclick="closeModal('optimizeModal')" class="text-slate-400 hover:text-slate-600">
+                <iconify-icon icon="solar:close-circle-bold" style="font-size: 28px;"></iconify-icon>
+            </button>
+        </div>
+        <div class="modal-body" id="optimizeModalBody">
+            <!-- 动态内容 -->
+        </div>
+        <div class="p-6 border-t border-amber-100 flex items-center justify-between bg-amber-50">
+            <div class="text-sm text-slate-500">
+                <iconify-icon icon="solar:info-circle-linear"></iconify-icon>
+                选择需要应用的优化建议
+            </div>
+            <div class="flex gap-3">
+                <button onclick="closeModal('optimizeModal')" class="px-6 py-2.5 text-slate-600 hover:bg-white rounded-lg text-sm font-medium border border-amber-200 transition-all">
+                    取消
+                </button>
+                <button onclick="applyOptimizations()" class="px-6 py-2.5 bg-tcm-primary text-white rounded-lg text-sm font-medium hover:opacity-90 transition-all flex items-center gap-2">
+                    <iconify-icon icon="solar:check-read-bold"></iconify-icon>
+                    应用优化
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- API设置模态框 -->
+<div id="settingsModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden items-center justify-center">
+    <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden">
+        <div class="p-6 border-b border-amber-100 flex items-center justify-between">
+            <h2 class="text-xl font-bold" style="color: #333333;">系统设置</h2>
+            <button onclick="closeSettings()" class="text-slate-400 hover:text-slate-600">
+                <iconify-icon icon="solar:close-circle-bold" style="font-size: 28px;"></iconify-icon>
+            </button>
+        </div>
+
+        <!-- 设置标签页 -->
+        <div class="border-b border-amber-100">
+            <div class="flex">
+                <button onclick="switchSettingsTab('api')" class="settings-tab-btn active px-6 py-3 text-sm font-medium" data-tab="api">
+                    <iconify-icon icon="solar:server-bold" class="mr-1"></iconify-icon>
+                    API设置
+                </button>
+                <button onclick="switchSettingsTab('general')" class="settings-tab-btn px-6 py-3 text-sm font-medium" data-tab="general">
+                    <iconify-icon icon="solar:settings-bold" class="mr-1"></iconify-icon>
+                    通用设置
+                </button>
+            </div>
+        </div>
+
+        <!-- 设置内容 -->
+        <div class="p-6 overflow-y-auto" style="max-height: calc(85vh - 140px);">
+            <!-- API设置 -->
+            <div id="apiSettingsTab" class="settings-tab-content">
+                <div class="space-y-5">
+                    <!-- API开关 -->
+                    <div class="bg-gradient-to-r from-amber-50 to-emerald-50 rounded-xl p-4 border border-amber-100">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-tcm-primary/10 flex items-center justify-center">
+                                    <iconify-icon class="tcm-primary" icon="solar:server-bold"></iconify-icon>
+                                </div>
+                                <div>
+                                    <span class="font-bold text-sm" style="color: #333333;">启用AI增强</span>
+                                    <p class="text-xs text-slate-500">使用真实AI API生成更智能的回复</p>
+                                </div>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="apiEnabled" class="sr-only peer" onchange="toggleAPIEnabled()">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-tcm-primary"></div>
+                            </label>
+                        </div>
+                        <div id="apiStatus" class="text-xs text-slate-500 mt-2">
+                            当前模式：<span class="font-medium text-amber-600">模拟模式</span>
+                        </div>
+                    </div>
+
+                    <!-- API提供商选择 -->
+                    <div>
+                        <label class="block text-sm font-bold mb-2" style="color: #333333;">
+                            <iconify-icon class="mr-1 tcm-primary" icon="solar:cloud-bold"></iconify-icon>
+                            API提供商
+                        </label>
+                        <select id="apiProvider" onchange="updateProviderSettings()" class="w-full border border-amber-200 rounded-lg px-4 py-2.5 focus:border-tcm-primary focus:outline-none text-sm">
+                            <option value="anthropic">Anthropic (Claude)</option>
+                            <option value="openai">OpenAI (GPT-4/GPT-3.5)</option>
+                            <option value="baidu">百度文心一言</option>
+                            <option value="xunfei">讯飞星火</option>
+                        </select>
+                    </div>
+
+                    <!-- API端点 -->
+                    <div>
+                        <label class="block text-sm font-bold mb-2" style="color: #333333;">
+                            <iconify-icon class="mr-1 tcm-primary" icon="solar:link-bold"></iconify-icon>
+                            API端点
+                        </label>
+                        <input type="text" id="apiEndpoint"
+                               placeholder="https://api.anthropic.com/v1/messages"
+                               class="w-full border border-amber-200 rounded-lg px-4 py-2.5 focus:border-tcm-primary focus:outline-none text-sm font-mono text-xs">
+                    </div>
+
+                    <!-- API密钥 -->
+                    <div>
+                        <label class="block text-sm font-bold mb-2" style="color: #333333;">
+                            <iconify-icon class="mr-1 tcm-primary" icon="solar:lock-keyhole-bold"></iconify-icon>
+                            API密钥
+                        </label>
+                        <div class="relative">
+                            <input type="password" id="apiKey"
+                                   placeholder="sk-ant-..."
+                                   class="w-full border border-amber-200 rounded-lg px-4 py-2.5 pr-10 focus:border-tcm-primary focus:outline-none text-sm font-mono">
+                            <button type="button" onclick="toggleApiKeyVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                                <iconify-icon id="apiKeyToggleIcon" icon="solar:eye-bold"></iconify-icon>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 模型选择 -->
+                    <div>
+                        <label class="block text-sm font-bold mb-2" style="color: #333333;">
+                            <iconify-icon class="mr-1 tcm-primary" icon="solar:cpu-bold"></iconify-icon>
+                            模型
+                        </label>
+                        <select id="apiModel" class="w-full border border-amber-200 rounded-lg px-4 py-2.5 focus:border-tcm-primary focus:outline-none text-sm">
+                            <option value="claude-sonnet-4-20250514">Claude Sonnet 4.5 (推荐)</option>
+                            <option value="claude-opus-4-20250514">Claude Opus 4.5</option>
+                            <option value="claude-haiku-4-20250514">Claude Haiku 4.5</option>
+                        </select>
+                    </div>
+
+                    <!-- 保存按钮 -->
+                    <div class="flex gap-3 pt-2">
+                        <button onclick="testAPConnection()" class="flex-1 py-2.5 border-2 border-tcm-primary text-tcm-primary rounded-lg font-medium hover:bg-amber-50 flex items-center justify-center gap-2">
+                            <iconify-icon icon="solar:check-circle-bold"></iconify-icon>
+                            测试连接
+                        </button>
+                        <button onclick="saveAPISettings()" class="flex-1 py-2.5 bg-tcm-primary text-white rounded-lg font-medium hover:opacity-90 flex items-center justify-center gap-2">
+                            <iconify-icon icon="solar:disk-bold"></iconify-icon>
+                            保存设置
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 通用设置 -->
+            <div id="generalSettingsTab" class="settings-tab-content hidden">
+                <div class="space-y-5">
+                    <div class="bg-blue-50 rounded-xl p-4">
+                        <h4 class="font-bold text-sm mb-2 flex items-center gap-2" style="color: #333333;">
+                            <iconify-icon class="text-blue-600" icon="solar:info-bold"></iconify-icon>
+                            关于本系统
+                        </h4>
+                        <p class="text-xs text-slate-600 mb-3">智课精灵 v1.0 - 中医课程Web应用平台 · 教案管理</p>
+                        <div class="space-y-2 text-xs text-slate-500">
+                            <p>• AI智能优化建议</p>
+                            <p>• 经典引文自动添加</p>
+                            <p>• 知识图谱生成</p>
+                            <p>• 语音和文字双输入模式</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="font-bold text-sm mb-3" style="color: #333333;">数据管理</h4>
+                        <button onclick="clearLocalData()" class="w-full py-2.5 border border-rose-200 text-rose-600 rounded-lg text-sm hover:bg-rose-50 flex items-center justify-center gap-2">
+                            <iconify-icon icon="solar:trash-bin-trash-bold"></iconify-icon>
+                            清空本地数据
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-4 border-t border-amber-100 bg-amber-50">
+            <button onclick="closeSettings()" class="w-full py-2.5 bg-white border border-amber-200 rounded-lg font-medium hover:bg-amber-50">
+                关闭
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ==================== 状态管理 ====================
+const state = {
+    selectedQuotes: [],
+    selectedActivity: null,
+    optimizations: [],
+    knowledgeGenerated: false,
+    // 语音输入状态
+    voice: {
+        isRecording: false,
+        recognition: null,
+        transcript: '',
+        inputMode: 'text' // 'text' 或 'voice'
+    },
+    // API配置状态
+    api: {
+        enabled: false,
+        endpoint: '',
+        apiKey: '',
+        model: 'claude-sonnet-4-20250514',
+        provider: 'anthropic'
+    }
+};
+
+// ==================== API设置管理 ====================
+function openSettings() {
+    document.getElementById('settingsModal').classList.remove('hidden');
+    document.getElementById('settingsModal').classList.add('flex');
+    document.body.style.overflow = 'hidden';
+    loadAPISettings();
+}
+
+function closeSettings() {
+    document.getElementById('settingsModal').classList.add('hidden');
+    document.getElementById('settingsModal').classList.remove('flex');
+    document.body.style.overflow = '';
+}
+
+function switchSettingsTab(tab) {
+    document.querySelectorAll('.settings-tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelectorAll('.settings-tab-content').forEach(content => {
+        content.classList.add('hidden');
+    });
+    document.querySelector(`.settings-tab-btn[data-tab="${tab}"]`).classList.add('active');
+    document.getElementById(`${tab}SettingsTab`).classList.remove('hidden');
+}
+
+function loadAPISettings() {
+    const saved = localStorage.getItem('tcm_lesson_api_config');
+    if (saved) {
+        state.api = { ...state.api, ...JSON.parse(saved) };
+    }
+
+    // 更新UI
+    document.getElementById('apiEnabled').checked = state.api.enabled;
+    document.getElementById('apiProvider').value = state.api.provider;
+    document.getElementById('apiEndpoint').value = state.api.endpoint;
+    document.getElementById('apiKey').value = state.api.apiKey;
+    document.getElementById('apiModel').value = state.api.model;
+    updateAPIStatus();
+}
+
+function saveAPISettings() {
+    state.api.enabled = document.getElementById('apiEnabled').checked;
+    state.api.provider = document.getElementById('apiProvider').value;
+    state.api.endpoint = document.getElementById('apiEndpoint').value;
+    state.api.apiKey = document.getElementById('apiKey').value;
+    state.api.model = document.getElementById('apiModel').value;
+
+    localStorage.setItem('tcm_lesson_api_config', JSON.stringify(state.api));
+    updateAPIStatus();
+    closeSettings();
+    showToast('API设置已保存', 'success');
+}
+
+function toggleAPIEnabled() {
+    const enabled = document.getElementById('apiEnabled').checked;
+    document.getElementById('apiStatus').innerHTML = enabled
+        ? '当前模式：<span class="font-medium text-emerald-600">AI增强模式</span>'
+        : '当前模式：<span class="font-medium text-amber-600">模拟模式</span>';
+}
+
+function updateAPIStatus() {
+    const statusEl = document.getElementById('apiStatus');
+    if (state.api.enabled) {
+        statusEl.innerHTML = '当前模式：<span class="font-medium text-emerald-600">AI增强模式</span>';
+    } else {
+        statusEl.innerHTML = '当前模式：<span class="font-medium text-amber-600">模拟模式</span>';
+    }
+}
+
+function updateProviderSettings() {
+    const provider = document.getElementById('apiProvider').value;
+    const endpointInput = document.getElementById('apiEndpoint');
+    const modelSelect = document.getElementById('apiModel');
+
+    const providerConfigs = {
+        'anthropic': {
+            endpoint: 'https://api.anthropic.com/v1/messages',
+            models: [
+                { value: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4.5 (推荐)' },
+                { value: 'claude-opus-4-20250514', label: 'Claude Opus 4.5' },
+                { value: 'claude-haiku-4-20250514', label: 'Claude Haiku 4.5' }
+            ]
+        },
+        'openai': {
+            endpoint: 'https://api.openai.com/v1/chat/completions',
+            models: [
+                { value: 'gpt-4', label: 'GPT-4' },
+                { value: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
+                { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' }
+            ]
+        },
+        'baidu': {
+            endpoint: 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions',
+            models: [
+                { value: 'ERNIE-Bot-4', label: '文心大模型4.0' },
+                { value: 'ERNIE-Bot-turbo', label: '文心大模型Turbo' }
+            ]
+        },
+        'xunfei': {
+            endpoint: 'https://spark-api.xf-yun.com/v1/chat/completions',
+            models: [
+                { value: 'spark-4.0', label: '讯飞星火4.0' },
+                { value: 'spark-3.5', label: '讯飞星火3.5' }
+            ]
+        }
+    };
+
+    const config = providerConfigs[provider];
+    endpointInput.value = config.endpoint;
+    endpointInput.placeholder = config.endpoint;
+
+    modelSelect.innerHTML = config.models.map(m =>
+        `<option value="${m.value}">${m.label}</option>`
+    ).join('');
+}
+
+function toggleApiKeyVisibility() {
+    const input = document.getElementById('apiKey');
+    const icon = document.getElementById('apiKeyToggleIcon');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.setAttribute('icon', 'solar:eye-closed-bold');
+    } else {
+        input.type = 'password';
+        icon.setAttribute('icon', 'solar:eye-bold');
+    }
+}
+
+async function testAPConnection() {
+    const endpoint = document.getElementById('apiEndpoint').value;
+    const apiKey = document.getElementById('apiKey').value;
+
+    if (!endpoint || !apiKey) {
+        showToast('请先填写API端点和密钥', 'warning');
+        return;
+    }
+
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<iconify-icon icon="solar:refresh-bold" class="animate-spin"></iconify-icon> 测试中...';
+    btn.disabled = true;
+
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        showToast('API连接测试成功！', 'success');
+    }, 1500);
+}
+
+function clearLocalData() {
+    if (confirm('确定要清空所有本地数据吗？')) {
+        localStorage.clear();
+        location.reload();
+    }
+}
+
+function showToast(message, type = 'info') {
+    const colors = {
+        success: 'bg-emerald-500',
+        error: 'bg-rose-500',
+        warning: 'bg-amber-500',
+        info: 'bg-blue-500'
+    };
+
+    const toast = document.createElement('div');
+    toast.className = `fixed top-20 right-6 ${colors[type]} text-white px-6 py-3 rounded-xl shadow-lg z-[100] flex items-center gap-2`;
+    toast.style.animation = 'fadeIn 0.3s ease';
+    toast.innerHTML = `
+        <iconify-icon icon="solar:check-circle-bold"></iconify-icon>
+        ${message}
+    `;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// 点击模态框外部关闭
+document.addEventListener('click', function(e) {
+    const settingsModal = document.getElementById('settingsModal');
+    if (e.target === settingsModal) {
+        closeSettings();
+    }
+});
+
+// ESC键关闭模态框
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeSettings();
+    }
+});
+
+// ==================== 语音输入系统 ====================
+// 初始化语音识别
+function initLessonVoiceRecognition() {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        document.getElementById('lessonVoiceStatus').textContent = '您的浏览器不支持语音输入';
+        return false;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    state.voice.recognition = new SpeechRecognition();
+    state.voice.recognition.lang = 'zh-CN';
+    state.voice.recognition.continuous = true;
+    state.voice.recognition.interimResults = true;
+
+    state.voice.recognition.onresult = (event) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+                finalTranscript += transcript;
+            } else {
+                interimTranscript += transcript;
+            }
+        }
+
+        const preview = document.getElementById('lessonTranscription');
+        if (finalTranscript) {
+            state.voice.transcript += finalTranscript;
+            preview.textContent = state.voice.transcript;
+            preview.classList.remove('empty');
+        }
+        if (interimTranscript) {
+            preview.textContent = state.voice.transcript + interimTranscript;
+            preview.classList.remove('empty');
+        }
+    };
+
+    state.voice.recognition.onerror = (event) => {
+        let errorMsg = '识别出错';
+        switch (event.error) {
+            case 'no-speech': errorMsg = '未检测到语音'; break;
+            case 'audio-capture': errorMsg = '无法访问麦克风'; break;
+            case 'not-allowed': errorMsg = '未授权使用麦克风'; break;
+        }
+        document.getElementById('lessonVoiceStatus').textContent = errorMsg;
+        stopLessonVoiceAnimation();
+    };
+
+    state.voice.recognition.onend = () => {
+        if (state.voice.isRecording) {
+            try {
+                state.voice.recognition.start();
+            } catch (e) {
+                state.voice.isRecording = false;
+                stopLessonVoiceAnimation();
+            }
+        }
+    };
+
+    state.voice.recognition.onstart = () => {
+        state.voice.isRecording = true;
+        document.getElementById('lessonVoiceStatus').textContent = '正在聆听...';
+        startLessonVoiceAnimation();
+    };
+
+    return true;
+}
+
+// 切换输入模式
+function switchLessonInputMode(mode) {
+    state.voice.inputMode = mode;
+    const textBtn = document.getElementById('lessonTextModeBtn');
+    const voiceBtn = document.getElementById('lessonVoiceModeBtn');
+    const textWrapper = document.getElementById('lessonTextInputWrapper');
+    const voiceWrapper = document.getElementById('lessonVoiceInputWrapper');
+
+    if (mode === 'text') {
+        textBtn.classList.add('active');
+        voiceBtn.classList.remove('active');
+        textWrapper.classList.remove('hidden');
+        voiceWrapper.classList.remove('active');
+        if (state.voice.isRecording) {
+            stopLessonVoice();
+        }
+    } else {
+        voiceBtn.classList.add('active');
+        textBtn.classList.remove('active');
+        voiceWrapper.classList.add('active');
+        textWrapper.classList.add('hidden');
+        if (!state.voice.recognition) {
+            initLessonVoiceRecognition();
+        }
+    }
+}
+
+// 开始语音输入
+function startLessonVoice() {
+    if (!state.voice.recognition) {
+        const initialized = initLessonVoiceRecognition();
+        if (!initialized) return;
+    }
+
+    try {
+        state.voice.transcript = '';
+        document.getElementById('lessonTranscription').textContent = '等待语音输入...';
+        document.getElementById('lessonTranscription').classList.add('empty');
+        state.voice.recognition.start();
+
+        document.getElementById('lessonStartVoiceBtn').classList.add('hidden');
+        document.getElementById('lessonStopVoiceBtn').classList.remove('hidden');
+        document.getElementById('lessonSendVoiceBtn').classList.add('hidden');
+        document.getElementById('lessonRetryVoiceBtn').classList.add('hidden');
+    } catch (e) {
+        document.getElementById('lessonVoiceStatus').textContent = '启动失败，请重试';
+    }
+}
+
+// 停止语音输入
+function stopLessonVoice() {
+    if (state.voice.recognition && state.voice.isRecording) {
+        state.voice.isRecording = false;
+        state.voice.recognition.stop();
+        stopLessonVoiceAnimation();
+
+        document.getElementById('lessonVoiceStatus').textContent = '录音已完成';
+        document.getElementById('lessonStartVoiceBtn').classList.add('hidden');
+        document.getElementById('lessonStopVoiceBtn').classList.add('hidden');
+
+        if (state.voice.transcript.trim()) {
+            document.getElementById('lessonSendVoiceBtn').classList.remove('hidden');
+            document.getElementById('lessonRetryVoiceBtn').classList.remove('hidden');
+        } else {
+            document.getElementById('lessonStartVoiceBtn').classList.remove('hidden');
+            document.getElementById('lessonRetryVoiceBtn').classList.remove('hidden');
+        }
+    }
+}
+
+// 重新录音
+function retryLessonVoice() {
+    state.voice.transcript = '';
+    document.getElementById('lessonTranscription').textContent = '等待语音输入...';
+    document.getElementById('lessonTranscription').classList.add('empty');
+    document.getElementById('lessonVoiceStatus').textContent = '点击按钮开始录音';
+    startLessonVoice();
+}
+
+// 发送语音消息
+function sendLessonVoice() {
+    const message = state.voice.transcript.trim();
+    if (!message) {
+        showToast('没有识别到任何内容', 'warning');
+        return;
+    }
+
+    // 切换到文字模式并填充内容
+    switchLessonInputMode('text');
+    document.getElementById('lessonTextInput').value = message;
+    sendLessonCommand();
+
+    // 重置语音输入
+    state.voice.transcript = '';
+}
+
+// 开始语音动画
+function startLessonVoiceAnimation() {
+    const bars = document.querySelectorAll('#lessonVoiceWave .voice-wave-bar-mini');
+    bars.forEach(bar => bar.classList.remove('paused'));
+}
+
+// 停止语音动画
+function stopLessonVoiceAnimation() {
+    const bars = document.querySelectorAll('#lessonVoiceWave .voice-wave-bar-mini');
+    bars.forEach(bar => bar.classList.add('paused'));
+}
+
+// 处理回车发送
+function handleLessonInputKey(event) {
+    if (event.key === 'Enter') {
+        sendLessonCommand();
+    }
+}
+
+// 解析语音/文字指令，映射到具体操作
+function parseLessonCommand(text) {
+    const t = text.toLowerCase();
+    const commands = [
+        { keywords: ['删除知识图谱', '移除知识图谱', '删除图谱'], action: removeKnowledgeGraph, label: '删除知识图谱' },
+        { keywords: ['插入知识图谱', '添加知识图谱', '插入图谱'], action: insertKnowledgeGraph, label: '插入知识图谱到教案' },
+        { keywords: ['知识图谱', '生成图谱', '关系图'], action: generateKnowledgeGraph, label: '生成知识图谱' },
+        { keywords: ['导出word', '导出文档', '下载文档', '导出教案', '下载教案'], action: exportToWord, label: '导出Word文档' },
+        { keywords: ['优化', 'ai分析', 'ai优化'], action: aiOptimize, label: 'AI优化教案' },
+        { keywords: ['引文', '经典', '文献', '经典引文'], action: addClassicQuote, label: '添加经典引文' },
+        { keywords: ['互动', '活动', '互动活动', '游戏'], action: designInteractiveActivity, label: '设计互动活动' },
+    ];
+    for (const cmd of commands) {
+        if (cmd.keywords.some(k => t.includes(k))) return cmd;
+    }
+    return null;
+}
+
+// 发送智能修改指令
+function sendLessonCommand() {
+    const input = document.getElementById('lessonTextInput');
+    const command = input.value.trim();
+    if (!command) return;
+
+    const result = parseLessonCommand(command);
+
+    if (result) {
+        showToast(`正在执行：${result.label}`, 'info');
+        setTimeout(() => {
+            result.action();
+        }, 300);
+    } else {
+        showToast('未识别的指令，可尝试：生成知识图谱、导出文档、AI优化、添加引文、设计互动', 'warning');
+    }
+    input.value = '';
+}
+
+// ==================== Toast 通知系统 ====================
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+
+    const icons = {
+        success: '<iconify-icon class="text-emerald-500 text-xl" icon="solar:check-circle-bold"></iconify-icon>',
+        error: '<iconify-icon class="text-rose-500 text-xl" icon="solar:close-circle-bold"></iconify-icon>',
+        warning: '<iconify-icon class="text-amber-500 text-xl" icon="solar:danger-triangle-bold"></iconify-icon>',
+        info: '<iconify-icon class="text-blue-500 text-xl" icon="solar:info-circle-bold"></iconify-icon>',
+        loading: '<div class="loading-spinner"></div>'
+    };
+
+    toast.innerHTML = `
+        ${icons[type]}
+        <span style="color: #333333; font-size: 14px;">${message}</span>
+    `;
+
+    container.appendChild(toast);
+
+    // 自动移除（除了 loading 类型）
+    if (type !== 'loading') {
+        setTimeout(() => {
+            toast.classList.add('removing');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    return toast;
+}
+
+// ==================== 模态框系统 ====================
+function openModal(modalId) {
+    document.getElementById(modalId).classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+// 点击遮罩关闭
+document.querySelectorAll('.modal-overlay').forEach(modal => {
+    modal.addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    });
+});
+
+// ==================== AI 优化功能 ====================
+function aiOptimize() {
+    showToast('AI 正在分析教案...', 'info');
+
+    setTimeout(() => {
+        // 生成优化建议
+        state.optimizations = [
+            {
+                id: 1,
+                title: '教学目标优化',
+                description: '建议将目标4前置，强调经典文献学习的重要性',
+                priority: 'high',
+                category: '结构优化'
+            },
+            {
+                id: 2,
+                title: '增加临床案例',
+                description: '建议在"五行乘侮关系"部分添加 2-3 个典型医案',
+                priority: 'high',
+                category: '内容补充'
+            },
+            {
+                id: 3,
+                title: '完善时间分配',
+                description: '建议将互动环节从 30 分钟延长至 40 分钟',
+                priority: 'medium',
+                category: '时间优化'
+            },
+            {
+                id: 4,
+                title: '添加思考题',
+                description: '建议增加开放性思考题，鼓励学生深度思考',
+                priority: 'medium',
+                category: '内容补充'
+            }
+        ];
+
+        renderOptimizations();
+        openModal('optimizeModal');
+        showToast('优化建议已生成', 'success');
+    }, 1500);
+}
+
+function renderOptimizations() {
+    const body = document.getElementById('optimizeModalBody');
+    body.innerHTML = state.optimizations.map(opt => `
+        <div class="activity-card mb-3" onclick="toggleOptimization(${opt.id})">
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="px-2 py-0.5 text-xs font-bold rounded ${opt.priority === 'high' ? 'bg-rose-100 text-rose-600' : 'bg-amber-100 text-amber-600'}">
+                            ${opt.priority === 'high' ? '高优先级' : '中优先级'}
+                        </span>
+                        <span class="px-2 py-0.5 text-xs bg-blue-100 text-blue-600 rounded">${opt.category}</span>
+                    </div>
+                    <h4 class="font-bold text-base mb-1" style="color: #333333;">${opt.title}</h4>
+                    <p class="text-sm text-slate-600">${opt.description}</p>
+                </div>
+                <div class="ml-3">
+                    <div class="w-5 h-5 rounded-full border-2 border-amber-300 flex items-center justify-center opt-check-${opt.id}">
+                        <iconify-icon class="text-emerald-500 text-sm hidden" icon="solar:check-read-bold"></iconify-icon>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function toggleOptimization(id) {
+    const checkbox = document.querySelector(`.opt-check-${id}`);
+    const icon = checkbox.querySelector('iconify-icon');
+    const opt = state.optimizations.find(o => o.id === id);
+
+    if (opt.selected) {
+        opt.selected = false;
+        checkbox.classList.remove('bg-tcm-primary', 'border-tcm-primary');
+        icon.classList.add('hidden');
+    } else {
+        opt.selected = true;
+        checkbox.classList.add('bg-tcm-primary', 'border-tcm-primary');
+        icon.classList.remove('hidden');
+    }
+}
+
+function applyOptimizations() {
+    const selected = state.optimizations.filter(o => o.selected);
+    if (selected.length === 0) {
+        showToast('请选择要应用的优化建议', 'warning');
+        return;
+    }
+
+    closeModal('optimizeModal');
+    showToast(`正在应用 ${selected.length} 条优化建议...`, 'loading');
+
+    setTimeout(() => {
+        // 应用每个优化建议
+        selected.forEach(opt => {
+            switch(opt.id) {
+                case 1: // 教学目标优化
+                    updateTeachingObjective();
+                    break;
+                case 2: // 增加临床案例
+                    addClinicalCase();
+                    break;
+                case 3: // 完善时间分配
+                    updateTimeAllocation();
+                    break;
+                case 4: // 添加思考题
+                    addThinkingQuestion();
+                    break;
+            }
+        });
+
+        showToast(`已成功应用 ${selected.length} 条优化建议`, 'success');
+    }, 1000);
+}
+
+// 具体优化应用函数
+function updateTeachingObjective() {
+    showToast('正在优化教学目标...', 'info');
+    // 这里可以添加实际的文字修改逻辑
+    // 例如：将目标4前置
+    setTimeout(() => {
+        showToast('教学目标已优化：经典文献学习目标已前置', 'success');
+    }, 500);
+}
+
+function addClinicalCase() {
+    showToast('正在添加临床案例...', 'info');
+    // 在教学过程中添加医案
+    setTimeout(() => {
+        showToast('已添加 2 个五行相关典型医案到教学过程', 'success');
+    }, 500);
+}
+
+function updateTimeAllocation() {
+    showToast('正在调整时间分配...', 'info');
+    // 更新互动环节时间
+    setTimeout(() => {
+        showToast('互动环节已延长至 40 分钟', 'success');
+    }, 500);
+}
+
+function addThinkingQuestion() {
+    showToast('正在添加思考题...', 'info');
+    // 添加开放性思考题
+    setTimeout(() => {
+        showToast('已添加 3 个开放性思考题', 'success');
+    }, 500);
+}
+
+// ==================== 添加经典引文 ====================
+function addClassicQuote() {
+    showToast('AI 正在搜索经典文献...', 'info');
+
+    setTimeout(() => {
+        const quotes = [
+            {
+                id: 1,
+                source: '《素问·阴阳应象大论》',
+                content: '阴阳者，天地之道也，万物之纲纪，变化之父母，生杀之本始，神明之府也。',
+                explanation: '阐述阴阳学说的根本地位和重要作用',
+                category: '阴阳学说'
+            },
+            {
+                id: 2,
+                source: '《素问·五运行大论》',
+                content: '燥胜则地干，暑胜则地热，风胜则地动，湿胜则地泥，寒胜则地裂。',
+                explanation: '描述五行属性与自然现象的关系',
+                category: '五行学说'
+            },
+            {
+                id: 3,
+                source: '《素问·阴阳应象大论》',
+                content: '阴平阳秘，精神乃治；阴阳离决，精气乃绝。',
+                explanation: '说明阴阳平衡对人体健康的重要性',
+                category: '阴阳学说'
+            },
+            {
+                id: 4,
+                source: '《素问·宝命全形论》',
+                content: '人生有形，不离阴阳。',
+                explanation: '指出人体生命活动与阴阳的密切关系',
+                category: '阴阳学说'
+            },
+            {
+                id: 5,
+                source: '《素问·六微旨大论》',
+                content: '亢则害，承乃制，制则生化。',
+                explanation: '阐述五行相克承制的调节机制',
+                category: '五行学说'
+            },
+            {
+                id: 6,
+                source: '《难经·六十六难》',
+                content: '虚则补其母，实则泻其子。',
+                explanation: '五行学说在临床治疗中的具体应用',
+                category: '五行应用'
+            }
+        ];
+
+        state.selectedQuotes = [];
+        renderQuotes(quotes);
+        openModal('quoteModal');
+        showToast(`找到 ${quotes.length} 条经典引文`, 'success');
+    }, 1200);
+}
+
+function showQuoteSuggestion() {
+    addClassicQuote();
+}
+
+function renderQuotes(quotes) {
+    const body = document.getElementById('quoteModalBody');
+    body.innerHTML = `
+        <div class="max-h-96 overflow-y-auto custom-scrollbar p-2">
+            ${quotes.map(quote => `
+                <div class="quote-item bg-white rounded-lg" id="quote-${quote.id}" onclick="toggleQuote(${quote.id})">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="px-2 py-0.5 text-xs font-bold bg-emerald-100 text-emerald-600 rounded">${quote.category}</span>
+                        <span class="text-xs font-bold text-slate-600">${quote.source}</span>
+                    </div>
+                    <p class="text-sm font-serif italic mb-2" style="color: #333333;">"${quote.content}"</p>
+                    <p class="text-xs text-slate-500 flex items-start gap-1">
+                        <iconify-icon icon="solar:info-circle-linear" class="flex-shrink-0 mt-0.5"></iconify-icon>
+                        ${quote.explanation}
+                    </p>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function toggleQuote(id) {
+    const element = document.getElementById(`quote-${id}`);
+    const index = state.selectedQuotes.indexOf(id);
+
+    if (index > -1) {
+        state.selectedQuotes.splice(index, 1);
+        element.classList.remove('selected');
+    } else {
+        state.selectedQuotes.push(id);
+        element.classList.add('selected');
+    }
+}
+
+function addSelectedQuotes() {
+    if (state.selectedQuotes.length === 0) {
+        showToast('请选择要添加的引文', 'warning');
+        return;
+    }
+
+    closeModal('quoteModal');
+
+    setTimeout(() => {
+        // 获取引文数据（重新生成以便获取完整数据）
+        const allQuotes = [
+            {
+                id: 1,
+                source: '《素问·阴阳应象大论》',
+                content: '阴阳者，天地之道也，万物之纲纪，变化之父母，生杀之本始，神明之府也。',
+                explanation: '阐述阴阳学说的根本地位和重要作用',
+                category: '阴阳学说',
+                color: 'emerald'
+            },
+            {
+                id: 2,
+                source: '《素问·五运行大论》',
+                content: '燥胜则地干，暑胜则地热，风胜则地动，湿胜则地泥，寒胜则地裂。',
+                explanation: '描述五行属性与自然现象的关系',
+                category: '五行学说',
+                color: 'amber'
+            },
+            {
+                id: 3,
+                source: '《素问·阴阳应象大论》',
+                content: '阴平阳秘，精神乃治；阴阳离决，精气乃绝。',
+                explanation: '说明阴阳平衡对人体健康的重要性',
+                category: '阴阳学说',
+                color: 'emerald'
+            },
+            {
+                id: 4,
+                source: '《素问·宝命全形论》',
+                content: '人生有形，不离阴阳。',
+                explanation: '指出人体生命活动与阴阳的密切关系',
+                category: '阴阳学说',
+                color: 'blue'
+            },
+            {
+                id: 5,
+                source: '《素问·六微旨大论》',
+                content: '亢则害，承乃制，制则生化。',
+                explanation: '阐述五行相克承制的调节机制',
+                category: '五行学说',
+                color: 'rose'
+            },
+            {
+                id: 6,
+                source: '《难经·六十六难》',
+                content: '虚则补其母，实则泻其子。',
+                explanation: '五行学说在临床治疗中的具体应用',
+                category: '五行应用',
+                color: 'purple'
+            }
+        ];
+
+        // 获取选中的引文
+        const selectedQuotesData = allQuotes.filter(q => state.selectedQuotes.includes(q.id));
+
+        // 获取引文容器
+        const quoteContainer = document.getElementById('quoteContainer');
+        if (!quoteContainer) {
+            showToast('找不到引文容器', 'error');
+            return;
+        }
+
+        // 为每条选中的引文创建HTML并添加到容器
+        selectedQuotesData.forEach((quote, index) => {
+            // 检查是否已存在（避免重复添加）
+            const existingQuote = document.getElementById(`added-quote-${quote.id}`);
+            if (existingQuote) {
+                existingQuote.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                existingQuote.classList.add('ring-2', 'ring-emerald-500', 'ring-offset-2');
+                setTimeout(() => {
+                    existingQuote.classList.remove('ring-2', 'ring-emerald-500', 'ring-offset-2');
+                }, 2000);
+                return;
+            }
+
+            // 创建引文HTML
+            const quoteHTML = `
+                <div id="added-quote-${quote.id}" class="bg-white rounded-lg p-4 border-l-4 border-${quote.color}-500 transform transition-all duration-500 opacity-0 translate-y-4 new-quote-item">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-${quote.color}-600 bg-${quote.color}-50 px-2 py-0.5 rounded">${quote.source}</span>
+                            <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">AI添加</span>
+                        </div>
+                        <button onclick="removeQuote(${quote.id})" class="text-slate-400 hover:text-rose-500 transition-colors" title="删除引文">
+                            <iconify-icon icon="solar:trash-bin-trash-linear" style="font-size: 18px;"></iconify-icon>
+                        </button>
+                    </div>
+                    <p class="text-sm italic text-slate-600 leading-relaxed">"${quote.content}"</p>
+                    <p class="text-xs text-slate-500 mt-2 flex items-center gap-1">
+                        <iconify-icon icon="solar:info-circle-linear"></iconify-icon>
+                        ${quote.explanation}
+                    </p>
+                </div>
+            `;
+
+            // 插入到容器中
+            quoteContainer.insertAdjacentHTML('beforeend', quoteHTML);
+
+            // 触发动画
+            setTimeout(() => {
+                const newQuote = document.getElementById(`added-quote-${quote.id}`);
+                if (newQuote) {
+                    newQuote.classList.remove('opacity-0', 'translate-y-4');
+                }
+            }, 100 * index);
+        });
+
+        // 滚动到引文区域
+        quoteContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        showToast(`已成功添加 ${state.selectedQuotes.length} 条经典引文到教案`, 'success');
+
+        // 清空选择
+        state.selectedQuotes = [];
+    }, 500);
+}
+
+// 删除已添加的引文
+function removeQuote(id) {
+    const quoteElement = document.getElementById(`added-quote-${id}`);
+    if (quoteElement) {
+        quoteElement.style.opacity = '0';
+        quoteElement.style.transform = 'translateX(20px)';
+        setTimeout(() => {
+            quoteElement.remove();
+            showToast('引文已删除', 'info');
+        }, 300);
+    }
+}
+
+// ==================== 生成知识图谱 ====================
+function generateKnowledgeGraph() {
+    if (state.knowledgeGenerated) {
+        openModal('knowledgeModal');
+        return;
+    }
+
+    showToast('AI 正在生成知识图谱...', 'info');
+
+    setTimeout(() => {
+        renderKnowledgeGraph();
+        state.knowledgeGenerated = true;
+        openModal('knowledgeModal');
+        showToast('知识图谱已生成', 'success');
+    }, 1000);
+}
+
+function showKnowledgeSuggestion() {
+    generateKnowledgeGraph();
+}
+
+function renderKnowledgeGraph() {
+    const container = document.getElementById('knowledgeGraph');
+
+    // 使用纯SVG，固定坐标系
+    const svgWidth = 500;
+    const svgHeight = 400;
+    const centerX = svgWidth / 2;
+    const centerY = svgHeight / 2;
+    const radius = 110;
+
+    const wuxing = [
+        { name: '木', color: '#22c55e', bgColor: '#dcfce7', organ: '肝', x: centerX, y: centerY - radius },
+        { name: '火', color: '#ef4444', bgColor: '#fee2e2', organ: '心', x: centerX + radius * 0.95, y: centerY - radius * 0.31 },
+        { name: '土', color: '#eab308', bgColor: '#fef9c3', organ: '脾', x: centerX + radius * 0.59, y: centerY + radius * 0.81 },
+        { name: '金', color: '#6b7280', bgColor: '#e5e7eb', organ: '肺', x: centerX - radius * 0.59, y: centerY + radius * 0.81 },
+        { name: '水', color: '#3b82f6', bgColor: '#dbeafe', organ: '肾', x: centerX - radius * 0.95, y: centerY - radius * 0.31 }
+    ];
+
+    let svgContent = '';
+
+    // 相生关系线（实线，绿色）
+    const shengEdges = [[0,1], [1,2], [2,3], [3,4], [4,0]];
+    shengEdges.forEach(([from, to]) => {
+        svgContent += `<line x1="${wuxing[from].x}" y1="${wuxing[from].y}" x2="${wuxing[to].x}" y2="${wuxing[to].y}"
+            stroke="#22c55e" stroke-width="3" opacity="0.6"/>`;
+        const mx = (wuxing[from].x + wuxing[to].x) / 2;
+        const my = (wuxing[from].y + wuxing[to].y) / 2;
+        svgContent += `<circle cx="${mx}" cy="${my}" r="14" fill="#22c55e" stroke="white" stroke-width="2"/>`;
+        svgContent += `<text x="${mx}" y="${my+5}" text-anchor="middle" fill="white" font-size="13" font-weight="bold">生</text>`;
+    });
+
+    // 相克关系线（虚线，红色）
+    const keEdges = [[0,2], [2,4], [4,1], [1,3], [3,0]];
+    keEdges.forEach(([from, to]) => {
+        svgContent += `<line x1="${wuxing[from].x}" y1="${wuxing[from].y}" x2="${wuxing[to].x}" y2="${wuxing[to].y}"
+            stroke="#ef4444" stroke-width="2" stroke-dasharray="6,3" opacity="0.6"/>`;
+        const mx = (wuxing[from].x + wuxing[to].x) / 2;
+        const my = (wuxing[from].y + wuxing[to].y) / 2;
+        svgContent += `<circle cx="${mx}" cy="${my}" r="13" fill="#ef4444" stroke="white" stroke-width="2"/>`;
+        svgContent += `<text x="${mx}" y="${my+5}" text-anchor="middle" fill="white" font-size="13" font-weight="bold">克</text>`;
+    });
+
+    // 五行节点 - 使用 SVG group
+    wuxing.forEach((item, i) => {
+        // 外圈光晕
+        svgContent += `<circle cx="${item.x}" cy="${item.y}" r="45" fill="${item.bgColor}" opacity="0.3"/>`;
+        // 主圆
+        svgContent += `<circle cx="${item.x}" cy="${item.y}" r="38" fill="${item.color}" stroke="white" stroke-width="3"/>`;
+        // 五行名称
+        svgContent += `<text x="${item.x}" y="${item.y+8}" text-anchor="middle" fill="white" font-size="26" font-weight="bold">${item.name}</text>`;
+        // 脏腑
+        svgContent += `<text x="${item.x}" y="${item.y+28}" text-anchor="middle" fill="white" font-size="12" opacity="0.9">${item.organ}</text>`;
+    });
+
+    // 中心太极图案
+    svgContent += `<circle cx="${centerX}" cy="${centerY}" r="35" fill="url(#taijiGrad)" stroke="#8B5A2B" stroke-width="3"/>`;
+    svgContent += `<circle cx="${centerX}" cy="${centerY}" r="28" fill="white"/>`;
+    svgContent += `<text x="${centerX}" y="${centerY+6}" text-anchor="middle" fill="#8B5A2B" font-size="28">☯</text>`;
+    svgContent += `<text x="${centerX}" y="${centerY+24}" text-anchor="middle" fill="#8B5A2B" font-size="11" font-weight="bold">五行</text>`;
+
+    container.innerHTML = `
+        <svg viewBox="0 0 ${svgWidth} ${svgHeight}" style="width: 100%; height: 100%; display: block;">
+            <defs>
+                <radialGradient id="taijiGrad">
+                    <stop offset="0%" stop-color="#FFFBEB"/>
+                    <stop offset="100%" stop-color="#ECFDF5"/>
+                </radialGradient>
+            </defs>
+            ${svgContent}
+        </svg>
+    `;
+}
+
+function showWuxingDetail(name, organ) {
+    showToast(`五行：${name} 对应脏腑：${organ}`, 'info');
+}
+
+// 插入知识图谱到教案
+function insertKnowledgeGraph() {
+    closeModal('knowledgeModal');
+
+    setTimeout(() => {
+        // 显示知识图谱区域
+        const kgSection = document.getElementById('knowledgeGraphSection');
+        const kgContainer = document.getElementById('insertedKnowledgeGraph');
+
+        if (kgSection && kgContainer) {
+            kgSection.style.display = 'block';
+            kgSection.classList.add('new-quote-item'); // 添加动画类
+
+            // 渲染知识图谱
+            renderKnowledgeGraphToContainer(kgContainer);
+
+            // 移除动画类
+            setTimeout(() => {
+                kgSection.classList.remove('new-quote-item', 'opacity-0', 'translate-y-4');
+            }, 100);
+
+            // 滚动到知识图谱区域
+            kgSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            showToast('知识图谱已成功添加到教案', 'success');
+        }
+    }, 500);
+}
+
+// 将知识图谱渲染到指定容器
+function renderKnowledgeGraphToContainer(container) {
+    // 使用紧凑坐标系，去掉多余空白
+    const svgWidth = 520;
+    const svgHeight = 480;
+    const centerX = svgWidth / 2;
+    const centerY = svgHeight / 2;
+    const radius = 165;
+
+    const wuxing = [
+        { name: '木', color: '#22c55e', bgColor: '#dcfce7', organ: '肝', x: centerX, y: centerY - radius },
+        { name: '火', color: '#ef4444', bgColor: '#fee2e2', organ: '心', x: centerX + radius * 0.95, y: centerY - radius * 0.31 },
+        { name: '土', color: '#eab308', bgColor: '#fef9c3', organ: '脾', x: centerX + radius * 0.59, y: centerY + radius * 0.81 },
+        { name: '金', color: '#6b7280', bgColor: '#e5e7eb', organ: '肺', x: centerX - radius * 0.59, y: centerY + radius * 0.81 },
+        { name: '水', color: '#3b82f6', bgColor: '#dbeafe', organ: '肾', x: centerX - radius * 0.95, y: centerY - radius * 0.31 }
+    ];
+
+    let svgContent = '';
+
+    // 相生关系线（实线，绿色）
+    const shengEdges = [[0,1], [1,2], [2,3], [3,4], [4,0]];
+    shengEdges.forEach(([from, to]) => {
+        svgContent += `<line x1="${wuxing[from].x}" y1="${wuxing[from].y}" x2="${wuxing[to].x}" y2="${wuxing[to].y}"
+            stroke="#22c55e" stroke-width="4" opacity="0.65"/>`;
+        const mx = (wuxing[from].x + wuxing[to].x) / 2;
+        const my = (wuxing[from].y + wuxing[to].y) / 2;
+        svgContent += `<circle cx="${mx}" cy="${my}" r="16" fill="#22c55e" stroke="white" stroke-width="2"/>`;
+        svgContent += `<text x="${mx}" y="${my+5}" text-anchor="middle" fill="white" font-size="14" font-weight="bold">生</text>`;
+    });
+
+    // 相克关系线（虚线，红色）
+    const keEdges = [[0,2], [2,4], [4,1], [1,3], [3,0]];
+    keEdges.forEach(([from, to]) => {
+        svgContent += `<line x1="${wuxing[from].x}" y1="${wuxing[from].y}" x2="${wuxing[to].x}" y2="${wuxing[to].y}"
+            stroke="#ef4444" stroke-width="3" stroke-dasharray="8,5" opacity="0.65"/>`;
+        const mx = (wuxing[from].x + wuxing[to].x) / 2;
+        const my = (wuxing[from].y + wuxing[to].y) / 2;
+        svgContent += `<circle cx="${mx}" cy="${my}" r="15" fill="#ef4444" stroke="white" stroke-width="2"/>`;
+        svgContent += `<text x="${mx}" y="${my+5}" text-anchor="middle" fill="white" font-size="14" font-weight="bold">克</text>`;
+    });
+
+    // 五行节点
+    wuxing.forEach((item) => {
+        svgContent += `<circle cx="${item.x}" cy="${item.y}" r="55" fill="${item.bgColor}" opacity="0.3"/>`;
+        svgContent += `<circle cx="${item.x}" cy="${item.y}" r="45" fill="${item.color}" stroke="white" stroke-width="3"/>`;
+        svgContent += `<text x="${item.x}" y="${item.y+8}" text-anchor="middle" fill="white" font-size="32" font-weight="bold">${item.name}</text>`;
+        svgContent += `<text x="${item.x}" y="${item.y+28}" text-anchor="middle" fill="white" font-size="13" opacity="0.9">${item.organ}</text>`;
+    });
+
+    // 中心太极图案
+    svgContent += `<circle cx="${centerX}" cy="${centerY}" r="42" fill="url(#taijiGrad)" stroke="#8B5A2B" stroke-width="3"/>`;
+    svgContent += `<circle cx="${centerX}" cy="${centerY}" r="34" fill="white"/>`;
+    svgContent += `<text x="${centerX}" y="${centerY+6}" text-anchor="middle" fill="#8B5A2B" font-size="34">☯</text>`;
+    svgContent += `<text x="${centerX}" y="${centerY+26}" text-anchor="middle" fill="#8B5A2B" font-size="12" font-weight="bold">五行</text>`;
+
+    container.innerHTML = `
+        <svg viewBox="0 0 ${svgWidth} ${svgHeight}" style="width: 100%; height: auto; display: block;">
+            <defs>
+                <radialGradient id="taijiGrad">
+                    <stop offset="0%" stop-color="#FFFBEB"/>
+                    <stop offset="100%" stop-color="#ECFDF5"/>
+                </radialGradient>
+            </defs>
+            ${svgContent}
+        </svg>
+    `;
+}
+
+// 删除知识图谱
+function removeKnowledgeGraph() {
+    const kgSection = document.getElementById('knowledgeGraphSection');
+    if (kgSection) {
+        kgSection.style.opacity = '0';
+        kgSection.style.transform = 'translateY(-20px)';
+        setTimeout(() => {
+            kgSection.style.display = 'none';
+            kgSection.style.opacity = '';
+            kgSection.style.transform = '';
+            showToast('知识图谱已删除', 'info');
+        }, 300);
+    }
+}
+
+// ==================== 导出Word功能 ====================
+function exportToWord() {
+    setTimeout(() => {
+        // 收集教案内容
+        const docContent = collectLessonPlanContent();
+
+        // 创建Word文档内容（简化版，使用HTML格式）
+        const wordContent = generateWordDocument(docContent);
+
+        // 创建Blob并下载
+        const blob = new Blob([wordContent], {
+            type: 'application/vnd.ms-word'
+        });
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `中医教案_阴阳五行学说_${new Date().toISOString().split('T')[0]}.doc`;
+        link.click();
+
+        URL.revokeObjectURL(url);
+        showToast('Word文档导出成功', 'success');
+    }, 1500);
+}
+
+// 收集教案内容
+function collectLessonPlanContent() {
+    // 收集知识图谱SVG
+    let knowledgeGraphSVG = '';
+    const kgContainer = document.getElementById('insertedKnowledgeGraph');
+    if (kgContainer && kgContainer.innerHTML) {
+        // 提取SVG内容，替换emoji/特殊字符为Word兼容文本，清理内联样式
+        knowledgeGraphSVG = kgContainer.innerHTML
+            .replace(/style="[^"]*"/g, 'style="width:100%;height:auto;"')
+            .replace(/☯/g, '阴阳')
+            .replace(/→/g, '&#8594;')
+            .replace(/●/g, '&#9679;')
+            .replace(/✕/g, '&#10005;')
+            .replace(/⚠/g, '&#9888;')
+            .replace(/&#x2716;/g, '&#10005;');
+    }
+
+    // 收集经典文献引用（包括默认引文和AI添加的引文）
+    let quotesHTML = '';
+    const quoteContainer = document.getElementById('quoteContainer');
+    if (quoteContainer) {
+        const quotes = quoteContainer.querySelectorAll(':scope > div');
+        quotes.forEach(quote => {
+            // 提取来源：取第一个含书名号的span
+            const spans = quote.querySelectorAll('span');
+            let source = '';
+            spans.forEach(span => {
+                const txt = span.textContent.trim();
+                if (txt.includes('\u300A') && txt.length > 0) {
+                    source = txt;
+                }
+            });
+            // 提取引文内容
+            const contentEl = quote.querySelector('p.text-sm.italic, p.italic');
+            const content = contentEl ? contentEl.textContent.replace(/^\s*[""]\s*|\s*[""]\s*$/g, '').trim() : '';
+            // 提取解读（可能不存在）
+            const explEl = quote.querySelector('p.text-xs.text-slate-500');
+            const explanation = explEl ? explEl.textContent.trim() : '';
+            if (content) {
+                quotesHTML += '<div class="quote-box">' +
+                    '<p class="quote-text">\u201C' + content + '\u201D</p>' +
+                    '<p class="quote-source">\u2014\u2014' + source + '</p>' +
+                    (explanation ? '<p class="quote-explanation">\u89E3\u8BFB\uFF1A' + explanation + '</p>' : '') +
+                    '</div>';
+            }
+        });
+    }
+
+    return {
+        title: '阴阳五行学说教案',
+        subtitle: '中医基础理论课程',
+        date: '2026年4月12日',
+        author: '李教授',
+        institution: '智课精灵中医教育学院',
+        knowledgeGraph: knowledgeGraphSVG,
+        sections: [
+            {
+                title: '一、课程概述',
+                content: {
+                    description: '本课程系统讲授中医基础理论的核心内容——阴阳五行学说。阴阳五行理论是中医学的哲学基础，贯穿于中医的生理、病理、诊断、治疗等各个方面。通过本课程的学习，学生将掌握阴阳五行的基本概念、相互关系及其在中医临床中的应用。',
+                    objectives: [
+                        '掌握阴阳的基本概念及其相互关系',
+                        '理解五行学说的基本内容：五行特性、五行生克制化规律',
+                        '能够运用阴阳五行理论解释人体生理病理现象，指导临床辨证论治',
+                        '熟悉《黄帝内经》中相关经典条文，培养中医思维'
+                    ]
+                }
+            },
+            {
+                title: '二、教学重点与难点',
+                content: {
+                    keyPoints: [
+                        '阴阳的基本概念和相互关系（对立制约、互根互用、消长平衡、相互转化）',
+                        '五行生克制化规律（相生、相克、相乘、相侮）',
+                        '五行与脏腑的对应关系及临床意义',
+                        '阴阳五行在辨证论治中的具体应用'
+                    ],
+                    difficulties: [
+                        '阴阳相互转化的机理与条件',
+                        '五行生克关系的动态理解',
+                        '五行乘侮关系的病理意义',
+                        '理论与实践的有机结合'
+                    ]
+                }
+            },
+            {
+                title: '三、五行知识图谱',
+                content: knowledgeGraphSVG
+            },
+            {
+                title: '四、经典文献引用',
+                content: quotesHTML || '<p class="no-content">暂无经典文献引用</p>'
+            },
+            {
+                title: '五、教学过程设计',
+                content: {
+                    duration: '90分钟',
+                    structure: [
+                        { phase: '课程导入', duration: '10分钟', content: '通过临床案例引入阴阳五行的实际应用，激发学生学习兴趣' },
+                        { phase: '理论讲授', duration: '40分钟', content: '系统讲解阴阳五行理论的基本概念、相互关系及临床应用' },
+                        { phase: '互动讨论', duration: '25分钟', content: '分组讨论阴阳五行在具体病例中的体现，培养学生的辨证思维能力' },
+                        { phase: '案例解析', duration: '10分钟', content: '结合典型临床病例，展示阴阳五行理论的实践应用' },
+                        { phase: '课堂小结', duration: '5分钟', content: '总结本节课的重点内容，布置课后思考题' }
+                    ]
+                }
+            },
+            {
+                title: '六、教学反思与展望',
+                content: {
+                    reflection: '本课程通过理论与实践相结合的方式，帮助学生建立了完整的阴阳五行理论体系。在今后的教学中，应进一步加强与临床实践的联系，提高学生运用中医思维解决实际问题的能力。',
+                    outlook: '下一步将结合现代研究成果，深化对阴阳五行理论的科学阐释，推动中医理论的传承与创新。'
+                }
+            },
+            {
+                title: '七、课堂互动测验',
+                content: {
+                    quizzes: [
+                        {
+                            type: 'choice',
+                            question: '以下哪项属于五行相生关系？',
+                            options: ['A. 木克土', 'B. 水生木', 'C. 火克金', 'D. 土克水'],
+                            answer: 'B',
+                            explanation: '水生木：水能滋养树木，故水生木。五行相生顺序为木生火、火生土、土生金、金生水、水生木。'
+                        },
+                        {
+                            type: 'choice',
+                            question: '肝火犯肺病证的五行传变是：',
+                            options: ['A. 相生', 'B. 相克', 'C. 相乘', 'D. 相侮'],
+                            answer: 'D',
+                            explanation: '肝属木，肺属金。正常情况下金克木，但木火过于亢盛时，可反向克制金，称为"木火刑金"，属于相侮关系。'
+                        },
+                        {
+                            type: 'case',
+                            question: '患者，女，42岁。情绪低落，胸胁胀满，善太息，食欲不振。辨证属五行中何种关系失调？',
+                            options: ['A. 木火刑金', 'B. 木旺乘土', 'C. 土不生金', 'D. 水不涵木'],
+                            answer: 'B',
+                            explanation: '肝属木，脾属土。肝郁（木旺）导致脾虚（受乘），出现食欲不振等症状，属于木旺乘土。治疗应疏肝健脾，代表方为逍遥散。'
+                        }
+                    ]
+                }
+            }
+        ]
+    };
+}
+
+// 生成Word文档内容
+function generateWordDocument(data) {
+    return `
+<!DOCTYPE html>
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word">
+<head>
+    <meta charset="utf-8">
+    <title>${data.title}</title>
+    <!--[if gte mso 9]><xml>
+    <w:WordDocument>
+        <w:View>Print</w:View>
+        <w:Zoom>100</w:Zoom>
+        <w:DoNotOptimizeForBrowser/>
+    </w:WordDocument>
+    </xml><![endif]-->
+    <style>
+        /* ====== 页面设置 ====== */
+        @page Section1 {
+            size: 21cm 29.7cm;
+            margin: 0;
+            mso-header-margin: 0;
+            mso-footer-margin: 0;
+        }
+        div.Section1 { page: Section1; }
+
+        @page Section2 {
+            size: 21cm 29.7cm;
+            margin: 2.54cm 3.17cm 2.54cm 3.17cm;
+            mso-header-margin: 1.5cm;
+            mso-footer-margin: 1.75cm;
+        }
+        div.Section2 { page: Section2; }
+
+        * { margin: 0; padding: 0; }
+
+        body {
+            font-family: "Microsoft YaHei", "SimSun", serif;
+            font-size: 14pt;
+            line-height: 2;
+            color: #333;
+            background: #fff;
+        }
+
+        /* ====== 封面样式（单层表格，严格一页 A4，上下对称居中） ====== */
+        .cover {
+            width: 21cm;
+            height: 29.7cm;
+            text-align: center;
+            padding: 0;
+            margin: 0;
+            background: #fef9f3;
+            overflow: hidden;
+            page-break-after: always;
+        }
+
+        /* 封面单层表格（显式高度，border 直接画在 table 上） */
+        .cover-table {
+            width: 100%;
+            height: 29.7cm;
+            border: 4px solid #8B5A2B;
+            border-collapse: collapse;
+            background: #fef9f3;
+        }
+        .cover-table td {
+            padding: 0;
+            border: none;
+        }
+
+        /* 顶部装饰带 */
+        .cover-header-band {
+            background: #8B5A2B;
+            padding: 16px 20px;
+            color: #fef9f3;
+            font-size: 20pt;
+            letter-spacing: 16px;
+            font-family: "SimSun", "Microsoft YaHei", serif;
+            font-weight: bold;
+            border-bottom: 3px solid #C23B22;
+        }
+
+        /* 中间居中内容区（仅水平 padding，垂直由 valign=middle 控制） */
+        .cover-center-cell {
+            padding: 0 80px;
+            vertical-align: middle;
+        }
+
+        /* 顶部装饰线（双线） */
+        .cover-top-deco {
+            border: none;
+            border-top: 3px solid #8B5A2B;
+            border-bottom: 2px solid #C23B22;
+            height: 6px;
+            background: #fef9f3;
+            margin: 0 auto 30px auto;
+            width: 55%;
+        }
+
+        /* 标题 */
+        .cover h1 {
+            font-size: 48pt;
+            color: #8B5A2B;
+            margin-bottom: 16px;
+            font-weight: bold;
+            letter-spacing: 12px;
+            font-family: "SimSun", "Microsoft YaHei", serif;
+        }
+
+        /* 副标题 */
+        .cover .subtitle {
+            font-size: 32pt;
+            color: #C23B22;
+            margin-bottom: 12px;
+            font-weight: bold;
+            letter-spacing: 8px;
+        }
+
+        /* 副标题下装饰线（双线） */
+        .cover-sub-deco {
+            border: none;
+            border-top: 3px solid #8B5A2B;
+            border-bottom: 2px solid #d4a574;
+            height: 5px;
+            background: #fef9f3;
+            margin: 24px auto;
+            width: 35%;
+        }
+
+        /* 信息栏 */
+        .cover .info {
+            font-size: 24pt;
+            color: #555;
+            line-height: 2.6;
+            margin-top: 20px;
+        }
+
+        .cover .info p {
+            margin: 8px 0;
+            text-indent: 0;
+            text-align: center;
+        }
+
+        /* 信息栏标签着色 */
+        .cover .info strong {
+            color: #8B5A2B;
+        }
+
+        /* 底部装饰带 */
+        .cover-footer-band {
+            background: #8B5A2B;
+            padding: 16px 20px;
+            border-top: 3px solid #C23B22;
+        }
+
+        .cover-footer-inner {
+            background: #fef9f3;
+            padding: 12px 0;
+            text-align: center;
+        }
+
+        .cover-footer-inner p {
+            font-size: 16pt;
+            color: #999;
+            letter-spacing: 4px;
+            text-indent: 0;
+            text-align: center;
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        /* ====== 正文基础 ====== */
+        .content { padding: 0; }
+
+        /* 一级标题 h2 */
+        h2 {
+            font-size: 22pt;
+            color: #8B5A2B;
+            font-weight: bold;
+            border-left: 6px solid #8B5A2B;
+            border-bottom: 2px solid #d4b896;
+            padding: 10px 0 8px 16px;
+            margin: 40px 0 22px 0;
+            line-height: 1.5;
+        }
+
+        /* 二级标题 h3 */
+        h3 {
+            font-size: 16pt;
+            color: #C23B22;
+            font-weight: bold;
+            margin: 28px 0 14px 0;
+            line-height: 1.5;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #e5d5c0;
+        }
+
+        /* 三级标题 h4 */
+        h4 {
+            font-size: 14pt;
+            color: #8B5A2B;
+            font-weight: bold;
+            margin: 20px 0 10px 0;
+            line-height: 1.5;
+        }
+
+        /* 段落 */
+        p {
+            margin: 10px 0;
+            text-align: justify;
+            text-indent: 2em;
+            line-height: 2;
+            font-size: 14pt;
+        }
+
+        /* 列表 */
+        ul, ol {
+            margin: 12px 0 12px 0;
+            padding-left: 36px;
+        }
+        li {
+            margin: 6px 0;
+            line-height: 2;
+            font-size: 14pt;
+        }
+
+        /* ====== 重点难点（表格布局） ====== */
+        .points-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 18px 0 24px 0;
+        }
+        .points-table td {
+            width: 50%;
+            vertical-align: top;
+            background: #fef9f3;
+            border: 2px solid #d4b896;
+            padding: 18px 20px;
+        }
+        .points-table td:first-child {
+            border-right: none;
+        }
+        .points-table h4 {
+            text-align: center;
+            color: #8B5A2B;
+            border-bottom: 2px solid #8B5A2B;
+            padding-bottom: 8px;
+            margin: 0 0 12px 0;
+            font-size: 14pt;
+        }
+        .points-table ul {
+            margin: 6px 0;
+            padding-left: 22px;
+        }
+        .points-table li { margin: 6px 0; }
+
+        /* ====== 知识图谱 ====== */
+        .knowledge-graph-section {
+            text-align: center;
+            margin: 10px 0;
+            page-break-inside: avoid;
+        }
+        .knowledge-graph-container {
+            width: 100%;
+            border: 2px solid #8B5A2B;
+            padding: 6px;
+            background: #fef9f3;
+        }
+        .knowledge-graph-container svg { width: 100%; height: auto; }
+
+        /* 图谱说明 */
+        .kg-relation-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 14px 0 20px 0;
+        }
+        .kg-relation-table td {
+            padding: 10px 16px;
+            border: 1px solid #d4b896;
+            font-size: 14pt;
+            line-height: 2;
+            text-indent: 0;
+        }
+        .kg-relation-table .label-cell {
+            font-weight: bold;
+            width: 120px;
+            text-align: center;
+        }
+
+        /* ====== 经典文献引用 ====== */
+        .quote-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-left: 5px solid #22c55e;
+            padding: 18px 20px;
+            margin: 18px 0;
+        }
+        .quote-text {
+            font-size: 14pt;
+            color: #333;
+            font-style: italic;
+            margin-bottom: 8px;
+            text-indent: 0;
+            line-height: 2;
+        }
+        .quote-source {
+            font-size: 14pt;
+            color: #16a34a;
+            font-weight: bold;
+            margin-bottom: 6px;
+            text-indent: 0;
+            line-height: 1.8;
+        }
+        .quote-explanation {
+            font-size: 14pt;
+            color: #666;
+            text-indent: 0;
+            line-height: 1.8;
+        }
+
+        /* ====== 教学过程表格 ====== */
+        .teaching-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 18px 0 24px 0;
+        }
+        .teaching-table th {
+            background: #8B5A2B;
+            color: white;
+            padding: 10px 12px;
+            text-align: center;
+            font-weight: bold;
+            border: 1px solid #6b4528;
+            font-size: 14pt;
+        }
+        .teaching-table td {
+            padding: 10px 12px;
+            border: 1px solid #d4b896;
+            text-indent: 0;
+            font-size: 14pt;
+            line-height: 2;
+            vertical-align: top;
+        }
+        .teaching-table tr:nth-child(even) td { background: #fef9f3; }
+
+        /* ====== 反思与展望 ====== */
+        .reflection-box {
+            background: #f0f9f0;
+            border: 1px solid #bbf7d0;
+            padding: 18px 20px;
+            margin: 14px 0;
+        }
+        .reflection-box h4 {
+            color: #16a34a;
+            margin: 0 0 6px 0;
+            font-size: 14pt;
+        }
+        .reflection-box p { text-indent: 2em; }
+
+        .no-content {
+            color: #999;
+            font-style: italic;
+            text-align: center;
+            padding: 25px;
+            text-indent: 0;
+            font-size: 14pt;
+        }
+
+        /* ====== 测验 ====== */
+        .quiz-item {
+            border: 2px solid #d4b896;
+            padding: 18px 20px;
+            margin: 18px 0;
+            background: #fefcf8;
+            page-break-inside: avoid;
+        }
+        .quiz-header {
+            margin-bottom: 10px;
+            border-bottom: 1px solid #e5d5c0;
+            padding-bottom: 6px;
+        }
+        .quiz-number {
+            background: #8B5A2B;
+            color: white;
+            padding: 2px 10px;
+            font-weight: bold;
+            font-size: 14pt;
+        }
+        .quiz-type {
+            font-size: 12pt;
+            color: #999;
+        }
+        .quiz-question {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            text-indent: 0;
+            line-height: 2;
+        }
+        .quiz-option {
+            padding: 6px 14px;
+            margin: 4px 0;
+            border: 1px solid #ddd;
+            font-size: 14pt;
+            line-height: 1.8;
+            text-indent: 0;
+        }
+        .quiz-option-correct {
+            border: 2px solid #22c55e;
+            background: #f0fdf4;
+            font-weight: bold;
+            color: #15803d;
+        }
+        .quiz-answer-line {
+            margin: 12px 0 4px;
+            font-size: 14pt;
+            font-weight: bold;
+            color: #16a34a;
+            text-indent: 0;
+        }
+        .quiz-explanation {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-left: 4px solid #3b82f6;
+            padding: 12px 16px;
+            margin-top: 8px;
+            font-size: 14pt;
+            line-height: 2;
+            text-indent: 0;
+            color: #1e40af;
+        }
+
+        /* ====== 页脚 ====== */
+        .footer {
+            text-align: center;
+            color: #999;
+            font-size: 10.5pt;
+            margin-top: 40px;
+            padding-top: 14px;
+            border-top: 1px solid #ddd;
+        }
+        .footer p { text-indent: 0; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <!-- 封面（单层表格，显式高度，valign=middle 实现上下对称居中） -->
+    <div class="Section1">
+        <div class="cover">
+            <table class="cover-table" cellpadding="0" cellspacing="0" width="100%">
+                <!-- 居中主体 -->
+                <tr>
+                    <td class="cover-center-cell" valign="middle" align="center">
+                        <div class="cover-top-deco"></div>
+                        <h1>${data.title}</h1>
+                        <div class="subtitle">${data.subtitle}</div>
+                        <div class="cover-sub-deco"></div>
+                        <div class="info">
+                            <p><strong>授课单位：</strong>${data.institution || '智课精灵中医教育学院'}</p>
+                            <p><strong>授课教师：</strong>${data.author}</p>
+                            <p><strong>授课日期：</strong>${data.date}</p>
+                            <p style="font-size: 14pt; color: #999; letter-spacing: 4px; margin-top: 14px;">智课精灵 &#183; 中医课程Web应用平台</p>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- 分节符（封面→正文，仅此一处换页） -->
+    <br clear="all" style="page-break-before:always; mso-break-type:section-break;" />
+
+    <!-- 正文（新分节） -->
+    <div class="Section2 content">
+        ${data.sections.map(section => {
+            if (section.title.includes('课程概述')) {
+                return `
+                    <h2>${section.title}</h2>
+                    <p>${section.content.description}</p>
+                    <h3>教学目标</h3>
+                    <ul>
+                        ${section.content.objectives.map(obj => '<li>' + obj + '</li>').join('')}
+                    </ul>
+                `;
+            } else if (section.title.includes('重点与难点')) {
+                return `
+                    <h2>${section.title}</h2>
+                    <table class="points-table"><tr>
+                        <td>
+                            <h4>教学重点</h4>
+                            <ul>
+                                ${section.content.keyPoints.map(p => '<li>' + p + '</li>').join('')}
+                            </ul>
+                        </td>
+                        <td>
+                            <h4>教学难点</h4>
+                            <ul>
+                                ${section.content.difficulties.map(d => '<li>' + d + '</li>').join('')}
+                            </ul>
+                        </td>
+                    </tr></table>
+                `;
+            } else if (section.title.includes('知识图谱')) {
+                return `
+                    <h2>${section.title}</h2>
+                    <p style="text-align: center; margin-bottom: 12px; text-indent: 0;">
+                        五行生克关系知识图谱，展示木、火、土、金、水五行之间的相生相克关系及脏腑对应。
+                    </p>
+                    <div class="knowledge-graph-section">
+                        <div class="knowledge-graph-container">
+                            ${section.content || '<p class="no-content">暂未生成知识图谱</p>'}
+                        </div>
+                    </div>
+                    <table class="kg-relation-table">
+                        <tr>
+                            <td class="label-cell" style="background:#dcfce7; color:#15803d;">相生关系</td>
+                            <td>木生火 &#8594; 火生土 &#8594; 土生金 &#8594; 金生水 &#8594; 水生木</td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell" style="background:#fee2e2; color:#dc2626;">相克关系</td>
+                            <td>木克土 &#8594; 土克水 &#8594; 水克火 &#8594; 火克金 &#8594; 金克木</td>
+                        </tr>
+                    </table>
+                `;
+            } else if (section.title.includes('经典文献')) {
+                return `
+                    <h2>${section.title}</h2>
+                    ${section.content}
+                `;
+            } else if (section.title.includes('互动测验')) {
+                const quizzes = section.content.quizzes || [];
+                const typeLabel = function(t) { return t === 'case' ? '病例分析题' : '选择题'; };
+                return `
+                    <h2>${section.title}</h2>
+                    <p>以下测验题用于课堂互动，检验学生对阴阳五行理论的掌握程度，共 ${quizzes.length} 题。</p>
+                    ${quizzes.map(function(q, qi) {
+                        const correctIdx = q.options.findIndex(function(o) { return o.charAt(0) === q.answer; });
+                        return '<div class="quiz-item">' +
+                            '<div class="quiz-header">' +
+                                '<span class="quiz-number">题目 ' + (qi+1) + '</span>' +
+                                '<span class="quiz-type">' + typeLabel(q.type) + '</span>' +
+                            '</div>' +
+                            '<p class="quiz-question">' + q.question + '</p>' +
+                            q.options.map(function(opt, oi) {
+                                const cls = oi === correctIdx ? ' class="quiz-option quiz-option-correct"' : ' class="quiz-option"';
+                                return '<p' + cls + '>' + opt + (oi === correctIdx ? ' &#10003;' : '') + '</p>';
+                            }).join('') +
+                            '<p class="quiz-answer-line">正确答案：' + q.answer + '</p>' +
+                            '<div class="quiz-explanation"><strong>解析：</strong>' + q.explanation + '</div>' +
+                        '</div>';
+                    }).join('')}
+                `;
+            } else if (section.title.includes('教学过程')) {
+                return `
+                    <h2>${section.title}</h2>
+                    <p><strong>课程时长：</strong>${section.content.duration}</p>
+                    <table class="teaching-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 20%;">教学阶段</th>
+                                <th style="width: 15%;">时间</th>
+                                <th style="width: 65%;">主要内容</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${section.content.structure.map(item => `
+                                <tr>
+                                    <td style="text-align: center;"><strong>${item.phase}</strong></td>
+                                    <td style="text-align: center;">${item.duration}</td>
+                                    <td>${item.content}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } else if (section.title.includes('教学反思')) {
+                return `
+                    <h2>${section.title}</h2>
+                    <div class="reflection-box">
+                        <h4>教学反思</h4>
+                        <p>${section.content.reflection}</p>
+                    </div>
+                    <div class="reflection-box">
+                        <h4>教学展望</h4>
+                        <p>${section.content.outlook}</p>
+                    </div>
+                `;
+            }
+            return `
+                <h2>${section.title}</h2>
+                <p>${section.content}</p>
+            `;
+        }).join('')}
+    </div>
+
+    <!-- 页脚 -->
+    <div class="footer">
+        <p>本教案由智课精灵中医课程Web应用平台生成</p>
+        <p>生成时间：${new Date().toLocaleString('zh-CN')}</p>
+    </div>
+</body>
+</html>
+    `;
+}
+
+// 修复互动环节添加功能
+function addInteractiveActivityToLesson() {
+    const activity = state.selectedActivity;
+    if (!activity) {
+        showToast('请选择要添加的互动环节', 'warning');
+        return;
+    }
+
+    closeModal('activityModal');
+
+    setTimeout(() => {
+        // 在教学过程的最后添加互动环节
+        const teachingProcess = document.querySelector('.section-card.bg-blue-50');
+        if (teachingProcess) {
+            // 查找教学过程的最后一个子项
+            const lastSection = teachingProcess.querySelector('.space-y-4');
+            if (lastSection) {
+                const activityHTML = `
+                    <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border-2 border-purple-200 new-quote-item">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-2">
+                                <iconify-icon icon="${activity.icon}" class="text-xl text-${activity.color}-600"></iconify-icon>
+                                <h4 class="font-bold text-sm" style="color: #333333;">${activity.title}</h4>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs px-2 py-0.5 bg-${activity.color}-100 text-${activity.color}-600 rounded">${activity.difficulty}</span>
+                                <span class="text-xs text-slate-500">${activity.duration}</span>
+                                <button onclick="this.closest('.new-quote-item').remove()" class="text-slate-400 hover:text-rose-500">
+                                    <iconify-icon icon="solar:trash-bin-trash-linear" style="font-size: 16px;"></iconify-icon>
+                                </button>
+                            </div>
+                        </div>
+                        <p class="text-sm text-slate-700 mb-2">${activity.description}</p>
+                        <div class="flex flex-wrap gap-2">
+                            ${activity.features.map(f => `
+                                <span class="text-xs px-2 py-0.5 bg-white border border-purple-200 rounded-full">${f}</span>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+
+                lastSection.insertAdjacentHTML('beforeend', activityHTML);
+
+                // 触发动画
+                setTimeout(() => {
+                    const newActivity = teachingProcess.querySelector('.new-quote-item');
+                    if (newActivity) {
+                        newActivity.classList.remove('opacity-0', 'translate-y-4');
+                    }
+                }, 100);
+            }
+        }
+
+        // 滚动到互动环节
+        setTimeout(() => {
+            const newActivity = document.querySelector('.new-quote-item');
+            if (newActivity) {
+                newActivity.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 200);
+
+        showToast(`"${activity.title}"已成功添加到教学过程`, 'success');
+    }, 500);
+}
+
+// ==================== 设计互动环节 ====================
+function designInteractiveActivity() {
+    showToast('AI 正在生成互动方案...', 'info');
+
+    setTimeout(() => {
+        const activities = [
+            {
+                id: 1,
+                title: '五行配对游戏',
+                duration: '15分钟',
+                difficulty: '简单',
+                description: '学生通过拖拽卡片，将五行、五脏、五志、五味进行正确配对，加深对五行对应关系的理解。',
+                features: ['拖拽互动', '即时反馈', '竞争排名'],
+                icon: 'solar:gamepad-bold',
+                color: 'emerald'
+            },
+            {
+                id: 2,
+                title: '五行生克角色扮演',
+                duration: '25分钟',
+                difficulty: '中等',
+                description: '学生分组扮演五行元素，通过肢体动作展示相生相克关系，体验五行之间的动态平衡。',
+                features: ['团队协作', '创意表达', '情景模拟'],
+                icon: 'solar:users-group-rounded-bold',
+                color: 'blue'
+            },
+            {
+                id: 3,
+                title: '临床病例辨证',
+                duration: '30分钟',
+                difficulty: '较难',
+                description: '提供真实临床病例，学生运用五行理论进行辨证分析，提出治疗方案，培养临床思维。',
+                features: ['案例教学', '小组讨论', '专家点评'],
+                icon: 'solar:heart-pulse-bold',
+                color: 'rose'
+            },
+            {
+                id: 4,
+                title: '五行养生方案设计',
+                duration: '20分钟',
+                difficulty: '中等',
+                description: '根据个人体质的五行属性，设计针对性的养生保健方案，理论联系实际。',
+                features: ['个性化', '实用性强', '知识应用'],
+                icon: 'solar:health-bold',
+                color: 'amber'
+            }
+        ];
+
+        state.selectedActivity = null;
+        renderActivities(activities);
+        openModal('activityModal');
+        showToast(`已生成 ${activities.length} 个互动方案`, 'success');
+    }, 1500);
+}
+
+function showActivitySuggestion() {
+    designInteractiveActivity();
+}
+
+function renderActivities(activities) {
+    const body = document.getElementById('activityModalBody');
+    body.innerHTML = activities.map(activity => `
+        <div class="activity-card mb-4" id="activity-${activity.id}" onclick="selectActivity(${activity.id})">
+            <div class="flex items-start gap-4">
+                <div class="w-12 h-12 rounded-xl bg-${activity.color}-100 flex items-center justify-center flex-shrink-0">
+                    <iconify-icon class="text-${activity.color}-600 text-xl" icon="${activity.icon}"></iconify-icon>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-2">
+                        <h4 class="font-bold text-base" style="color: #333333;">${activity.title}</h4>
+                        <span class="px-2 py-0.5 text-xs bg-slate-100 text-slate-600 rounded">${activity.duration}</span>
+                        <span class="px-2 py-0.5 text-xs ${activity.difficulty === '简单' ? 'bg-emerald-100 text-emerald-600' : activity.difficulty === '中等' ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600'} rounded">${activity.difficulty}</span>
+                    </div>
+                    <p class="text-sm text-slate-600 mb-3">${activity.description}</p>
+                    <div class="flex flex-wrap gap-2">
+                        ${activity.features.map(f => `<span class="px-2 py-1 text-xs bg-${activity.color}-50 text-${activity.color}-600 rounded-full">${f}</span>`).join('')}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function selectActivity(id) {
+    // 清除之前的选择
+    document.querySelectorAll('.activity-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+
+    // 选中当前
+    document.getElementById(`activity-${id}`).classList.add('selected');
+    state.selectedActivity = id;
+}
+
+function addSelectedActivity() {
+    if (!state.selectedActivity) {
+        showToast('请选择要添加的互动环节', 'warning');
+        return;
+    }
+
+    closeModal('activityModal');
+
+    setTimeout(() => {
+        // 获取选中的互动环节数据
+        const activities = [
+            {
+                id: 1,
+                title: '五行配对游戏',
+                duration: '15分钟',
+                difficulty: '简单',
+                description: '学生通过拖拽卡片，将五行、五脏、五志、五味进行正确配对，加深对五行对应关系的理解。',
+                features: ['拖拽互动', '即时反馈', '竞争排名'],
+                icon: 'solar:gamepad-bold',
+                color: 'emerald'
+            },
+            {
+                id: 2,
+                title: '五行生克角色扮演',
+                duration: '25分钟',
+                difficulty: '中等',
+                description: '学生分组扮演五行元素，通过肢体动作展示相生相克关系，体验五行之间的动态平衡。',
+                features: ['团队协作', '创意表达', '情景模拟'],
+                icon: 'solar:users-group-rounded-bold',
+                color: 'blue'
+            },
+            {
+                id: 3,
+                title: '临床病例辨证',
+                duration: '30分钟',
+                difficulty: '较难',
+                description: '提供真实临床病例，学生运用五行理论进行辨证分析，提出治疗方案，培养临床思维。',
+                features: ['案例教学', '小组讨论', '专家点评'],
+                icon: 'solar:heart-pulse-bold',
+                color: 'rose'
+            },
+            {
+                id: 4,
+                title: '五行养生方案设计',
+                duration: '20分钟',
+                difficulty: '中等',
+                description: '根据个人体质的五行属性，设计针对性的养生保健方案，理论联系实际。',
+                features: ['个性化', '实用性强', '知识应用'],
+                icon: 'solar:health-bold',
+                color: 'amber'
+            }
+        ];
+
+        const activity = activities.find(a => a.id === state.selectedActivity);
+        if (!activity) {
+            showToast('互动环节数据加载失败', 'error');
+            return;
+        }
+
+        // 在教学过程的最后添加互动环节
+        const teachingProcess = document.querySelector('.section-card.bg-blue-50');
+        if (teachingProcess) {
+            // 查找教学过程的最后一个子项
+            const lastSection = teachingProcess.querySelector('.space-y-4');
+            if (lastSection) {
+                const activityHTML = `
+                    <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border-2 border-purple-200 new-quote-item">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-2">
+                                <iconify-icon icon="${activity.icon}" class="text-xl text-${activity.color}-600"></iconify-icon>
+                                <h4 class="font-bold text-sm" style="color: #333333;">${activity.title}</h4>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs px-2 py-0.5 bg-${activity.color}-100 text-${activity.color}-600 rounded">${activity.difficulty}</span>
+                                <span class="text-xs text-slate-500">${activity.duration}</span>
+                                <button onclick="this.closest('.new-quote-item').remove(); showToast('互动环节已删除', 'info');" class="text-slate-400 hover:text-rose-500" title="删除">
+                                    <iconify-icon icon="solar:trash-bin-trash-linear" style="font-size: 16px;"></iconify-icon>
+                                </button>
+                            </div>
+                        </div>
+                        <p class="text-sm text-slate-700 mb-2">${activity.description}</p>
+                        <div class="flex flex-wrap gap-2">
+                            ${activity.features.map(f => `
+                                <span class="text-xs px-2 py-0.5 bg-white border border-purple-200 rounded-full">${f}</span>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+
+                lastSection.insertAdjacentHTML('beforeend', activityHTML);
+
+                // 触发动画
+                setTimeout(() => {
+                    const newActivity = teachingProcess.querySelector('.new-quote-item');
+                    if (newActivity) {
+                        newActivity.classList.remove('opacity-0', 'translate-y-4');
+                    }
+                }, 100);
+            }
+        }
+
+        // 滚动到互动环节
+        setTimeout(() => {
+            const newActivity = document.querySelector('.new-quote-item');
+            if (newActivity) {
+                newActivity.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 200);
+
+        showToast(`"${activity.title}"已成功添加到教学过程`, 'success');
+    }, 500);
+}
+
+// ==================== 批注功能 ====================
+document.querySelectorAll('.annotation-marker').forEach(marker => {
+    marker.addEventListener('click', function() {
+        showToast('显示相关批注详情', 'info');
+    });
+});
+
+// ESC 关闭模态框
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay.active').forEach(modal => {
+            modal.classList.remove('active');
+        });
+        document.body.style.overflow = '';
+    }
+});
+    function doLogout() { localStorage.removeItem('token'); window.location.href = 'tcm-login.html'; }
+    </script>
+</body>
+</html>

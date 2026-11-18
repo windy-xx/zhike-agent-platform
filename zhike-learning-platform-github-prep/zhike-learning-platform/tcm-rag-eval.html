@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>RAG 检索评测 - 智课精灵</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; background: #f8fafc; }
+    .metric-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .metric-value { font-size: 32px; font-weight: 700; }
+    .metric-label { font-size: 13px; color: #64748b; margin-top: 4px; }
+    .result-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .result-table th { background: #f1f5f9; padding: 10px 12px; text-align: left; font-weight: 600; color: #334155; border-bottom: 2px solid #e2e8f0; }
+    .result-table td { padding: 8px 12px; border-bottom: 1px solid #f1f5f9; }
+    .result-table tr:hover td { background: #f8fafc; }
+    .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+    .tag-hit { background: #dcfce7; color: #166534; }
+    .tag-miss { background: #fee2e2; color: #991b1b; }
+    .btn { padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; }
+    .btn-primary { background: #059669; color: #fff; }
+    .btn-primary:hover { background: #047857; }
+    .btn-primary:disabled { background: #9ca3af; cursor: not-allowed; }
+    .progress-wrap { background: #e2e8f0; border-radius: 8px; height: 8px; overflow: hidden; }
+    .progress-fill { height: 100%; background: #059669; transition: width 0.3s; }
+</style>
+</head>
+<body>
+<div class="max-w-6xl mx-auto px-4 py-8">
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-slate-800">RAG 检索评测</h1>
+        <p class="text-slate-500 mt-1">自动评测向量检索 / 关键词检索 / 混合检索的 Recall@K 和 Precision@K</p>
+    </div>
+
+    <!-- 控制栏 -->
+    <div class="flex items-center gap-4 mb-6 flex-wrap">
+        <button class="btn btn-primary" id="btnRun" onclick="runEvaluation()">开始评测</button>
+        <div class="flex items-center gap-2 text-sm text-slate-600">
+            <label>Top K =</label>
+            <select id="topKSelect" class="border rounded px-2 py-1 text-sm">
+                <option value="3">3</option>
+                <option value="5" selected>5</option>
+                <option value="10">10</option>
+            </select>
+        </div>
+        <div class="flex items-center gap-2 text-sm text-slate-600">
+            <label>检索模式：</label>
+            <select id="modeSelect" class="border rounded px-2 py-1 text-sm">
+                <option value="all">全部（三路对比）</option>
+                <option value="vector">仅向量检索</option>
+                <option value="keyword">仅关键词检索</option>
+                <option value="hybrid">仅混合检索</option>
+            </select>
+        </div>
+        <div id="progressInfo" class="text-sm text-slate-500 ml-auto hidden">
+            <span id="progressText">准备中...</span>
+            <div class="progress-wrap w-40 mt-1"><div class="progress-fill" id="progressBar" style="width:0%"></div></div>
+        </div>
+    </div>
+
+    <!-- 指标卡片 -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="metricsCards" style="display:none;">
+        <div class="metric-card">
+            <div class="metric-value text-emerald-600" id="metricRecall">-</div>
+            <div class="metric-label">平均 Recall@<span class="k-val">5</span></div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value text-blue-600" id="metricPrecision">-</div>
+            <div class="metric-label">平均 Precision@<span class="k-val">5</span></div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value text-purple-600" id="metricMRR">-</div>
+            <div class="metric-label">MRR (Mean Reciprocal Rank)</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value text-amber-600" id="metricTotal">-</div>
+            <div class="metric-label">评测查询数</div>
+        </div>
+    </div>
+
+    <!-- 三路对比卡片 -->
+    <div id="compareCards" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6" style="display:none;">
+        <div class="metric-card border-l-4 border-blue-500">
+            <div class="text-sm font-semibold text-slate-600 mb-2">向量检索</div>
+            <div class="text-xl font-bold text-blue-600" id="metricVector">-</div>
+            <div class="text-xs text-slate-400 mt-1">Recall@<span class="k-val">5</span></div>
+        </div>
+        <div class="metric-card border-l-4 border-amber-500">
+            <div class="text-sm font-semibold text-slate-600 mb-2">关键词检索</div>
+            <div class="text-xl font-bold text-amber-600" id="metricKeyword">-</div>
+            <div class="text-xs text-slate-400 mt-1">Recall@<span class="k-val">5</span></div>
+        </div>
+        <div class="metric-card border-l-4 border-emerald-500">
+            <div class="text-sm font-semibold text-slate-600 mb-2">混合检索 (RRF)</div>
+            <div class="text-xl font-bold text-emerald-600" id="metricHybrid">-</div>
+            <div class="text-xs text-slate-400 mt-1">Recall@<span class="k-val">5</span></div>
+        </div>
+    </div>
+
+    <!-- 图表 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div class="metric-card" id="chartRecallWrap" style="display:none;">
+            <div class="text-sm font-semibold text-slate-600 mb-2">各查询 Recall@K 对比</div>
+            <div id="chartRecall" style="height:320px;"></div>
+        </div>
+        <div class="metric-card" id="chartCategoryWrap" style="display:none;">
+            <div class="text-sm font-semibold text-slate-600 mb-2">按知识类别准确率</div>
+            <div id="chartCategory" style="height:320px;"></div>
+        </div>
+    </div>
+
+    <!-- 详细结果表 -->
+    <div class="metric-card" id="detailTable" style="display:none;">
+        <div class="text-sm font-semibold text-slate-600 mb-3">逐条评测结果</div>
+        <div style="overflow-x:auto;">
+            <table class="result-table" id="resultTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>查询</th>
+                        <th>期望相关 ID</th>
+                        <th>实际检索 ID</th>
+                        <th>Recall</th>
+                        <th>Precision</th>
+                        <th>RR</th>
+                    </tr>
+                </thead>
+                <tbody id="resultBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- 加载 RAG 系统所需的脚本 -->
+<script src="tcm-knowledge-base.js"></script>
+<script src="tcm-knowledge-base-part2.js"></script>
+<script src="tcm-vector-store.js"></script>
+<script src="tcm-embedder.js"></script>
+<script src="tcm-rag-system.js"></script>
+
+<script>
+// ==================== 标注数据集（Ground Truth）====================
+// 每条：query = 测试查询，relevant = 期望检索到的知识库条目 ID 集合
+const EVAL_DATASET = [
+    // 基础理论 - 阴阳
+    { query: '阴阳的基本概念是什么', relevant: ['JC-001', 'JC-002', 'JC-003', 'JD-001'] },
+    { query: '阴阳互根互用的关系', relevant: ['JC-002', 'JC-004', 'JD-001'] },
+    { query: '阴平阳秘精神乃治', relevant: ['JC-004', 'JD-001'] },
+    // 基础理论 - 五行
+    { query: '五行相生相克的关系', relevant: ['JC-007', 'JC-006', 'JC-009'] },
+    { query: '五行与五脏的对应关系', relevant: ['JC-008', 'JC-006'] },
+    { query: '五行乘侮是什么意思', relevant: ['JC-009', 'JC-011'] },
+    // 藏象
+    { query: '心主血脉藏神的生理功能', relevant: ['JC-012', 'JC-018'] },
+    { query: '脾主运化的功能', relevant: ['JC-014'] },
+    { query: '肝主疏泄藏血', relevant: ['JC-015'] },
+    { query: '肾主藏精主水', relevant: ['JC-016'] },
+    // 气血津液
+    { query: '气的分类和功能有哪些', relevant: ['JC-020', 'JC-023'] },
+    { query: '血的生成过程和功能', relevant: ['JC-021', 'JC-023'] },
+    // 经络
+    { query: '十二经脉的循行规律', relevant: ['JC-025', 'JC-024', 'JX-001', 'JX-002'] },
+    { query: '奇经八脉有哪些', relevant: ['JC-026', 'JX-003'] },
+    // 病因病机
+    { query: '六淫致病的特点', relevant: ['JC-027'] },
+    { query: '七情内伤如何影响脏腑', relevant: ['JC-028'] },
+    // 四诊
+    { query: '望舌质可以判断什么', relevant: ['ZD-003', 'ZD-004', 'ZD-006'] },
+    { query: '脉诊浮沉迟数怎么辨别', relevant: ['ZD-016', 'ZD-017', 'ZD-018'] },
+    { query: '问诊十问歌内容', relevant: ['ZD-012', 'ZD-013'] },
+    { query: '八纲辨证阴阳表里寒热虚实', relevant: ['ZD-021', 'ZD-022', 'ZD-023', 'ZD-024', 'ZD-025'] },
+    // 方剂
+    { query: '麻黄汤的组成和功效', relevant: ['FJ-001', 'ZY-001'] },
+    { query: '六味地黄丸的功效主治', relevant: ['FJ-006'] },
+    { query: '逍遥散的组成和适应证', relevant: ['FJ-007', 'ZY-003', 'ZY-007'] },
+    // 穴位
+    { query: '足三里穴的位置和功效', relevant: ['JX-007', 'JX-013'] },
+    { query: '合谷穴的主治作用', relevant: ['JX-006', 'JX-013'] },
+    // 中药
+    { query: '黄芪的功效和临床应用', relevant: ['ZY-006'] },
+    { query: '中药十八反十九畏', relevant: ['ZY-013'] },
+    { query: '当归的性味归经功效', relevant: ['ZY-007'] },
+    // 经典
+    { query: '黄帝内经治未病的思想', relevant: ['JD-002', 'JD-001'] },
+    { query: '伤寒论太阳病提纲', relevant: ['JD-005', 'JD-006'] },
+    // 案例
+    { query: '风寒感冒和风热感冒怎么区别', relevant: ['AL-001'] },
+    { query: '脾胃气虚的临床表现和辨证', relevant: ['AL-002', 'JC-014'] },
+    { query: '肝气郁结的症状和治疗', relevant: ['AL-003', 'JC-015'] },
+    // 综合/模糊查询
+    { query: '中医如何通过舌象判断体质', relevant: ['ZD-003', 'ZD-004', 'ZD-006', 'ZD-001'] },
+    { query: '气血不足怎么调理', relevant: ['JC-020', 'JC-021', 'JC-023', 'FJ-004', 'ZY-005'] },
+    { query: '经络不通会有什么表现', relevant: ['JC-024', 'JC-025', 'JX-004'] },
+];
+
+// ==================== 评测逻辑 ====================
+let ragSystem = null;
+let evalResults = [];
+
+async function initRAG() {
+    if (ragSystem) return ragSystem;
+    ragSystem = new TCMRAGSystem();
+    await ragSystem.init();
+    return ragSystem;
+}
+
+// 单条查询评测
+async function evaluateQuery(query, relevantIds, topK, mode) {
+    const rag = await initRAG();
+
+    let retrievedIds = [];
+    try {
+        // 直接使用 RAG 系统的底层检索方法
+        if (mode === 'vector' && rag.embedder && rag.embedder.isReady) {
+            const queryVec = await rag.embedder.embed(query);
+            const results = await rag.vectorStore.vectorSearch(queryVec, topK);
+            retrievedIds = results.map(r => r.id);
+        } else if (mode === 'keyword') {
+            const results = await rag.vectorStore.keywordSearch(query, topK);
+            retrievedIds = results.map(r => r.id);
+        } else {
+            // hybrid (default)
+            const results = await rag.hybridSearch(query, topK);
+            retrievedIds = results.map(r => r.id);
+        }
+    } catch (e) {
+        console.warn('[Eval] 检索失败:', e.message);
+        // 降级到混合搜索
+        try {
+            const results = await rag.hybridSearch(query, topK);
+            retrievedIds = results.map(r => r.id);
+        } catch {
+            retrievedIds = [];
+        }
+    }
+
+    // 计算 Recall@K
+    const hits = retrievedIds.filter(id => relevantIds.includes(id));
+    const recall = relevantIds.length > 0 ? hits.length / relevantIds.length : 0;
+    const precision = retrievedIds.length > 0 ? hits.length / retrievedIds.length : 0;
+
+    // 计算 RR (Reciprocal Rank)
+    let rr = 0;
+    for (let i = 0; i < retrievedIds.length; i++) {
+        if (relevantIds.includes(retrievedIds[i])) {
+            rr = 1 / (i + 1);
+            break;
+        }
+    }
+
+    return {
+        query,
+        relevantIds,
+        retrievedIds,
+        hits,
+        recall,
+        precision,
+        rr,
+        mode
+    };
+}
+
+// 计算聚合指标
+function aggregateMetrics(results) {
+    const n = results.length;
+    if (n === 0) return { avgRecall: 0, avgPrecision: 0, mrr: 0 };
+
+    const avgRecall = results.reduce((s, r) => s + r.recall, 0) / n;
+    const avgPrecision = results.reduce((s, r) => s + r.precision, 0) / n;
+    const mrr = results.reduce((s, r) => s + r.rr, 0) / n;
+
+    return { avgRecall, avgPrecision, mrr };
+}
+
+// ==================== 主评测流程 ====================
+async function runEvaluation() {
+    const btn = document.getElementById('btnRun');
+    btn.disabled = true;
+    btn.textContent = '评测中...';
+
+    const topK = parseInt(document.getElementById('topKSelect').value);
+    const modeVal = document.getElementById('modeSelect').value;
+
+    // 更新 K 显示
+    document.querySelectorAll('.k-val').forEach(el => el.textContent = topK);
+
+    const progressInfo = document.getElementById('progressInfo');
+    const progressText = document.getElementById('progressText');
+    const progressBar = document.getElementById('progressBar');
+    progressInfo.classList.remove('hidden');
+
+    progressText.textContent = '初始化 RAG 系统...';
+    progressBar.style.width = '5%';
+
+    try {
+        await initRAG();
+    } catch (e) {
+        alert('RAG 系统初始化失败: ' + e.message);
+        btn.disabled = false;
+        btn.textContent = '开始评测';
+        progressInfo.classList.add('hidden');
+        return;
+    }
+
+    const modes = modeVal === 'all'
+        ? ['hybrid', 'vector', 'keyword']
+        : [modeVal];
+
+    const allResults = {};
+
+    for (const mode of modes) {
+        const results = [];
+        for (let i = 0; i < EVAL_DATASET.length; i++) {
+            const item = EVAL_DATASET[i];
+            progressText.textContent = `评测 ${mode} 模式 (${i + 1}/${EVAL_DATASET.length}): ${item.query.slice(0, 20)}...`;
+            progressBar.style.width = `${5 + (i / EVAL_DATASET.length) * 90}%`;
+
+            const result = await evaluateQuery(item.query, item.relevant, topK, mode);
+            results.push(result);
+
+            // 给 UI 时间更新
+            await new Promise(r => setTimeout(r, 50));
+        }
+        allResults[mode] = results;
+    }
+
+    progressBar.style.width = '100%';
+    progressText.textContent = '评测完成！';
+
+    // 默认显示混合检索结果（或单一模式结果）
+    const primaryMode = modes.includes('hybrid') ? 'hybrid' : modes[0];
+    evalResults = allResults[primaryMode];
+    const metrics = aggregateMetrics(evalResults);
+
+    // 显示指标卡片
+    showMetrics(metrics, EVAL_DATASET.length);
+
+    // 三路对比
+    if (modeVal === 'all') {
+        showCompare(allResults, topK);
+    }
+
+    // 显示详细表
+    showDetailTable(evalResults);
+
+    // 显示图表
+    showCharts(allResults, modeVal, topK);
+
+    btn.disabled = false;
+    btn.textContent = '重新评测';
+}
+
+// ==================== UI 渲染 ====================
+function pct(v) { return (v * 100).toFixed(1) + '%'; }
+
+function showMetrics(metrics, total) {
+    document.getElementById('metricsCards').style.display = '';
+    document.getElementById('metricRecall').textContent = pct(metrics.avgRecall);
+    document.getElementById('metricPrecision').textContent = pct(metrics.avgPrecision);
+    document.getElementById('metricMRR').textContent = metrics.mrr.toFixed(3);
+    document.getElementById('metricTotal').textContent = total;
+}
+
+function showCompare(allResults, topK) {
+    document.getElementById('compareCards').style.display = '';
+    const modes = ['vector', 'keyword', 'hybrid'];
+    const ids = ['metricVector', 'metricKeyword', 'metricHybrid'];
+    modes.forEach((mode, i) => {
+        if (allResults[mode]) {
+            const m = aggregateMetrics(allResults[mode]);
+            document.getElementById(ids[i]).textContent = pct(m.avgRecall);
+        }
+    });
+}
+
+function showDetailTable(results) {
+    document.getElementById('detailTable').style.display = '';
+    const tbody = document.getElementById('resultBody');
+    tbody.innerHTML = '';
+
+    results.forEach((r, i) => {
+        const hitTags = r.hits.map(id => `<span class="tag tag-hit">${id}</span>`).join(' ');
+        const missIds = r.retrievedIds.filter(id => !r.relevantIds.includes(id));
+        const missTags = missIds.map(id => `<span class="tag tag-miss">${id}</span>`).join(' ');
+        const notFound = r.relevantIds.filter(id => !r.retrievedIds.includes(id));
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${i + 1}</td>
+            <td class="max-w-[200px] truncate" title="${r.query}">${r.query}</td>
+            <td class="text-xs">${r.relevantIds.join(', ')}</td>
+            <td class="text-xs">${hitTags} ${missTags}</td>
+            <td>${pct(r.recall)}</td>
+            <td>${pct(r.precision)}</td>
+            <td>${r.rr.toFixed(2)}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function showCharts(allResults, modeVal, topK) {
+    // Recall 对比柱状图
+    const chartRecallWrap = document.getElementById('chartRecallWrap');
+    chartRecallWrap.style.display = '';
+
+    const primaryMode = modeVal === 'all' ? 'hybrid' : modeVal;
+    const results = allResults[primaryMode];
+    const queries = results.map((r, i) => `Q${i + 1}`);
+    const recalls = results.map(r => (r.recall * 100).toFixed(1));
+
+    const chartRecall = echarts.init(document.getElementById('chartRecall'));
+    const series = [{ name: 'Recall@' + topK, type: 'bar', data: recalls, itemStyle: { color: '#059669' } }];
+
+    if (modeVal === 'all') {
+        series.push({ name: '向量检索', type: 'line', data: allResults.vector.map(r => (r.recall * 100).toFixed(1)), itemStyle: { color: '#3b82f6' } });
+        series.push({ name: '关键词检索', type: 'line', data: allResults.keyword.map(r => (r.recall * 100).toFixed(1)), itemStyle: { color: '#f59e0b' } });
+    }
+
+    chartRecall.setOption({
+        tooltip: { trigger: 'axis' },
+        legend: modeVal === 'all' ? { data: ['Recall@' + topK, '向量检索', '关键词检索'] } : undefined,
+        xAxis: { type: 'category', data: queries, axisLabel: { fontSize: 10 } },
+        yAxis: { type: 'value', max: 100, axisLabel: { formatter: '{value}%' } },
+        grid: { left: 50, right: 20, bottom: 30, top: modeVal === 'all' ? 40 : 20 },
+        series
+    });
+
+    // 按类别准确率
+    const chartCategoryWrap = document.getElementById('chartCategoryWrap');
+    chartCategoryWrap.style.display = '';
+
+    // 构建类别映射
+    const categories = {
+        '基础理论': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+        '诊断四诊': [16, 17, 18, 19],
+        '方剂中药': [20, 21, 22, 25, 26, 27],
+        '穴位经络': [23, 24],
+        '经典案例': [28, 29, 30, 31],
+        '综合查询': [32, 33, 34]
+    };
+
+    const catData = Object.entries(categories).map(([name, indices]) => {
+        const catResults = indices.filter(i => i < results.length).map(i => results[i]);
+        return catResults.length > 0
+            ? { name, value: parseFloat((catResults.reduce((s, r) => s + r.recall, 0) / catResults.length * 100).toFixed(1)) }
+            : { name, value: 0 };
+    });
+
+    const chartCategory = echarts.init(document.getElementById('chartCategory'));
+    chartCategory.setOption({
+        tooltip: { trigger: 'axis', formatter: '{b}: {c}%' },
+        xAxis: { type: 'category', data: catData.map(d => d.name), axisLabel: { fontSize: 11 } },
+        yAxis: { type: 'value', max: 100, axisLabel: { formatter: '{value}%' } },
+        grid: { left: 50, right: 20, bottom: 30, top: 20 },
+        series: [{ type: 'bar', data: catData, itemStyle: { color: (p) => p.value >= 80 ? '#059669' : p.value >= 50 ? '#f59e0b' : '#ef4444' } }]
+    });
+
+    // 响应窗口变化
+    window.addEventListener('resize', () => {
+        chartRecall.resize();
+        chartCategory.resize();
+    });
+}
+</script>
+</body>
+</html>

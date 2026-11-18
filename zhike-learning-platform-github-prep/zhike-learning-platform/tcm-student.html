@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>智课精灵 - 学生中心</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+    body { font-family: 'Inter', 'Noto Serif SC', serif; background: #F9F6F0; }
+    .tcm-primary { color: #8B5A2B; }
+    .bg-tcm-primary { background-color: #8B5A2B; }
+    .game-card { transition: all 0.3s ease; cursor: pointer; }
+    .game-card:hover { transform: translateY(-6px); box-shadow: 0 16px 32px rgba(139,90,43,0.15); }
+    .tab-btn { transition: all 0.2s; }
+    .tab-btn.active { background: white; color: #8B5A2B; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.4s ease-out; }
+    .stat-card { transition: all 0.2s; }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
+    /* 移动端底部导航 */
+    .mobile-nav { display: none; }
+    @media (max-width: 767px) {
+        .mobile-nav {
+            display: flex;
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            z-index: 50;
+            background: white;
+            border-top: 1px solid rgba(139,90,43,0.15);
+            padding: 6px 0 env(safe-area-inset-bottom, 6px);
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -2px 12px rgba(0,0,0,0.06);
+        }
+        .mobile-nav a {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            font-size: 10px;
+            color: #999;
+            text-decoration: none;
+            padding: 4px 8px;
+            min-width: 56px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .mobile-nav a.active { color: #8B5A2B; }
+        .mobile-nav iconify-icon { font-size: 20px; }
+        .game-card { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        .game-card:active { transform: scale(0.97); }
+        main { padding-bottom: 80px; }
+    }
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- 顶部导航 -->
+<nav class="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-amber-100 shadow-sm">
+<div class="max-w-[1200px] mx-auto px-4 md:px-6 h-14 flex items-center justify-between">
+<div class="flex items-center gap-3">
+    <div class="w-8 h-8 bg-tcm-primary rounded-lg flex items-center justify-center">
+        <iconify-icon class="text-white text-lg" icon="solar:body-bold"></iconify-icon>
+    </div>
+    <span class="font-bold text-base tcm-primary">智课精灵</span>
+    <span class="text-xs text-slate-400 hidden sm:inline">学生中心</span>
+</div>
+<div class="flex items-center gap-4">
+    <div id="userArea" class="relative flex items-center gap-2">
+        <div class="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center border-2 border-amber-200 cursor-pointer" onclick="toggleMenu()">
+            <span class="text-sm font-medium tcm-primary" id="avatarText">学</span>
+        </div>
+        <span class="text-sm font-medium hidden sm:inline" id="navUserName" style="color:#333;">加载中...</span>
+        <div id="userMenu" class="hidden absolute top-12 right-0 bg-white rounded-lg shadow-lg border border-amber-100 py-2 min-w-[140px] z-50">
+            <div class="px-4 py-2 border-b border-amber-50">
+                <p class="text-sm font-medium tcm-primary" id="menuUserName">未登录</p>
+                <p class="text-xs text-slate-400" id="menuUserRole"></p>
+            </div>
+            <div class="border-t border-amber-50 mt-1 pt-1">
+                <button onclick="doLogout()" class="flex items-center gap-2 px-4 py-2 text-sm text-red-500 hover:bg-red-50 w-full text-left">
+                    <iconify-icon icon="solar:logout-2-linear" class="text-base"></iconify-icon>退出登录
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+</nav>
+
+<!-- 主内容 -->
+<main class="max-w-[1200px] mx-auto px-4 md:px-6 py-6">
+<!-- Tab 切换 -->
+<div class="flex items-center gap-1 bg-amber-50 p-1 rounded-xl mb-6 w-fit">
+    <button class="tab-btn active px-5 py-2 rounded-lg text-sm font-medium" onclick="switchTab('games')" id="tabGames">
+        <iconify-icon icon="solar:gamepad-bold" class="mr-1"></iconify-icon>游戏中心
+    </button>
+    <button class="tab-btn px-5 py-2 rounded-lg text-sm font-medium text-slate-500" onclick="switchTab('analytics')" id="tabAnalytics">
+        <iconify-icon icon="solar:chart-bold" class="mr-1"></iconify-icon>学情分析
+    </button>
+</div>
+
+<!-- ==================== 游戏中心 ==================== -->
+<div id="gamesPanel" class="fade-in">
+    <!-- 概览卡片 -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="stat-card bg-white rounded-xl p-4 border border-amber-100">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                    <iconify-icon class="text-amber-600 text-xl" icon="solar:gamepad-bold"></iconify-icon>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-400">游戏次数</p>
+                    <p class="text-xl font-bold tcm-primary" id="statGames">0</p>
+                </div>
+            </div>
+        </div>
+        <div class="stat-card bg-white rounded-xl p-4 border border-amber-100">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+                    <iconify-icon class="text-emerald-600 text-xl" icon="solar:star-bold"></iconify-icon>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-400">总积分</p>
+                    <p class="text-xl font-bold text-emerald-600" id="statPoints">0</p>
+                </div>
+            </div>
+        </div>
+        <div class="stat-card bg-white rounded-xl p-4 border border-amber-100">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <iconify-icon class="text-blue-600 text-xl" icon="solar:medal-star-bold"></iconify-icon>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-400">最高分</p>
+                    <p class="text-xl font-bold text-blue-600" id="statBest">0</p>
+                </div>
+            </div>
+        </div>
+        <div class="stat-card bg-white rounded-xl p-4 border border-amber-100">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-rose-100 rounded-lg flex items-center justify-center">
+                    <iconify-icon class="text-rose-600 text-xl" icon="solar:fire-bold"></iconify-icon>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-400">连续天数</p>
+                    <p class="text-xl font-bold text-rose-500" id="statStreak">0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 游戏卡片 -->
+    <h3 class="font-bold text-base mb-4 flex items-center gap-2" style="color:#333;">
+        <iconify-icon class="tcm-accent" icon="solar:gamepad-bold"></iconify-icon>
+        中医互动游戏
+    </h3>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- 五行配对 -->
+        <div class="game-card bg-white rounded-2xl border border-amber-100 overflow-hidden" onclick="openGame('tcm-game-match.html')">
+            <div class="h-28 bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center relative overflow-hidden">
+                <div class="absolute inset-0 opacity-10" style="background:repeating-linear-gradient(45deg,transparent,transparent 10px,rgba(255,255,255,.1) 10px,rgba(255,255,255,.1) 20px)"></div>
+                <div class="text-center relative z-10">
+                    <iconify-icon class="text-white text-4xl" icon="solar:link-bold"></iconify-icon>
+                    <p class="text-white text-xs mt-1 font-medium">木火土金水</p>
+                </div>
+            </div>
+            <div class="p-4">
+                <h4 class="font-bold text-sm" style="color:#333;">五行配对挑战</h4>
+                <p class="text-xs text-slate-400 mt-1">掌握五行生克关系，配对脏腑与五行</p>
+                <div class="flex items-center justify-between mt-3">
+                    <span class="text-xs text-amber-500 bg-amber-50 px-2 py-0.5 rounded">基础理论</span>
+                    <span class="text-xs text-slate-400">难度 ★★☆</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 舌诊挑战 -->
+        <div class="game-card bg-white rounded-2xl border border-amber-100 overflow-hidden" onclick="openGame('tcm-game-tongue.html')">
+            <div class="h-28 bg-gradient-to-br from-rose-400 to-rose-600 flex items-center justify-center relative overflow-hidden">
+                <div class="absolute inset-0 opacity-10" style="background:repeating-linear-gradient(45deg,transparent,transparent 10px,rgba(255,255,255,.1) 10px,rgba(255,255,255,.1) 20px)"></div>
+                <div class="text-center relative z-10">
+                    <iconify-icon class="text-white text-4xl" icon="solar:heart-pulse-bold"></iconify-icon>
+                    <p class="text-white text-xs mt-1 font-medium">望舌辨证</p>
+                </div>
+            </div>
+            <div class="p-4">
+                <h4 class="font-bold text-sm" style="color:#333;">舌诊挑战</h4>
+                <p class="text-xs text-slate-400 mt-1">辨识舌象特征，判断寒热虚实</p>
+                <div class="flex items-center justify-between mt-3">
+                    <span class="text-xs text-rose-500 bg-rose-50 px-2 py-0.5 rounded">临床诊断</span>
+                    <span class="text-xs text-slate-400">难度 ★★★</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 记忆翻牌 -->
+        <div class="game-card bg-white rounded-2xl border border-amber-100 overflow-hidden" onclick="openGame('tcm-game-memory.html')">
+            <div class="h-28 bg-gradient-to-br from-violet-400 to-violet-600 flex items-center justify-center relative overflow-hidden">
+                <div class="absolute inset-0 opacity-10" style="background:repeating-linear-gradient(45deg,transparent,transparent 10px,rgba(255,255,255,.1) 10px,rgba(255,255,255,.1) 20px)"></div>
+                <div class="text-center relative z-10">
+                    <iconify-icon class="text-white text-4xl" icon="solar:copy-bold"></iconify-icon>
+                    <p class="text-white text-xs mt-1 font-medium">术语记忆</p>
+                </div>
+            </div>
+            <div class="p-4">
+                <h4 class="font-bold text-sm" style="color:#333;">记忆翻牌</h4>
+                <p class="text-xs text-slate-400 mt-1">翻牌配对中医术语，强化记忆</p>
+                <div class="flex items-center justify-between mt-3">
+                    <span class="text-xs text-violet-500 bg-violet-50 px-2 py-0.5 rounded">中医术语</span>
+                    <span class="text-xs text-slate-400">难度 ★★☆</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 穴位定位 -->
+        <div class="game-card bg-white rounded-2xl border border-amber-100 overflow-hidden" onclick="openGame('tcm-game-acupoint.html')">
+            <div class="h-28 bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center relative overflow-hidden">
+                <div class="absolute inset-0 opacity-10" style="background:repeating-linear-gradient(45deg,transparent,transparent 10px,rgba(255,255,255,.1) 10px,rgba(255,255,255,.1) 20px)"></div>
+                <div class="text-center relative z-10">
+                    <iconify-icon class="text-white text-4xl" icon="solar:body-bold"></iconify-icon>
+                    <p class="text-white text-xs mt-1 font-medium">经络腧穴</p>
+                </div>
+            </div>
+            <div class="p-4">
+                <h4 class="font-bold text-sm" style="color:#333;">穴位定位</h4>
+                <p class="text-xs text-slate-400 mt-1">在人体上找到正确的穴位位置</p>
+                <div class="flex items-center justify-between mt-3">
+                    <span class="text-xs text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded">针灸推拿</span>
+                    <span class="text-xs text-slate-400">难度 ★★★</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 中药辨识 -->
+        <div class="game-card bg-white rounded-2xl border border-amber-100 overflow-hidden" onclick="openGame('tcm-game-herb.html')">
+            <div class="h-28 bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center relative overflow-hidden">
+                <div class="absolute inset-0 opacity-10" style="background:repeating-linear-gradient(45deg,transparent,transparent 10px,rgba(255,255,255,.1) 10px,rgba(255,255,255,.1) 20px)"></div>
+                <div class="text-center relative z-10">
+                    <iconify-icon class="text-white text-4xl" icon="solar:leaf-bold"></iconify-icon>
+                    <p class="text-white text-xs mt-1 font-medium">药性辨识</p>
+                </div>
+            </div>
+            <div class="p-4">
+                <h4 class="font-bold text-sm" style="color:#333;">中药辨识</h4>
+                <p class="text-xs text-slate-400 mt-1">识别中药材，学习性味归经</p>
+                <div class="flex items-center justify-between mt-3">
+                    <span class="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">中药学</span>
+                    <span class="text-xs text-slate-400">难度 ★★☆</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 方剂配伍 -->
+        <div class="game-card bg-white rounded-2xl border border-amber-100 overflow-hidden" onclick="openGame('tcm-prescription-game.html')">
+            <div class="h-28 bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center relative overflow-hidden">
+                <div class="absolute inset-0 opacity-10" style="background:repeating-linear-gradient(45deg,transparent,transparent 10px,rgba(255,255,255,.1) 10px,rgba(255,255,255,.1) 20px)"></div>
+                <div class="text-center relative z-10">
+                    <iconify-icon class="text-white text-4xl" icon="solar:document-text-bold"></iconify-icon>
+                    <p class="text-white text-xs mt-1 font-medium">君臣佐使</p>
+                </div>
+            </div>
+            <div class="p-4">
+                <h4 class="font-bold text-sm" style="color:#333;">方剂配伍</h4>
+                <p class="text-xs text-slate-400 mt-1">选择正确药物组成经典方剂</p>
+                <div class="flex items-center justify-between mt-3">
+                    <span class="text-xs text-blue-500 bg-blue-50 px-2 py-0.5 rounded">方剂学</span>
+                    <span class="text-xs text-slate-400">难度 ★★★</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ==================== 学情分析 ==================== -->
+<div id="analyticsPanel" class="hidden fade-in">
+    <!-- 学情概览 -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="stat-card bg-white rounded-xl p-4 border border-amber-100">
+            <p class="text-xs text-slate-400 mb-1">总积分</p>
+            <p class="text-2xl font-bold tcm-primary" id="aPoints">0</p>
+            <p class="text-[10px] text-emerald-500 mt-1">↑ 持续增长中</p>
+        </div>
+        <div class="stat-card bg-white rounded-xl p-4 border border-amber-100">
+            <p class="text-xs text-slate-400 mb-1">答题正确率</p>
+            <p class="text-2xl font-bold text-emerald-600" id="aAccuracy">0%</p>
+            <p class="text-[10px] text-emerald-500 mt-1">↑ 较上周提升</p>
+        </div>
+        <div class="stat-card bg-white rounded-xl p-4 border border-amber-100">
+            <p class="text-xs text-slate-400 mb-1">掌握知识点</p>
+            <p class="text-2xl font-bold text-blue-600" id="aKnowledge">0</p>
+            <p class="text-[10px] text-slate-400 mt-1">共112个知识点</p>
+        </div>
+        <div class="stat-card bg-white rounded-xl p-4 border border-amber-100">
+            <p class="text-xs text-slate-400 mb-1">学习时长</p>
+            <p class="text-2xl font-bold text-rose-500" id="aHours">0h</p>
+            <p class="text-[10px] text-slate-400 mt-1">本周累计</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- 成绩趋势 -->
+        <div class="bg-white rounded-2xl border border-amber-100 p-5">
+            <h4 class="font-bold text-sm mb-4 flex items-center gap-2" style="color:#333;">
+                <iconify-icon class="text-amber-500" icon="solar:chart-2-bold"></iconify-icon>成绩趋势
+            </h4>
+            <div id="chartTrend" style="height:240px;"></div>
+        </div>
+
+        <!-- 能力雷达 -->
+        <div class="bg-white rounded-2xl border border-amber-100 p-5">
+            <h4 class="font-bold text-sm mb-4 flex items-center gap-2" style="color:#333;">
+                <iconify-icon class="text-blue-500" icon="solar:atom-bold"></iconify-icon>能力分布
+            </h4>
+            <div id="chartRadar" style="height:240px;"></div>
+        </div>
+    </div>
+
+    <!-- 最近游戏记录 -->
+    <div class="bg-white rounded-2xl border border-amber-100 p-5">
+        <h4 class="font-bold text-sm mb-4 flex items-center gap-2" style="color:#333;">
+            <iconify-icon class="tcm-primary" icon="solar:history-bold"></iconify-icon>最近游戏记录
+        </h4>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-amber-50">
+                        <th class="text-left py-2 text-slate-400 font-medium">游戏</th>
+                        <th class="text-left py-2 text-slate-400 font-medium">得分</th>
+                        <th class="text-left py-2 text-slate-400 font-medium">正确率</th>
+                        <th class="text-left py-2 text-slate-400 font-medium">用时</th>
+                        <th class="text-left py-2 text-slate-400 font-medium">时间</th>
+                    </tr>
+                </thead>
+                <tbody id="gameHistory">
+                    <tr><td colspan="5" class="py-8 text-center text-slate-400">暂无游戏记录，快去玩一局吧！</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</main>
+
+<!-- 移动端底部导航 -->
+<div class="mobile-nav">
+    <a href="tcm-student.html" class="active">
+        <iconify-icon icon="solar:gamepad-bold"></iconify-icon>游戏
+    </a>
+    <a href="#" onclick="switchTab('analytics');return false;">
+        <iconify-icon icon="solar:chart-bold"></iconify-icon>学情
+    </a>
+    <a href="#" onclick="toggleMenu();return false;">
+        <iconify-icon icon="solar:user-bold"></iconify-icon>我的
+    </a>
+</div>
+
+<script>
+const AUTH = { token: localStorage.getItem('token') || '', user: null };
+function authHeaders() { return AUTH.token ? { 'Authorization': 'Bearer ' + AUTH.token } : {}; }
+
+// ==================== 用户菜单 ====================
+function toggleMenu() { document.getElementById('userMenu').classList.toggle('hidden'); }
+document.addEventListener('click', function(e) {
+    const area = document.getElementById('userArea');
+    const menu = document.getElementById('userMenu');
+    if (area && !area.contains(e.target)) menu.classList.add('hidden');
+});
+
+function doLogout() {
+    if (AUTH.token) fetch('/api/auth/logout', { method: 'POST', headers: authHeaders() }).catch(() => {});
+    localStorage.removeItem('token');
+    window.location.href = 'tcm-login.html';
+}
+
+// ==================== Tab 切换 ====================
+function switchTab(tab) {
+    document.getElementById('gamesPanel').classList.toggle('hidden', tab !== 'games');
+    document.getElementById('analyticsPanel').classList.toggle('hidden', tab !== 'analytics');
+    document.getElementById('tabGames').classList.toggle('active', tab === 'games');
+    document.getElementById('tabGames').classList.toggle('text-slate-500', tab !== 'games');
+    document.getElementById('tabAnalytics').classList.toggle('active', tab === 'analytics');
+    document.getElementById('tabAnalytics').classList.toggle('text-slate-500', tab !== 'analytics');
+    if (tab === 'analytics') initCharts();
+}
+
+// ==================== 打开游戏 ====================
+function openGame(url) { window.location.href = url; }
+
+// ==================== 学情数据 ====================
+const GAME_LABELS = {
+    wuxing: '五行配对', tongue: '舌诊挑战', memory: '记忆翻牌',
+    acupoint: '穴位定位', herb: '中药辨识', prescription: '方剂配伍'
+};
+
+function getFallbackData() {
+    const data = localStorage.getItem('studentData_' + (AUTH.user?.username || 'guest'));
+    if (data) return JSON.parse(data);
+    return {
+        points: 0, gamesPlayed: 0, bestScore: 0, streak: 0,
+        accuracy: 0, knowledge: 0, hours: 0,
+        history: []
+    };
+}
+
+async function loadStudentData() {
+    try {
+        const resp = await fetch('/api/games/stats', { headers: authHeaders() });
+        if (!resp.ok) throw new Error('API不可用');
+        const stats = await resp.json();
+
+        // 获取历史记录
+        const histResp = await fetch('/api/games/scores?limit=20', { headers: authHeaders() });
+        const histData = histResp.ok ? await histResp.json() : { scores: [] };
+
+        const history = (histData.scores || []).map(s => ({
+            game: GAME_LABELS[s.game_type] || s.game_type,
+            score: s.score,
+            accuracy: Math.round(s.accuracy) + '%',
+            time: formatDuration(s.duration_seconds),
+            date: s.created_at ? s.created_at.slice(0, 10) : ''
+        }));
+
+        return {
+            points: stats.points || 0,
+            gamesPlayed: stats.gamesPlayed || 0,
+            bestScore: stats.bestScore || 0,
+            streak: stats.streak || 0,
+            accuracy: stats.accuracy || 0,
+            knowledge: Math.min(112, (stats.gamesPlayed || 0) * 5),
+            hours: ((histData.scores || []).reduce((sum, s) => sum + (s.duration_seconds || 0), 0) / 3600).toFixed(1),
+            history
+        };
+    } catch {
+        return getFallbackData();
+    }
+}
+
+function formatDuration(seconds) {
+    if (!seconds) return '-';
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return m + ':' + String(s).padStart(2, '0');
+}
+
+// 提交游戏分数到后端
+async function submitGameScore(gameType, score, accuracy, durationSeconds) {
+    try {
+        await fetch('/api/games/score', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...authHeaders() },
+            body: JSON.stringify({ gameType, score, accuracy, durationSeconds })
+        });
+    } catch { /* 静默失败 */ }
+}
+
+function updateUI(data) {
+    document.getElementById('statGames').textContent = data.gamesPlayed;
+    document.getElementById('statPoints').textContent = data.points;
+    document.getElementById('statBest').textContent = data.bestScore;
+    document.getElementById('statStreak').textContent = data.streak;
+    document.getElementById('aPoints').textContent = data.points;
+    document.getElementById('aAccuracy').textContent = data.accuracy + '%';
+    document.getElementById('aKnowledge').textContent = data.knowledge;
+    document.getElementById('aHours').textContent = data.hours + 'h';
+
+    // 游戏记录
+    const tbody = document.getElementById('gameHistory');
+    if (data.history.length) {
+        tbody.innerHTML = data.history.map(h => `
+            <tr class="border-b border-amber-50 hover:bg-amber-50/50">
+                <td class="py-2.5 font-medium" style="color:#333;">${h.game}</td>
+                <td class="py-2.5"><span class="font-bold tcm-primary">${h.score}</span>分</td>
+                <td class="py-2.5">${h.accuracy}</td>
+                <td class="py-2.5 text-slate-400">${h.time}</td>
+                <td class="py-2.5 text-slate-400">${h.date}</td>
+            </tr>
+        `).join('');
+    }
+}
+
+// ==================== 图表 ====================
+function initCharts() {
+    // 成绩趋势
+    const trendEl = document.getElementById('chartTrend');
+    if (trendEl && !trendEl._echartsInit) {
+        const trendChart = echarts.init(trendEl);
+        trendEl._echartsInit = true;
+        trendChart.setOption({
+            tooltip: { trigger: 'axis' },
+            grid: { top: 20, right: 20, bottom: 30, left: 45 },
+            xAxis: { type: 'category', data: ['第1周','第2周','第3周','第4周','第5周','第6周','第7周','本周'],
+                axisLine: { lineStyle: { color: '#E5DCC8' } }, axisLabel: { color: '#999', fontSize: 11 } },
+            yAxis: { type: 'value', max: 100, splitLine: { lineStyle: { color: '#F5F0E5' } },
+                axisLabel: { color: '#999', fontSize: 11 } },
+            series: [{
+                data: [45, 52, 58, 65, 70, 74, 78, 82],
+                type: 'line', smooth: true,
+                lineStyle: { color: '#8B5A2B', width: 2.5 },
+                areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+                    colorStops: [{ offset: 0, color: 'rgba(139,90,43,0.15)' }, { offset: 1, color: 'rgba(139,90,43,0)' }] } },
+                itemStyle: { color: '#8B5A2B' }, symbol: 'circle', symbolSize: 6
+            }]
+        });
+        window.addEventListener('resize', () => trendChart.resize());
+    }
+
+    // 能力雷达
+    const radarEl = document.getElementById('chartRadar');
+    if (radarEl && !radarEl._echartsInit) {
+        const radarChart = echarts.init(radarEl);
+        radarEl._echartsInit = true;
+        radarChart.setOption({
+            tooltip: {},
+            radar: {
+                indicator: [
+                    { name: '基础理论', max: 100 }, { name: '临床诊断', max: 100 },
+                    { name: '中药辨识', max: 100 }, { name: '方剂应用', max: 100 },
+                    { name: '经络穴位', max: 100 }, { name: '经典文献', max: 100 }
+                ],
+                shape: 'circle', splitNumber: 4,
+                axisName: { color: '#666', fontSize: 11 },
+                splitArea: { areaStyle: { color: ['rgba(139,90,43,0.02)','rgba(139,90,43,0.04)','rgba(139,90,43,0.02)','rgba(139,90,43,0.04)'] } },
+                splitLine: { lineStyle: { color: '#E5DCC8' } }
+            },
+            series: [{
+                type: 'radar',
+                data: [{
+                    value: [85, 72, 78, 68, 65, 70],
+                    name: '能力值',
+                    lineStyle: { color: '#8B5A2B', width: 2 },
+                    areaStyle: { color: 'rgba(139,90,43,0.15)' },
+                    itemStyle: { color: '#8B5A2B' }
+                }]
+            }]
+        });
+        window.addEventListener('resize', () => radarChart.resize());
+    }
+}
+
+// ==================== 初始化 ====================
+document.addEventListener('DOMContentLoaded', async function() {
+    // 检查登录
+    if (!AUTH.token) {
+        window.location.href = 'tcm-login.html';
+        return;
+    }
+
+    try {
+        const resp = await fetch('/api/auth/me', { headers: authHeaders() });
+        if (resp.ok) {
+            AUTH.user = await resp.json();
+            if (AUTH.user.role !== 'student' && AUTH.user.role !== 'admin') {
+                window.location.href = 'tcm-dashboard.html';
+                return;
+            }
+            // 更新用户信息
+            const name = AUTH.user.displayName || AUTH.user.username;
+            document.getElementById('avatarText').textContent = name.charAt(0);
+            document.getElementById('navUserName').textContent = name;
+            document.getElementById('menuUserName').textContent = name;
+            const roleMap = { admin: '管理员', teacher: '教师', student: '学生' };
+            document.getElementById('menuUserRole').textContent = roleMap[AUTH.user.role] || '';
+        } else {
+            localStorage.removeItem('token');
+            window.location.href = 'tcm-login.html';
+            return;
+        }
+    } catch {
+        // 后端不可用，用缓存信息
+        const cached = localStorage.getItem('user');
+        if (cached) AUTH.user = JSON.parse(cached);
+    }
+
+    // 加载学情数据（优先后端，降级localStorage）
+    const data = await loadStudentData();
+    updateUI(data);
+});
+</script>
+</body>
+</html>

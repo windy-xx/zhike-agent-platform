@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>经络穴位定位 - 中医针灸游戏</title>
+<style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Serif SC', 'SimSun', serif;
+            background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #333;
+        }
+
+        .game-header {
+            background: linear-gradient(135deg, #2D8C5A 0%, #1F6B44 100%);
+            padding: 20px 30px;
+            box-shadow: 0 4px 20px rgba(45, 140, 90, 0.3);
+            position: relative;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .game-title {
+            font-size: 26px;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .game-stats {
+            display: flex;
+            gap: 25px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .game-container {
+            flex: 1;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 30px 20px;
+            display: flex;
+            gap: 30px;
+        }
+
+        /* 人体模型区 */
+        .body-area {
+            flex: 1;
+            background: #fff;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .body-display {
+            position: relative;
+            width: 280px;
+            height: 500px;
+            margin: 20px auto;
+        }
+
+        .body-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 穴位点 */
+        .acupoint {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #fff;
+            border: 3px solid #2D8C5A;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 700;
+            color: #2D8C5A;
+            box-shadow: 0 2px 8px rgba(45, 140, 90, 0.3);
+            z-index: 10;
+            transform: translate(-50%, -50%);
+        }
+
+        .acupoint:hover {
+            transform: scale(1.2);
+            box-shadow: 0 4px 15px rgba(45, 140, 90, 0.5);
+        }
+
+        .acupoint.selected {
+            background: #2D8C5A;
+            color: #fff;
+            border-color: #1F6B44;
+            transform: scale(1.15);
+        }
+
+        .acupoint.correct {
+            background: #4CAF50;
+            border-color: #45a049;
+            animation: pulse 0.5s ease;
+        }
+
+        .acupoint.wrong {
+            background: #EF4444;
+            border-color: #DC2626;
+            animation: shake 0.5s ease;
+        }
+
+        .acupoint.found {
+            background: #A5D6A7;
+            border-color: #2D8C5A;
+            cursor: default;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .meridian-label {
+            position: absolute;
+            font-size: 11px;
+            color: #8B5A2B;
+            font-weight: 600;
+            background: rgba(255,255,255,0.9);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        /* 提示信息区 */
+        .info-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .question-panel {
+            background: #fff;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        }
+
+        .question-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #8B5A2B;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .question-text {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .question-hint {
+            font-size: 13px;
+            color: #999;
+            padding: 12px;
+            background: #F5F5F0;
+            border-radius: 10px;
+            border-left: 3px solid #8B5A2B;
+        }
+
+        .found-panel {
+            background: #fff;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            flex: 1;
+        }
+
+        .found-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #8B5A2B;
+            margin-bottom: 15px;
+        }
+
+        .found-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .found-item {
+            padding: 8px 16px;
+            background: #E8F5E9;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #2D8C5A;
+            font-weight: 600;
+        }
+
+        /* 底部按钮 */
+        .game-footer {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #8B5A2B, #6B4423);
+            color: #fff;
+        }
+
+        .btn-hint {
+            background: linear-gradient(135deg, #F59E0B, #D97706);
+            color: #fff;
+        }
+
+        .btn-back {
+            background: linear-gradient(135deg, #6B7280, #4B5563);
+            color: #fff;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* 胜利弹窗 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #fff, #FFFBF7);
+            border-radius: 24px;
+            padding: 40px;
+            text-align: center;
+            max-width: 420px;
+            animation: modalIn 0.5s ease;
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-icon {
+            width: 90px;
+            height: 90px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #2D8C5A, #1F6B44);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 44px;
+        }
+
+        .modal-title {
+            font-size: 26px;
+            font-weight: 700;
+            color: #8B5A2B;
+            margin-bottom: 10px;
+        }
+
+        .modal-text {
+            font-size: 15px;
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2D8C5A, #1F6B44);
+            color: #fff;
+            padding: 14px 40px;
+        }
+
+        /* 触控优化 */
+        .acupoint {
+            -webkit-tap-highlight-color: transparent;
+        }
+        .acupoint:active {
+            transform: translate(-50%, -50%) scale(1.15);
+        }
+        .btn {
+            -webkit-tap-highlight-color: transparent;
+            min-height: 44px;
+        }
+        .btn:active {
+            transform: scale(0.97);
+        }
+
+        @media (max-width: 900px) {
+            .game-container {
+                flex-direction: column;
+                padding: 20px 15px;
+            }
+
+            .body-display {
+                width: 200px;
+                height: 360px;
+            }
+
+            .acupoint {
+                width: 18px;
+                height: 18px;
+                font-size: 8px;
+            }
+
+            .body-area {
+                padding: 20px;
+            }
+
+            .question-panel, .found-panel {
+                padding: 20px;
+            }
+
+            .game-header {
+                padding: 15px 20px;
+            }
+
+            .game-title {
+                font-size: 20px;
+            }
+
+            .game-stats {
+                gap: 15px;
+            }
+
+            .stat-value {
+                font-size: 18px;
+            }
+
+            .game-footer {
+                flex-wrap: wrap;
+                gap: 10px;
+                padding: 15px;
+            }
+
+            .game-footer .btn {
+                flex: 1;
+                justify-content: center;
+                min-width: 0;
+                padding: 12px 16px;
+            }
+
+            .modal-content {
+                padding: 30px 20px;
+                margin: 0 16px;
+                max-width: calc(100vw - 32px);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-content {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+
+            .game-title {
+                font-size: 18px;
+            }
+
+            .stat-value {
+                font-size: 16px;
+            }
+
+            .stat-label {
+                font-size: 12px;
+            }
+
+            .stat-item {
+                min-width: 50px;
+            }
+
+            .body-display {
+                width: 180px;
+                height: 320px;
+            }
+
+            .acupoint {
+                width: 28px;
+                height: 28px;
+                font-size: 9px;
+                touch-action: manipulation;
+            }
+
+            .question-text {
+                font-size: 18px;
+            }
+
+            .question-title {
+                font-size: 16px;
+            }
+
+            .modal-icon {
+                width: 70px;
+                height: 70px;
+                font-size: 36px;
+            }
+
+            .modal-title {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="game-header">
+        <a href="tcm-game-hub.html" style="position:absolute;top:10px;left:12px;z-index:10;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.9);display:flex;align-items:center;justify-content:center;text-decoration:none;color:#666;font-size:18px;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,0.1);">←</a>
+        <div class="header-content">
+            <h1 class="game-title">
+                <span>📍</span>
+                经络穴位定位
+            </h1>
+            <div class="game-stats">
+                <div class="stat-item">
+                    <div class="stat-label">已找到</div>
+                    <div class="stat-value"><span id="found">0</span>/10</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">错误</div>
+                    <div class="stat-value" id="wrong">0</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="game-container">
+        <div class="body-area">
+            <div class="body-display" id="bodyDisplay">
+                <svg class="body-svg" viewBox="0 0 200 360">
+                    <!-- 人体轮廓 -->
+                    <defs>
+                        <linearGradient id="skinGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#F5E6D3"/>
+                            <stop offset="100%" style="stop-color:#E8D4BE"/>
+                        </linearGradient>
+                    </defs>
+
+                    <!-- 头部 -->
+                    <ellipse cx="100" cy="35" rx="30" ry="35" fill="url(#skinGradient)" stroke="#D4C4B0" stroke-width="2"/>
+
+                    <!-- 颈部 -->
+                    <path d="M85 65 L85 80 L115 80 L115 65" fill="url(#skinGradient)" stroke="#D4C4B0" stroke-width="2"/>
+
+                    <!-- 躯干 -->
+                    <path d="M70 80 L60 180 L140 180 L130 80 Z" fill="url(#skinGradient)" stroke="#D4C4B0" stroke-width="2"/>
+
+                    <!-- 左臂 -->
+                    <path d="M60 90 L35 160 L45 165 L70 100" fill="url(#skinGradient)" stroke="#D4C4B0" stroke-width="2"/>
+                    <path d="M35 160 L25 220 L35 225 L45 165" fill="url(#skinGradient)" stroke="#D4C4B0" stroke-width="2"/>
+
+                    <!-- 右臂 -->
+                    <path d="M140 90 L165 160 L155 165 L130 100" fill="url(#skinGradient)" stroke="#D4C4B0" stroke-width="2"/>
+                    <path d="M165 160 L175 220 L165 225 L155 165" fill="url(#skinGradient)" stroke="#D4C4B0" stroke-width="2"/>
+
+                    <!-- 左腿 -->
+                    <path d="M70 180 L60 300 L80 300 L85 180" fill="url(#skinGradient)" stroke="#D4C4B0" stroke-width="2"/>
+
+                    <!-- 右腿 -->
+                    <path d="M130 180 L140 300 L120 300 L115 180" fill="url(#skinGradient)" stroke="#D4C4B0" stroke-width="2"/>
+
+                    <!-- 经络线 -->
+                    <path d="M100 70 L100 175" stroke="#E57373" stroke-width="2" fill="none" opacity="0.6" stroke-dasharray="5,5"/>
+                    <path d="M85 90 L40 160 L30 220" stroke="#64B5F6" stroke-width="2" fill="none" opacity="0.6" stroke-dasharray="5,5"/>
+                    <path d="M115 90 L160 160 L170 220" stroke="#64B5F6" stroke-width="2" fill="none" opacity="0.6" stroke-dasharray="5,5"/>
+                    <path d="M75 185 L70 295" stroke="#81C784" stroke-width="2" fill="none" opacity="0.6" stroke-dasharray="5,5"/>
+                    <path d="M125 185 L130 295" stroke="#81C784" stroke-width="2" fill="none" opacity="0.6" stroke-dasharray="5,5"/>
+                </svg>
+
+                <!-- 穴位点将通过JS动态生成 -->
+            </div>
+        </div>
+
+        <div class="info-area">
+            <div class="question-panel">
+                <h3 class="question-title">
+                    <span>❓</span>
+                    <span>请找到以下穴位</span>
+                </h3>
+                <p class="question-text" id="questionText">百会穴</p>
+                <p class="question-hint" id="questionHint">位于头顶正中线与两耳尖连线的交点处</p>
+            </div>
+
+            <div class="found-panel">
+                <h3 class="found-title">已找到的穴位</h3>
+                <div class="found-list" id="foundList"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="game-footer">
+        <button class="btn btn-reset" onclick="resetGame()">
+            <span>↻</span>
+            重置
+        </button>
+        <button class="btn btn-hint" onclick="showHint()">
+            <span>💡</span>
+            提示
+        </button>
+        <button class="btn btn-back" onclick="goBack()">
+            <span>←</span>
+            返回
+        </button>
+    </footer>
+
+    <div class="modal-overlay" id="victoryModal">
+        <div class="modal-content">
+            <div class="modal-icon">🎉</div>
+            <h2 class="modal-title">恭喜通关！</h2>
+            <p class="modal-text">你已经掌握了这些常用穴位的位置！</p>
+            <button class="btn btn-primary" onclick="resetGame()">
+                再玩一次
+            </button>
+            <a href="tcm-game-hub.html" class="btn btn-back" style="margin-top:12px;display:inline-flex;text-decoration:none;">返回游戏大厅</a>
+        </div>
+    </div>
+
+    <script>
+        // 穴位数据
+        const acupoints = [
+            { id: 1, name: '百会', hint: '位于头顶正中线与两耳尖连线的交点处', x: 100, y: 15 },
+            { id: 2, name: '印堂', hint: '位于两眉头连线的中点', x: 100, y: 28 },
+            { id: 3, name: '膻中', hint: '位于前正中线上，平第4肋间', x: 100, y: 120 },
+            { id: 4, name: '中脘', hint: '位于前正中线上，脐上4寸', x: 100, y: 150 },
+            { id: 5, name: '气海', hint: '位于前正中线上，脐下1.5寸', x: 100, y: 170 },
+            { id: 6, name: '关元', hint: '位于前正中线上，脐下3寸', x: 100, y: 178 },
+            { id: 7, name: '合谷', hint: '位于手背，第1、2掌骨间', x: 45, y: 140 },
+            { id: 8, name: '内关', hint: '位于前臂掌侧，腕横纹上2寸', x: 35, y: 120 },
+            { id: 9, name: '足三里', hint: '位于小腿前外侧，膝眼下3寸', x: 72, y: 240 },
+            { id: 10, name: '三阴交', hint: '位于内踝尖上3寸', x: 70, y: 280 }
+        ];
+
+        let gameState = {
+            currentIndex: 0,
+            foundCount: 0,
+            wrongCount: 0,
+            foundPoints: [],
+            shuffledPoints: []
+        };
+
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function initGame() {
+            gameState = {
+                currentIndex: 0,
+                foundCount: 0,
+                wrongCount: 0,
+                foundPoints: [],
+                shuffledPoints: shuffleArray([...acupoints])
+            };
+
+            document.getElementById('found').textContent = '0';
+            document.getElementById('wrong').textContent = '0';
+            document.getElementById('foundList').innerHTML = '';
+            document.getElementById('victoryModal').classList.remove('show');
+
+            renderAcupoints();
+            loadQuestion();
+        }
+
+        function renderAcupoints() {
+            const bodyDisplay = document.getElementById('bodyDisplay');
+            // 移除旧的穴位点
+            bodyDisplay.querySelectorAll('.acupoint').forEach(el => el.remove());
+
+            acupoints.forEach(point => {
+                const acupointEl = document.createElement('div');
+                acupointEl.className = 'acupoint';
+                acupointEl.dataset.id = point.id;
+                acupointEl.style.left = `${(point.x / 200) * 100}%`;
+                acupointEl.style.top = `${(point.y / 360) * 100}%`;
+                acupointEl.textContent = point.id;
+                acupointEl.addEventListener('click', () => checkAcupoint(point.id));
+                bodyDisplay.appendChild(acupointEl);
+            });
+        }
+
+        function loadQuestion() {
+            if (gameState.currentIndex >= gameState.shuffledPoints.length) {
+                showVictory();
+                return;
+            }
+
+            const currentPoint = gameState.shuffledPoints[gameState.currentIndex];
+            document.getElementById('questionText').textContent = `${currentPoint.name}穴`;
+            document.getElementById('questionHint').textContent = currentPoint.hint;
+        }
+
+        function checkAcupoint(pointId) {
+            const currentPoint = gameState.shuffledPoints[gameState.currentIndex];
+            const acupointEl = document.querySelector(`.acupoint[data-id="${pointId}"]`);
+
+            // 已找到的穴位不能再点击
+            if (gameState.foundPoints.includes(pointId)) {
+                return;
+            }
+
+            if (pointId === currentPoint.id) {
+                // 正确
+                acupointEl.classList.add('correct', 'found');
+                gameState.foundPoints.push(pointId);
+                gameState.foundCount++;
+
+                document.getElementById('found').textContent = gameState.foundCount;
+
+                // 添加到已找到列表
+                const foundItem = document.createElement('div');
+                foundItem.className = 'found-item';
+                foundItem.textContent = currentPoint.name;
+                document.getElementById('foundList').appendChild(foundItem);
+
+                setTimeout(() => {
+                    acupointEl.classList.remove('correct');
+                    gameState.currentIndex++;
+                    loadQuestion();
+                }, 500);
+            } else {
+                // 错误
+                acupointEl.classList.add('wrong');
+                gameState.wrongCount++;
+                document.getElementById('wrong').textContent = gameState.wrongCount;
+
+                setTimeout(() => {
+                    acupointEl.classList.remove('wrong');
+                }, 500);
+            }
+        }
+
+        function showVictory() {
+            document.getElementById('victoryModal').classList.add('show');
+            // 提交分数
+            const accuracy = Math.round((gameState.foundCount / Math.max(gameState.foundCount + gameState.wrongCount, 1)) * 100);
+            const score = gameState.foundCount * 10 - gameState.wrongCount * 5;
+            submitScore(Math.max(0, score), accuracy, 0);
+        }
+
+        async function submitScore(score, accuracy, duration) {
+            try {
+                const token = localStorage.getItem('token') || '';
+                await fetch('/api/games/score', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify({ gameType: 'acupoint', score, accuracy, durationSeconds: duration })
+                });
+            } catch {}
+        }
+
+        function resetGame() {
+            initGame();
+        }
+
+        function showHint() {
+            const currentPoint = gameState.shuffledPoints[gameState.currentIndex];
+            const acupointEl = document.querySelector(`.acupoint[data-id="${currentPoint.id}"]`);
+
+            // 高亮显示目标穴位
+            acupointEl.classList.add('selected');
+
+            setTimeout(() => {
+                acupointEl.classList.remove('selected');
+            }, 1500);
+        }
+
+        function goBack() {
+            if (confirm('确定要退出当前游戏吗？')) {
+                window.history.back();
+            }
+        }
+
+        // 初始化游戏
+        document.addEventListener('DOMContentLoaded', initGame);
+    </script>
+</body>
+</html>

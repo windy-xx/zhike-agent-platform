@@ -1,0 +1,4186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>中医互动学堂 - 游戏化学习平台</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700;900&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-green: #2D8C5A;
+            --dark-green: #1F6B44;
+            --light-green: #4CAF50;
+            --accent-brown: #8B5A2B;
+            --dark-brown: #6B4423;
+            --light-brown: #A0522D;
+            --accent-red: #C23B22;
+            --bg-cream: #F9F6F0;
+            --text-dark: #2C2416;
+            --text-muted: #6B5D4F;
+            --shadow-light: rgba(45, 140, 90, 0.15);
+            --shadow-medium: rgba(45, 140, 90, 0.25);
+            --shadow-heavy: rgba(45, 140, 90, 0.35);
+        }
+
+        body {
+            font-family: 'Noto Serif SC', serif;
+            background: var(--bg-cream);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: var(--text-dark);
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* 背景装饰层 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(45, 140, 90, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(139, 90, 43, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(194, 59, 34, 0.03) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* 水墨纹理背景 */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%238B5A2B' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E");
+            opacity: 0.6;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* 主标题区域 */
+        .main-header {
+            background:
+                linear-gradient(135deg, #1A4D3F 0%, #2D7A5E 50%, #3CB371 100%);
+            padding: 25px 40px 35px;
+            box-shadow:
+                0 10px 40px var(--shadow-medium),
+                0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 顶部装饰线条 */
+        .main-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg,
+                transparent 0%,
+                var(--accent-red) 15%,
+                var(--light-brown) 30%,
+                var(--primary-green) 50%,
+                var(--light-brown) 70%,
+                var(--accent-red) 85%,
+                transparent 100%
+            );
+        }
+
+        /* 装饰性圆圈 */
+        .main-header::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .header-decoration {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .header-decoration.left {
+            top: -20%;
+            left: -5%;
+        }
+
+        .header-decoration.right {
+            bottom: -30%;
+            right: -10%;
+            width: 400px;
+            height: 400px;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .main-title {
+            font-family: 'Ma Shan Zheng', cursive;
+            font-size: 56px;
+            font-weight: 700;
+            color: #FFFFFF;
+            text-shadow:
+                0 4px 12px rgba(0,0,0,0.3),
+                0 0 40px rgba(255,255,255,0.2);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            letter-spacing: 6px;
+            position: relative;
+        }
+
+        /* 标题装饰 */
+        .main-title::before,
+        .main-title::after {
+            content: '✦';
+            color: var(--accent-red);
+            font-size: 24px;
+            text-shadow: 0 0 20px rgba(194, 59, 34, 0.5);
+        }
+
+        .main-subtitle {
+            font-size: 18px;
+            color: rgba(255,255,255,0.95);
+            font-weight: 400;
+            letter-spacing: 4px;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+            position: relative;
+            display: inline-block;
+        }
+
+        /* 副标题装饰线 */
+        .main-subtitle::before,
+        .main-subtitle::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 80px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+        }
+
+        .main-subtitle::before {
+            right: calc(100% + 20px);
+        }
+
+        .main-subtitle::after {
+            left: calc(100% + 20px);
+        }
+
+        .header-icons {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 20px;
+        }
+
+        .header-icon {
+            font-size: 28px;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.2));
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .header-icon:nth-child(2) {
+            animation-delay: -1s;
+        }
+
+        .header-icon:nth-child(3) {
+            animation-delay: -2s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* 页面容器 */
+        .page-container {
+            flex: 1;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 50px 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 页面显示控制 */
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* 游戏网格 */
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        /* 游戏卡片 */
+        .game-card {
+            background:
+                linear-gradient(145deg, #FFFFFF 0%, #FFFBF7 50%, #F5F2ED 100%);
+            border-radius: 24px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow:
+                0 8px 30px var(--shadow-light),
+                0 0 0 1px rgba(45, 140, 90, 0.1) inset;
+            cursor: pointer;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 卡片顶部装饰条 */
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg,
+                var(--primary-green) 0%,
+                var(--light-green) 50%,
+                var(--primary-green) 100%
+            );
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        /* 卡片背景图案 */
+        .game-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(45, 140, 90, 0.05) 0%, transparent 70%);
+            border-radius: 50%;
+            transition: all 0.4s ease;
+        }
+
+        .game-card:hover {
+            transform: translateY(-12px) scale(1.02);
+            box-shadow:
+                0 20px 60px var(--shadow-medium),
+                0 0 0 1px rgba(45, 140, 90, 0.2) inset,
+                0 0 0 3px rgba(45, 140, 90, 0.1);
+            border-color: var(--primary-green);
+        }
+
+        .game-card:hover::before {
+            opacity: 1;
+        }
+
+        .game-card:hover::after {
+            opacity: 0.8;
+            transform: scale(1.2);
+        }
+
+        .game-icon-wrapper {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 25px;
+            background: linear-gradient(145deg, var(--bg-cream) 0%, #FFFFFF 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow:
+                0 8px 25px var(--shadow-light),
+                0 0 0 1px rgba(45, 140, 90, 0.15) inset;
+            transition: all 0.4s ease;
+        }
+
+        .game-card:hover .game-icon-wrapper {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow:
+                0 12px 40px var(--shadow-medium),
+                0 0 0 2px rgba(45, 140, 90, 0.25) inset;
+        }
+
+        .game-icon {
+            font-size: 56px;
+            display: block;
+            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));
+            transition: transform 0.3s ease;
+        }
+
+        .game-card:hover .game-icon {
+            transform: scale(1.1);
+        }
+
+        .game-name {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--accent-brown);
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+            position: relative;
+        }
+
+        .game-desc {
+            font-size: 15px;
+            color: var(--text-muted);
+            line-height: 1.8;
+            margin-bottom: 25px;
+            font-weight: 400;
+        }
+
+        .btn-play {
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--dark-green) 100%);
+            color: #FFFFFF;
+            padding: 16px 40px;
+            border-radius: 16px;
+            border: none;
+            font-size: 17px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            box-shadow:
+                0 6px 20px var(--shadow-medium),
+                0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 1px;
+        }
+
+        .btn-play::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .btn-play:hover::before {
+            left: 100%;
+        }
+
+        .btn-play:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow:
+                0 12px 35px var(--shadow-heavy),
+                0 0 0 1px rgba(255, 255, 255, 0.3) inset;
+        }
+
+        /* 统计卡片区域 */
+        .stats-section {
+            margin-top: 60px;
+            position: relative;
+        }
+
+        .stats-section-title {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--accent-brown);
+            margin-bottom: 40px;
+            letter-spacing: 4px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .stats-section-title::before,
+        .stats-section-title::after {
+            content: '✦';
+            color: var(--accent-red);
+            font-size: 20px;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+        }
+
+        .stat-card {
+            background:
+                linear-gradient(145deg, #FFFFFF 0%, #FFFBF7 50%, #F5F2ED 100%);
+            border-radius: 28px;
+            padding: 40px 35px;
+            box-shadow:
+                0 10px 40px var(--shadow-light),
+                0 0 0 1px rgba(45, 140, 90, 0.15) inset;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 20px;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            border: 2px solid transparent;
+        }
+
+        /* 顶部渐变装饰条 */
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg,
+                var(--primary-green) 0%,
+                var(--light-green) 50%,
+                var(--primary-green) 100%
+            );
+        }
+
+        /* 背景装饰图案 */
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            bottom: -30px;
+            right: -30px;
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, rgba(45, 140, 90, 0.08) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-8px) scale(1.03);
+            box-shadow:
+                0 20px 60px var(--shadow-medium),
+                0 0 0 2px rgba(45, 140, 90, 0.25) inset;
+            border-color: rgba(45, 140, 90, 0.3);
+        }
+
+        /* 图标容器 */
+        .stat-icon-wrapper {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(145deg, rgba(45, 140, 90, 0.1) 0%, rgba(45, 140, 90, 0.05) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow:
+                0 8px 25px rgba(45, 140, 90, 0.15),
+                0 0 0 1px rgba(45, 140, 90, 0.2) inset;
+            transition: all 0.4s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stat-card:hover .stat-icon-wrapper {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow:
+                0 12px 35px rgba(45, 140, 90, 0.25),
+                0 0 0 2px rgba(45, 140, 90, 0.3) inset;
+        }
+
+        .stat-icon {
+            font-size: 52px;
+            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover .stat-icon {
+            transform: scale(1.1);
+        }
+
+        .stat-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stat-label {
+            font-size: 18px;
+            color: var(--text-muted);
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        /* 标签下方装饰线 */
+        .stat-label::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--primary-green), transparent);
+            border-radius: 2px;
+        }
+
+        .stat-value {
+            font-size: 42px;
+            font-weight: 800;
+            color: var(--primary-green);
+            text-shadow:
+                0 3px 12px rgba(45, 140, 90, 0.3),
+                0 0 30px rgba(45, 140, 90, 0.2);
+            letter-spacing: 1px;
+            line-height: 1.2;
+        }
+
+        /* 不同卡片的特色颜色 */
+        .stat-card.time-card .stat-value {
+            color: var(--accent-brown);
+            text-shadow:
+                0 3px 12px rgba(139, 90, 43, 0.3),
+                0 0 30px rgba(139, 90, 43, 0.2);
+        }
+
+        .stat-card.time-card .stat-icon-wrapper {
+            background: linear-gradient(145deg, rgba(139, 90, 43, 0.1) 0%, rgba(139, 90, 43, 0.05) 100%);
+            box-shadow:
+                0 8px 25px rgba(139, 90, 43, 0.15),
+                0 0 0 1px rgba(139, 90, 43, 0.2) inset;
+        }
+
+        .stat-card.score-card .stat-value {
+            color: var(--accent-red);
+            text-shadow:
+                0 3px 12px rgba(194, 59, 34, 0.3),
+                0 0 30px rgba(194, 59, 34, 0.2);
+        }
+
+        .stat-card.score-card .stat-icon-wrapper {
+            background: linear-gradient(145deg, rgba(194, 59, 34, 0.1) 0%, rgba(194, 59, 34, 0.05) 100%);
+            box-shadow:
+                0 8px 25px rgba(194, 59, 34, 0.15),
+                0 0 0 1px rgba(194, 59, 34, 0.2) inset;
+        }
+
+        .stat-card.games-card .stat-value {
+            color: #6B46A8;
+            text-shadow:
+                0 3px 12px rgba(107, 70, 168, 0.3),
+                0 0 30px rgba(107, 70, 168, 0.2);
+        }
+
+        .stat-card.games-card .stat-icon-wrapper {
+            background: linear-gradient(145deg, rgba(107, 70, 168, 0.1) 0%, rgba(107, 70, 168, 0.05) 100%);
+            box-shadow:
+                0 8px 25px rgba(107, 70, 168, 0.15),
+                0 0 0 1px rgba(107, 70, 168, 0.2) inset;
+        }
+
+        /* 底部信息 */
+        .footer {
+            background:
+                linear-gradient(135deg, var(--accent-brown) 0%, var(--dark-brown) 100%);
+            padding: 35px 40px;
+            text-align: center;
+            color: #FFFFFF;
+            position: relative;
+            box-shadow: 0 -5px 30px rgba(0,0,0,0.1);
+        }
+
+        .footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg,
+                transparent 0%,
+                var(--accent-red) 25%,
+                var(--primary-green) 50%,
+                var(--accent-red) 75%,
+                transparent 100%
+            );
+        }
+
+        .footer-text {
+            font-size: 15px;
+            opacity: 0.95;
+            letter-spacing: 1px;
+            font-weight: 400;
+        }
+
+        .footer-decoration {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .footer-icon {
+            font-size: 20px;
+            opacity: 0.7;
+        }
+
+        /* 游戏页面通用样式 */
+        .game-header {
+            background:
+                linear-gradient(135deg, #1A4D3F 0%, #2D7A5E 50%, #3CB371 100%);
+            padding: 25px 35px;
+            box-shadow:
+                0 6px 30px var(--shadow-medium),
+                0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg,
+                transparent 0%,
+                var(--accent-red) 20%,
+                var(--light-brown) 40%,
+                var(--primary-green) 60%,
+                var(--light-brown) 80%,
+                transparent 100%
+            );
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .game-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #FFFFFF;
+            text-shadow: 0 3px 10px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .game-title .icon {
+            font-size: 40px;
+            filter: drop-shadow(0 3px 8px rgba(0,0,0,0.3));
+        }
+
+        .game-stats {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: rgba(255,255,255,0.85);
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #FFFFFF;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .game-container {
+            flex: 1;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 40px 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .game-footer {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 30px;
+        }
+
+        .btn {
+            padding: 14px 32px;
+            border-radius: 14px;
+            font-size: 17px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.5px;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, var(--accent-brown) 0%, var(--dark-brown) 100%);
+            color: #FFFFFF;
+        }
+
+        .btn-reset:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(139, 90, 43, 0.4);
+        }
+
+        .btn-next {
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--dark-green) 100%);
+            color: #FFFFFF;
+        }
+
+        .btn-next:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-next:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(45, 140, 90, 0.4);
+        }
+
+        .btn-back {
+            background: linear-gradient(135deg, #6B7280 0%, #4B5563 100%);
+            color: #FFFFFF;
+        }
+
+        .btn-back:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(107, 114, 128, 0.4);
+        }
+
+        /* 五行配对游戏样式 */
+        .pairing-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin: 30px 0;
+        }
+
+        .pairing-column {
+            background:
+                linear-gradient(145deg, #FFFFFF 0%, #FFFBF7 100%);
+            border-radius: 24px;
+            padding: 35px;
+            box-shadow:
+                0 8px 35px var(--shadow-light),
+                0 0 0 1px rgba(45, 140, 90, 0.1) inset;
+        }
+
+        .column-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--accent-brown);
+            margin-bottom: 25px;
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 3px solid var(--primary-green);
+            letter-spacing: 4px;
+            position: relative;
+        }
+
+        .column-title::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: var(--accent-red);
+        }
+
+        .element-card {
+            background:
+                linear-gradient(145deg, #FFFFFF 0%, #FFFBF7 100%);
+            border: 2px solid rgba(139, 90, 43, 0.2);
+            border-radius: 18px;
+            padding: 25px;
+            text-align: center;
+            margin-bottom: 18px;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .element-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-green), var(--light-green));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .element-card:hover {
+            border-color: var(--primary-green);
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px var(--shadow-medium);
+        }
+
+        .element-card:hover::before {
+            opacity: 1;
+        }
+
+        .element-card.selected {
+            border-color: var(--accent-red);
+            background: linear-gradient(145deg, #FFF5F5 0%, #FFE5E5 100%);
+            box-shadow: 0 8px 25px rgba(194, 59, 34, 0.25);
+        }
+
+        .element-card.correct {
+            border-color: var(--primary-green);
+            background: linear-gradient(145deg, #F0FDF4 0%, #DCFCE7 100%);
+            box-shadow: 0 8px 25px rgba(45, 140, 90, 0.25);
+        }
+
+        .element-card.correct::after {
+            content: '✓';
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            font-size: 24px;
+            color: var(--primary-green);
+            background: #FFFFFF;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(45, 140, 90, 0.2);
+        }
+
+        .element-name {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--accent-brown);
+            margin-bottom: 8px;
+            letter-spacing: 3px;
+        }
+
+        .element-pinyin {
+            font-size: 16px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* 舌诊挑战样式 */
+        .tongue-question {
+            background:
+                linear-gradient(145deg, #FFFFFF 0%, #F5F2ED 100%);
+            border-radius: 24px;
+            padding: 45px;
+            box-shadow:
+                0 10px 40px var(--shadow-light),
+                0 0 0 1px rgba(45, 140, 90, 0.1) inset;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .tongue-image {
+            font-size: 140px;
+            margin-bottom: 25px;
+            filter: drop-shadow(0 6px 20px rgba(0,0,0,0.15));
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .tongue-desc {
+            font-size: 28px;
+            color: var(--text-dark);
+            line-height: 1.8;
+            margin-bottom: 15px;
+            font-weight: 600;
+            letter-spacing: 2px;
+        }
+
+        .tongue-subtitle {
+            font-size: 16px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .option-btn {
+            background:
+                linear-gradient(145deg, #FFFFFF 0%, #FFFBF7 100%);
+            border: 2px solid rgba(139, 90, 43, 0.2);
+            border-radius: 18px;
+            padding: 25px;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--accent-brown);
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 1px;
+        }
+
+        .option-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(45, 140, 90, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .option-btn:hover::before {
+            left: 100%;
+        }
+
+        .option-btn:hover {
+            border-color: var(--primary-green);
+            transform: translateY(-5px);
+            box-shadow: 0 12px 35px var(--shadow-medium);
+        }
+
+        .option-btn.correct {
+            background: linear-gradient(145deg, var(--primary-green) 0%, var(--dark-green) 100%);
+            color: white;
+            border-color: var(--primary-green);
+            box-shadow: 0 10px 30px rgba(45, 140, 90, 0.4);
+            animation: bounceIn 0.5s ease;
+        }
+
+        .option-btn.wrong {
+            background: linear-gradient(145deg, var(--accent-red) 0%, #A03020 100%);
+            color: white;
+            border-color: var(--accent-red);
+            box-shadow: 0 10px 30px rgba(194, 59, 34, 0.4);
+            animation: shake 0.5s ease;
+        }
+
+        /* 方剂配伍游戏样式 */
+        .level-info {
+            background:
+                linear-gradient(145deg, #FFFFFF 0%, #F5F2ED 100%);
+            border-radius: 24px;
+            padding: 35px 40px;
+            box-shadow:
+                0 10px 40px var(--shadow-light),
+                0 0 0 1px rgba(45, 140, 90, 0.1) inset;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .level-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .level-badge {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(145deg, var(--primary-green) 0%, var(--dark-green) 100%);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow:
+                0 8px 30px var(--shadow-medium),
+                0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+        }
+
+        .level-badge .level-num {
+            font-size: 32px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .level-badge .level-text {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+
+        .prescription-name {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--accent-brown);
+            letter-spacing: 2px;
+        }
+
+        .prescription-origin {
+            font-size: 15px;
+            color: var(--text-muted);
+            margin-top: 6px;
+            font-weight: 500;
+        }
+
+        .progress-bar-container {
+            flex: 1;
+            max-width: 350px;
+            margin: 0 40px;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: var(--accent-brown);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            height: 12px;
+            background: rgba(139, 90, 43, 0.15);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-green), var(--light-green));
+            border-radius: 12px;
+            transition: width 0.6s ease;
+            box-shadow: 0 0 10px rgba(45, 140, 90, 0.3);
+        }
+
+        .target-count {
+            text-align: right;
+            min-width: 120px;
+        }
+
+        .target-count .label {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .target-count .value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary-green);
+            text-shadow: 0 2px 8px rgba(45, 140, 90, 0.2);
+        }
+
+        .selected-area {
+            background:
+                linear-gradient(145deg, #FFFFFF 0%, #FFFBF7 100%);
+            border-radius: 24px;
+            padding: 35px 40px;
+            box-shadow:
+                0 8px 30px var(--shadow-light),
+                0 0 0 1px rgba(45, 140, 90, 0.1) inset;
+            min-height: 160px;
+            border: 3px dashed rgba(45, 140, 90, 0.3);
+            transition: all 0.4s ease;
+        }
+
+        .selected-area.has-items {
+            border-color: var(--primary-green);
+            border-style: solid;
+            background:
+                linear-gradient(145deg, #F0FDF4 0%, #DCFCE7 100%);
+        }
+
+        .area-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--accent-brown);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: 1px;
+        }
+
+        .selected-herbs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .available-area {
+            background:
+                linear-gradient(145deg, #FFFFFF 0%, #FFFBF7 100%);
+            border-radius: 24px;
+            padding: 35px 40px;
+            box-shadow:
+                0 8px 30px var(--shadow-light),
+                0 0 0 1px rgba(45, 140, 90, 0.1) inset;
+        }
+
+        .herbs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 20px;
+        }
+
+        .herb-card {
+            background:
+                linear-gradient(145deg, #FFFFFF 0%, #FFFBF7 100%);
+            border: 2px solid rgba(139, 90, 43, 0.2);
+            border-radius: 18px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .herb-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-green), var(--light-green));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .herb-card:hover {
+            border-color: var(--primary-green);
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px var(--shadow-medium);
+        }
+
+        .herb-card:hover::before {
+            opacity: 1;
+        }
+
+        .herb-card.selected {
+            opacity: 0.4;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .herb-card.correct-select {
+            animation: correctPulse 0.6s ease;
+        }
+
+        .herb-card.wrong-select {
+            animation: wrongShake 0.6s ease;
+        }
+
+        @keyframes correctPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes wrongShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-12px); }
+            75% { transform: translateX(12px); }
+        }
+
+        .herb-icon {
+            font-size: 42px;
+            margin-bottom: 12px;
+            display: block;
+            filter: drop-shadow(0 3px 10px rgba(0,0,0,0.15));
+        }
+
+        .herb-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 6px;
+            letter-spacing: 1px;
+        }
+
+        .herb-pinyin {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .selected-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            background: linear-gradient(145deg, var(--primary-green) 0%, var(--dark-green) 100%);
+            border-radius: 16px;
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+            box-shadow:
+                0 6px 20px var(--shadow-medium),
+                0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+            animation: tagIn 0.4s ease;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .selected-tag:hover {
+            transform: scale(1.08);
+            box-shadow:
+                0 10px 25px var(--shadow-heavy),
+                0 0 0 1px rgba(255, 255, 255, 0.3) inset;
+        }
+
+        @keyframes tagIn {
+            from {
+                opacity: 0;
+                transform: scale(0.7);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .selected-tag .herb-icon {
+            font-size: 22px;
+            margin-bottom: 0;
+        }
+
+        /* 生命值 */
+        .lives-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .life-heart {
+            font-size: 28px;
+            transition: all 0.4s ease;
+            filter: drop-shadow(0 2px 6px rgba(0,0,0,0.2));
+        }
+
+        .life-heart.lost {
+            opacity: 0.25;
+            filter: grayscale(100%) drop-shadow(0 2px 6px rgba(0,0,0,0.2));
+        }
+
+        /* 中药猜猜乐样式 */
+        .quiz-question {
+            background:
+                linear-gradient(145deg, #FFFFFF 0%, #F5F2ED 100%);
+            border-radius: 24px;
+            padding: 45px;
+            box-shadow:
+                0 10px 40px var(--shadow-light),
+                0 0 0 1px rgba(45, 140, 90, 0.1) inset;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .quiz-icon {
+            font-size: 100px;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 6px 20px rgba(0,0,0,0.15));
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .quiz-desc {
+            font-size: 26px;
+            color: var(--text-dark);
+            line-height: 1.8;
+            margin-bottom: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .quiz-subtitle {
+            font-size: 16px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* 经络穴位游戏样式 */
+        .meridian-pairing {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin: 30px 0;
+        }
+
+        .meridian-column {
+            background:
+                linear-gradient(145deg, #FFFFFF 0%, #FFFBF7 100%);
+            border-radius: 24px;
+            padding: 35px;
+            box-shadow:
+                0 8px 35px var(--shadow-light),
+                0 0 0 1px rgba(45, 140, 90, 0.1) inset;
+        }
+
+        .meridian-card {
+            background:
+                linear-gradient(145deg, #FFFFFF 0%, #FFFBF7 100%);
+            border: 2px solid rgba(139, 90, 43, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .meridian-card:hover {
+            border-color: var(--primary-green);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px var(--shadow-medium);
+        }
+
+        .meridian-card.selected {
+            border-color: var(--accent-red);
+            background: linear-gradient(145deg, #FFF5F5 0%, #FFE5E5 100%);
+            box-shadow: 0 8px 20px rgba(194, 59, 34, 0.25);
+        }
+
+        .meridian-card.correct {
+            border-color: var(--primary-green);
+            background: linear-gradient(145deg, #F0FDF4 0%, #DCFCE7 100%);
+            box-shadow: 0 8px 20px rgba(45, 140, 90, 0.25);
+        }
+
+        .meridian-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--accent-brown);
+            letter-spacing: 1px;
+        }
+
+        .acupoint-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-green);
+            letter-spacing: 2px;
+        }
+
+        /* 望闻问切游戏样式 */
+        .diagnosis-case {
+            background:
+                linear-gradient(145deg, #FFFFFF 0%, #F5F2ED 100%);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow:
+                0 10px 40px var(--shadow-light),
+                0 0 0 1px rgba(45, 140, 90, 0.1) inset;
+            margin-bottom: 30px;
+        }
+
+        .case-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            padding-bottom: 25px;
+            border-bottom: 3px solid var(--primary-green);
+        }
+
+        .case-icon {
+            font-size: 60px;
+            filter: drop-shadow(0 4px 15px rgba(0,0,0,0.15));
+        }
+
+        .case-title {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--accent-brown);
+            letter-spacing: 2px;
+        }
+
+        .case-content {
+            font-size: 20px;
+            color: var(--text-dark);
+            line-height: 2.2;
+            margin-bottom: 25px;
+        }
+
+        .case-content p {
+            margin-bottom: 15px;
+            padding: 15px;
+            background: rgba(45, 140, 90, 0.05);
+            border-radius: 12px;
+            border-left: 4px solid var(--primary-green);
+        }
+
+        .case-label {
+            font-weight: 700;
+            color: var(--primary-green);
+            display: inline-block;
+            min-width: 70px;
+            letter-spacing: 2px;
+        }
+
+        .diagnosis-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        /* 胜利弹窗 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background:
+                linear-gradient(145deg, #FFFFFF 0%, #FFFBF7 100%);
+            border-radius: 32px;
+            padding: 60px 50px;
+            text-align: center;
+            max-width: 550px;
+            box-shadow:
+                0 25px 80px rgba(0,0,0,0.3),
+                0 0 0 1px rgba(45, 140, 90, 0.2) inset;
+            animation: modalIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.7) translateY(-40px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-icon {
+            font-size: 100px;
+            margin-bottom: 25px;
+            animation: iconBounce 1.2s ease infinite;
+            filter: drop-shadow(0 6px 20px rgba(0,0,0,0.15));
+        }
+
+        @keyframes iconBounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-15px) scale(1.1); }
+        }
+
+        .modal-title {
+            font-size: 38px;
+            font-weight: 700;
+            color: var(--accent-brown);
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+        }
+
+        .modal-subtitle {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--primary-green);
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+        }
+
+        .modal-text {
+            font-size: 17px;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+            line-height: 1.8;
+            font-weight: 500;
+        }
+
+        .modal-stats {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            margin-bottom: 40px;
+            padding: 25px;
+            background: linear-gradient(145deg, rgba(45, 140, 90, 0.1) 0%, rgba(45, 140, 90, 0.05) 100%);
+            border-radius: 20px;
+            border: 2px solid rgba(45, 140, 90, 0.2);
+        }
+
+        .modal-stat-item {
+            text-align: center;
+        }
+
+        .modal-stat-label {
+            font-size: 14px;
+            color: var(--accent-brown);
+            margin-bottom: 8px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .modal-stat-value {
+            font-size: 40px;
+            font-weight: 700;
+            color: var(--primary-green);
+            text-shadow: 0 2px 10px rgba(45, 140, 90, 0.2);
+        }
+
+        .btn-primary {
+            background: linear-gradient(145deg, var(--primary-green) 0%, var(--dark-green) 100%);
+            color: #FFFFFF;
+            padding: 20px 60px;
+            font-size: 20px;
+            box-shadow:
+                0 8px 30px var(--shadow-medium),
+                0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.08);
+            box-shadow:
+                0 15px 45px var(--shadow-heavy),
+                0 0 0 1px rgba(255, 255, 255, 0.3) inset;
+        }
+
+        /* 提示信息 */
+        .toast {
+            position: fixed;
+            top: 120px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-30px);
+            padding: 20px 40px;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 17px;
+            opacity: 0;
+            transition: all 0.4s ease;
+            z-index: 999;
+            pointer-events: none;
+            box-shadow: 0 10px 35px rgba(0,0,0,0.2);
+            letter-spacing: 1px;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.correct {
+            background: linear-gradient(145deg, var(--primary-green) 0%, var(--dark-green) 100%);
+            color: white;
+            box-shadow:
+                0 10px 35px rgba(45, 140, 90, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+        }
+
+        .toast.wrong {
+            background: linear-gradient(145deg, var(--accent-red) 0%, #A03020 100%);
+            color: white;
+            box-shadow:
+                0 10px 35px rgba(194, 59, 34, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+        }
+
+        .toast.info {
+            background: linear-gradient(145deg, var(--accent-brown) 0%, var(--dark-brown) 100%);
+            color: white;
+            box-shadow:
+                0 10px 35px rgba(139, 90, 43, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .games-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .main-title {
+                font-size: 56px;
+            }
+
+            .pairing-container,
+            .meridian-pairing {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-header {
+                padding: 40px 25px 50px;
+            }
+
+            .main-title {
+                font-size: 42px;
+                letter-spacing: 4px;
+            }
+
+            .main-subtitle {
+                font-size: 16px;
+                letter-spacing: 3px;
+            }
+
+            .header-icons {
+                gap: 25px;
+            }
+
+            .header-icon {
+                font-size: 28px;
+            }
+
+            .games-grid {
+                grid-template-columns: 1fr;
+                gap: 25px;
+            }
+
+            .stats-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .stats-section-title {
+                font-size: 26px;
+                letter-spacing: 2px;
+            }
+
+            .stat-card {
+                padding: 30px 25px;
+            }
+
+            .stat-icon-wrapper {
+                width: 80px;
+                height: 80px;
+            }
+
+            .stat-icon {
+                font-size: 42px;
+            }
+
+            .stat-label {
+                font-size: 16px;
+                letter-spacing: 1px;
+            }
+
+            .stat-value {
+                font-size: 36px;
+            }
+
+            .game-card {
+                padding: 35px 25px;
+            }
+
+            .game-icon-wrapper {
+                width: 90px;
+                height: 90px;
+            }
+
+            .game-icon {
+                font-size: 48px;
+            }
+
+            .game-name {
+                font-size: 24px;
+            }
+
+            .game-desc {
+                font-size: 14px;
+            }
+
+            .btn-play {
+                padding: 14px 35px;
+                font-size: 16px;
+            }
+
+            .options-grid,
+            .diagnosis-options {
+                grid-template-columns: 1fr;
+            }
+
+            .level-info {
+                flex-direction: column;
+                gap: 25px;
+            }
+
+            .progress-bar-container {
+                max-width: none;
+                width: 100%;
+                margin: 15px 0;
+            }
+
+            .target-count {
+                text-align: center;
+            }
+
+            .herbs-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .modal-stats {
+                gap: 30px;
+            }
+
+            .modal-stat-value {
+                font-size: 32px;
+            }
+
+            .game-footer {
+                flex-wrap: wrap;
+                gap: 15px;
+            }
+
+            .btn {
+                padding: 12px 24px;
+                font-size: 15px;
+            }
+        }
+
+        /* 加载动画 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .game-card {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        .game-card:nth-child(1) { animation-delay: 0.1s; }
+        .game-card:nth-child(2) { animation-delay: 0.2s; }
+        .game-card:nth-child(3) { animation-delay: 0.3s; }
+        .game-card:nth-child(4) { animation-delay: 0.4s; }
+        .game-card:nth-child(5) { animation-delay: 0.5s; }
+        .game-card:nth-child(6) { animation-delay: 0.6s; }
+
+        /* 统计卡片入场动画 */
+        .stat-card {
+            animation: fadeInUp 0.8s ease forwards;
+            opacity: 0;
+        }
+
+        .stat-card:nth-child(1) { animation-delay: 0.8s; }
+        .stat-card:nth-child(2) { animation-delay: 1.0s; }
+        .stat-card:nth-child(3) { animation-delay: 1.2s; }
+
+        /* 统计标题动画 */
+        .stats-section-title {
+            animation: fadeInUp 0.6s ease forwards;
+            animation-delay: 0.7s;
+            opacity: 0;
+        }
+
+        /* 数字计数动画 */
+        @keyframes countUp {
+            from {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .stat-value {
+            animation: countUp 0.5s ease forwards;
+        }
+
+        .stat-card:nth-child(1) .stat-value { animation-delay: 1.3s; }
+        .stat-card:nth-child(2) .stat-value { animation-delay: 1.5s; }
+        .stat-card:nth-child(3) .stat-value { animation-delay: 1.7s; }
+
+        /* ========== 舌诊挑战游戏样式 ========== */
+        .tongue-game-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .tongue-display {
+            background: linear-gradient(135deg, #FFFFFF 0%, #F5F2ED 100%);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .tongue-visual {
+            width: 180px;
+            height: 260px;
+            border-radius: 90px 90px 45px 45px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            flex-shrink: 0;
+        }
+
+        .tongue-body {
+            width: 100%;
+            height: 100%;
+            border-radius: inherit;
+            position: relative;
+            transition: all 0.5s ease;
+        }
+
+        .tongue-coating {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 55%;
+            border-radius: 90px 90px 0 0;
+            transition: all 0.5s ease;
+        }
+
+        .tongue-info {
+            flex: 1;
+        }
+
+        .question-number {
+            display: inline-block;
+            padding: 6px 14px;
+            background: linear-gradient(135deg, #1A4D3F 0%, #2D7A5E 100%);
+            color: white;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .question-text {
+            font-size: 20px;
+            font-weight: 600;
+            color: #8B5A2B;
+            margin-bottom: 15px;
+        }
+
+        .tongue-description {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.8;
+            padding: 15px;
+            background: #FFF5F0;
+            border-radius: 12px;
+            border-left: 4px solid #8B5A2B;
+        }
+
+        .options-area-tongue {
+            background: #FFFFFF;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        }
+
+        .options-title-tongue {
+            font-size: 16px;
+            font-weight: 600;
+            color: #8B5A2B;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .options-grid-tongue {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .option-btn-tongue {
+            padding: 18px 24px;
+            border: 2px solid #E5DCC8;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #FFFFFF 0%, #FFFBF7 100%);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: left;
+        }
+
+        .option-btn-tongue:hover:not(:disabled) {
+            border-color: #1A4D3F;
+            background: linear-gradient(135deg, #EBF8FF 0%, #BEE3F8 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(30, 58, 95, 0.2);
+        }
+
+        .option-btn-tongue.correct {
+            border-color: #1A4D3F;
+            background: linear-gradient(135deg, #EBF8FF 0%, #BEE3F8 100%);
+        }
+
+        .option-btn-tongue.wrong {
+            border-color: #C23B22;
+            background: linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%);
+            animation: shake 0.5s ease-in-out;
+        }
+
+        .option-btn-tongue:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .option-label-tongue {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333333;
+            margin-bottom: 4px;
+        }
+
+        .option-desc-tongue {
+            font-size: 12px;
+            color: #999999;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Success/Failure Icons */
+        .feedback-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 24px;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        /* Enhanced Progress Bar */
+        .progress-enhanced {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-enhanced::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg,
+                transparent,
+                rgba(255, 255, 255, 0.3),
+                transparent
+            );
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .explanation-area-tongue {
+            background: #FFFFFF;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            display: none;
+            border-left: 4px solid #1A4D3F;
+        }
+
+        .explanation-area-tongue.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.05);
+            }
+            70% {
+                transform: scale(0.9);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes glowPulse {
+            0%, 100% {
+                box-shadow: 0 0 5px rgba(45, 140, 90, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 20px rgba(45, 140, 90, 0.6), 0 0 30px rgba(45, 140, 90, 0.4);
+            }
+        }
+
+        .animate-fadeInUp {
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        .animate-bounceIn {
+            animation: bounceIn 0.6s ease-out;
+        }
+
+        .animate-glow {
+            animation: glowPulse 2s ease-in-out infinite;
+        }
+
+        .explanation-title-tongue {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1A4D3F;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .explanation-text-tongue {
+            font-size: 14px;
+            color: #666666;
+            line-height: 1.7;
+        }
+
+        .game-footer-tongue {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .btn-next-tongue {
+            background: linear-gradient(135deg, #1A4D3F 0%, #2D7A5E 100%);
+            color: #FFFFFF;
+        }
+
+        .btn-next-tongue:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(30, 58, 95, 0.4);
+        }
+
+        /* ========== 经络穴位游戏样式 ========== */
+        .meridian-game-container {
+            flex: 1;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .timer-display-meridian {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.9);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .timer-display-meridian .icon {
+            font-size: 20px;
+        }
+
+        .timer-display-meridian .time {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1A4D3F;
+            min-width: 70px;
+        }
+
+        .game-main-area-meridian {
+            display: flex;
+            gap: 30px;
+            flex: 1;
+        }
+
+        .body-area {
+            flex: 1;
+            background: #fff;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .body-display {
+            position: relative;
+            width: 240px;
+            height: 432px;
+            margin: 20px auto;
+            background: linear-gradient(135deg, #F9F6F0 0%, #FFF8F0 100%);
+            border-radius: 15px;
+            box-shadow: inset 0 2px 10px rgba(30, 58, 95, 0.1);
+            overflow: visible;
+        }
+
+        .body-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .acupoint {
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #fff;
+            border: 3px solid #1A4D3F;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 700;
+            color: #1A4D3F;
+            box-shadow: 0 2px 8px rgba(30, 58, 95, 0.3);
+            z-index: 10;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            transform: translate(-50%, -50%);
+        }
+
+        .acupoint:hover {
+            transform: translate(-50%, -50%) scale(1.2);
+            box-shadow: 0 4px 15px rgba(30, 58, 95, 0.5);
+            border-color: #3CB371;
+        }
+
+        .acupoint:active {
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        .acupoint.selected {
+            background: #1A4D3F;
+            color: #fff;
+            border-color: #2D7A5E;
+            transform: translate(-50%, -50%) scale(1.15);
+        }
+
+        .acupoint.correct {
+            background: #4CAF50;
+            border-color: #45a049;
+            animation: pulse 0.5s ease;
+            transform: translate(-50%, -50%);
+        }
+
+        .acupoint.wrong {
+            background: #EF4444;
+            border-color: #DC2626;
+            animation: shake 0.5s ease;
+            transform: translate(-50%, -50%);
+        }
+
+        .acupoint.found {
+            background: #A5D6A7;
+            border-color: #1A4D3F;
+            cursor: default;
+            transform: translate(-50%, -50%);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+
+        .info-area-meridian {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .question-panel-meridian {
+            background: #fff;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        }
+
+        .question-title-meridian {
+            font-size: 18px;
+            font-weight: 700;
+            color: #8B5A2B;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .question-text-meridian {
+            font-size: 22px;
+            color: #1A4D3F;
+            margin-bottom: 20px;
+            line-height: 1.6;
+            font-weight: 600;
+        }
+
+        .question-hint-meridian {
+            font-size: 14px;
+            color: #666;
+            padding: 12px;
+            background: #F5F5F0;
+            border-radius: 10px;
+            border-left: 3px solid #1A4D3F;
+        }
+
+        .found-panel-meridian {
+            background: #fff;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            flex: 1;
+        }
+
+        .found-title-meridian {
+            font-size: 16px;
+            font-weight: 700;
+            color: #8B5A2B;
+            margin-bottom: 15px;
+        }
+
+        .found-list-meridian {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .found-item-meridian {
+            padding: 8px 16px;
+            background: #E3F2FD;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #1A4D3F;
+            font-weight: 600;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .score-display-meridian {
+            background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
+            border-radius: 12px;
+            padding: 15px 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .score-display-meridian .score-label {
+            font-size: 12px;
+            color: #8B5A2B;
+            margin-bottom: 5px;
+        }
+
+        .score-display-meridian .score-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #FF6F00;
+        }
+
+        .btn-hint-meridian {
+            background: linear-gradient(135deg, #F59E0B, #D97706);
+            color: #fff;
+        }
+
+        /* 响应式 */
+        @media (max-width: 900px) {
+            .game-main-area-meridian {
+                flex-direction: column;
+            }
+
+            .body-display {
+                width: 180px;
+                height: 324px;
+            }
+
+            .acupoint {
+                width: 20px;
+                height: 20px;
+                font-size: 8px;
+            }
+
+            .tongue-display {
+                flex-direction: column;
+            }
+
+            .tongue-visual {
+                width: 150px;
+                height: 220px;
+            }
+
+            .options-grid-tongue {
+                grid-template-columns: 1fr;
+            }
+
+            /* Enhanced mobile touch support */
+            .btn, .option-btn, .game-card {
+                -webkit-tap-highlight-color: transparent;
+                touch-action: manipulation;
+            }
+
+            /* Better mobile button spacing */
+            .game-footer, .game-footer-tongue {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .game-footer .btn, .game-footer-tongue .btn {
+                flex: 1;
+                min-width: 120px;
+                padding: 12px 20px;
+            }
+
+            /* Improve mobile readability */
+            .game-stats {
+                gap: 15px;
+            }
+
+            .stat-item {
+                min-width: 100px;
+            }
+
+            /* Better mobile game card layout */
+            .games-grid {
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 20px;
+            }
+        }
+
+        /* Enhanced mobile experience for small screens */
+        @media (max-width: 600px) {
+            .main-header {
+                padding: 20px 25px 30px;
+            }
+
+            .main-title {
+                font-size: 28px;
+            }
+
+            .game-header {
+                padding: 20px 25px;
+            }
+
+            .game-title {
+                font-size: 22px;
+            }
+
+            /* Improve mobile game display */
+            .game-container {
+                padding: 20px 15px;
+            }
+
+            .option-btn {
+                padding: 20px;
+                font-size: 18px;
+            }
+
+            /* Better mobile progress display */
+            .progress-bar-container {
+                max-width: none;
+                width: 100%;
+                margin: 10px 0;
+            }
+
+            /* Enhance mobile touch targets */
+            .btn-play {
+                min-height: 44px;
+                min-width: 44px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 主页面 -->
+    <div id="mainPage" class="page active">
+        <header class="main-header">
+            <div class="header-decoration left"></div>
+            <div class="header-decoration right"></div>
+            <div class="header-content">
+                <h1 class="main-title">中医互动学堂</h1>
+                <p class="main-subtitle">AI教学智能体 · 游戏化学习平台</p>
+                <div class="header-icons">
+                    <span class="header-icon">🌿</span>
+                    <span class="header-icon">☯️</span>
+                    <span class="header-icon">🧘</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="page-container">
+            <div class="games-grid">
+                <div class="game-card" onclick="startGame('elements')">
+                    <div class="game-icon-wrapper">
+                        <span class="game-icon">⚖️</span>
+                    </div>
+                    <h3 class="game-name">五行配对挑战</h3>
+                    <p class="game-desc">配对五行与脏腑，掌握相生相克</p>
+                    <button class="btn-play">开始游戏</button>
+                </div>
+
+                <div class="game-card" onclick="window.open('tcm-tongue-challenge.html','_blank')">
+                    <div class="game-icon-wrapper">
+                        <span class="game-icon">👅</span>
+                    </div>
+                    <h3 class="game-name">舌诊挑战</h3>
+                    <p class="game-desc">AI舌诊分析 + 辨证答题</p>
+                    <button class="btn-play">开始游戏</button>
+                </div>
+
+                <div class="game-card" onclick="startGame('prescription')">
+                    <div class="game-icon-wrapper">
+                        <span class="game-icon">📜</span>
+                    </div>
+                    <h3 class="game-name">方剂配伍挑战</h3>
+                    <p class="game-desc">选择药材，组成经典方剂</p>
+                    <button class="btn-play">开始游戏</button>
+                </div>
+
+                <div class="game-card" onclick="startGame('herbs')">
+                    <div class="game-icon-wrapper">
+                        <span class="game-icon">🌿</span>
+                    </div>
+                    <h3 class="game-name">中药猜猜乐</h3>
+                    <p class="game-desc">根据功效猜中药名称</p>
+                    <button class="btn-play">开始游戏</button>
+                </div>
+
+                <div class="game-card" onclick="startGame('meridian')">
+                    <div class="game-icon-wrapper">
+                        <span class="game-icon">🌀</span>
+                    </div>
+                    <h3 class="game-name">经络穴位定位</h3>
+                    <p class="game-desc">在人体模型上找到穴位位置</p>
+                    <button class="btn-play">开始游戏</button>
+                </div>
+
+                <div class="game-card" onclick="startGame('diagnosis')">
+                    <div class="game-icon-wrapper">
+                        <span class="game-icon">🩺</span>
+                    </div>
+                    <h3 class="game-name">望闻问切挑战</h3>
+                    <p class="game-desc">四诊合参，综合辨证</p>
+                    <button class="btn-play">开始游戏</button>
+                </div>
+            </div>
+
+            <!-- 统计数据区域 -->
+            <div class="stats-section">
+                <h2 class="stats-section-title">学习进度</h2>
+                <div class="stats-container">
+                    <div class="stat-card time-card">
+                        <div class="stat-icon-wrapper">
+                            <span class="stat-icon">⏱️</span>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-label">今日学习时长</div>
+                            <div class="stat-value" id="todayTime">25分钟</div>
+                        </div>
+                    </div>
+                    <div class="stat-card score-card">
+                        <div class="stat-icon-wrapper">
+                            <span class="stat-icon">🏆</span>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-label">累计获得积分</div>
+                            <div class="stat-value" id="totalScore">1280分</div>
+                        </div>
+                    </div>
+                    <div class="stat-card games-card">
+                        <div class="stat-icon-wrapper">
+                            <span class="stat-icon">📚</span>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-label">完成游戏次数</div>
+                            <div class="stat-value" id="completedGames">12次</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p class="footer-text">© 2024 中医互动学堂 | 传统中医文化科普平台</p>
+            <div class="footer-decoration">
+                <span class="footer-icon">🌿</span>
+                <span class="footer-icon">☯️</span>
+                <span class="footer-icon">🏮</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- 五行配对游戏页面 -->
+    <div id="elementsGame" class="page">
+        <header class="game-header">
+            <div class="header-content">
+                <h1 class="game-title">
+                    <span class="icon">⚖️</span>
+                    五行配对挑战
+                </h1>
+                <div class="game-stats">
+                    <div class="stat-item">
+                        <div class="stat-label">得分</div>
+                        <div class="stat-value" id="elementsScore">0/5</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">时间</div>
+                        <div class="stat-value" id="elementsTime">0秒</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="game-container">
+            <div class="pairing-container">
+                <div class="pairing-column">
+                    <h3 class="column-title">五行</h3>
+                    <div id="elementsList"></div>
+                </div>
+                <div class="pairing-column">
+                    <h3 class="column-title">脏腑</h3>
+                    <div id="organsList"></div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="game-footer">
+            <button class="btn btn-reset" onclick="resetElementsGame()">
+                <span>↻</span>
+                重置游戏
+            </button>
+            <button class="btn btn-next" onclick="showElementsHint()">
+                <span>💡</span>
+                提示
+            </button>
+            <button class="btn btn-back" onclick="goBack()">
+                <span>←</span>
+                返回大厅
+            </button>
+        </footer>
+    </div>
+
+    <!-- 舌诊挑战游戏页面 -->
+    <div id="tongueGame" class="page">
+        <!-- 顶部标题栏 -->
+        <header class="game-header">
+            <div class="header-content">
+                <h1 class="game-title">
+                    <span class="icon">👅</span>
+                    舌诊挑战
+                </h1>
+                <div class="game-stats">
+                    <div class="stat-item">
+                        <div class="stat-label">当前进度</div>
+                        <div class="stat-value"><span id="tongueCurrentQ">1</span>/<span id="tongueTotalQ">5</span></div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">当前得分</div>
+                        <div class="stat-value" id="tongueScore">0</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主游戏区 -->
+        <main class="tongue-game-container">
+            <!-- 舌象展示区 -->
+            <div class="tongue-display">
+                <div class="tongue-visual" id="tongueVisual">
+                    <div class="tongue-body" id="tongueBody">
+                        <div class="tongue-coating" id="tongueCoating"></div>
+                    </div>
+                </div>
+                <div class="tongue-info">
+                    <span class="question-number">第 <span id="tongueQNum">1</span> 题</span>
+                    <h3 class="question-text">请观察舌象，判断证型</h3>
+                    <p class="tongue-description" id="tongueDesc">正在加载题目...</p>
+                </div>
+            </div>
+
+            <!-- 选项区 -->
+            <div class="options-area-tongue">
+                <div class="options-title-tongue">
+                    <span>📋</span>
+                    <span>请选择正确的辨证结果</span>
+                </div>
+                <div class="options-grid-tongue" id="tongueOptions"></div>
+            </div>
+
+            <!-- 解析区 -->
+            <div class="explanation-area-tongue" id="tongueExplanationArea">
+                <div class="explanation-title-tongue">
+                    <span>💡</span>
+                    <span>答案解析</span>
+                </div>
+                <p class="explanation-text-tongue" id="tongueExplanationText"></p>
+            </div>
+        </main>
+
+        <!-- 底部按钮区 -->
+        <footer class="game-footer-tongue">
+            <button class="btn btn-reset" onclick="resetTongueGame()">
+                <span>↻</span>
+                重置
+            </button>
+            <button class="btn btn-next-tongue" id="tongueNextBtn" onclick="nextTongueQuestion()" disabled>
+                <span>→</span>
+                下一题
+            </button>
+            <button class="btn btn-back" onclick="goBack()">
+                <span>←</span>
+                返回
+            </button>
+        </footer>
+
+    </div>
+
+    <!-- 方剂配伍游戏页面 -->
+    <div id="prescriptionGame" class="page">
+        <header class="game-header">
+            <div class="header-content">
+                <h1 class="game-title">
+                    <span class="icon">📜</span>
+                    方剂配伍挑战
+                </h1>
+                <div class="game-stats">
+                    <div class="stat-item">
+                        <div class="stat-label">当前得分</div>
+                        <div class="stat-value" id="prescriptionScore">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">生命值</div>
+                        <div class="lives-container">
+                            <span class="life-heart" id="prescriptionLife1">❤️</span>
+                            <span class="life-heart" id="prescriptionLife2">❤️</span>
+                            <span class="life-heart" id="prescriptionLife3">❤️</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="game-container">
+            <div class="level-info">
+                <div class="level-header">
+                    <div class="level-badge">
+                        <span class="level-num" id="prescriptionLevelNum">1</span>
+                        <span class="level-text">关卡</span>
+                    </div>
+                    <div>
+                        <h2 class="prescription-name" id="prescriptionName">麻黄汤</h2>
+                        <p class="prescription-origin" id="prescriptionOrigin">出自《伤寒论》</p>
+                    </div>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-label">
+                        <span>配伍进度</span>
+                        <span id="prescriptionProgressText">0/4</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="prescriptionProgressFill" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="target-count">
+                    <div class="label">还需选择</div>
+                    <div class="value" id="prescriptionRemaining">4</div>
+                </div>
+            </div>
+
+            <div class="selected-area" id="prescriptionSelectedArea">
+                <div class="area-title">
+                    <span>✅</span>
+                    <span>已选药材</span>
+                    <span style="font-size: 12px; color: #999; margin-left: auto;">点击可移除</span>
+                </div>
+                <div class="selected-herbs" id="prescriptionSelectedHerbs">
+                    <span style="color: #999; font-size: 14px; padding: 20px;">请从下方选择正确的药材...</span>
+                </div>
+            </div>
+
+            <div class="available-area">
+                <div class="area-title">
+                    <span>🌿</span>
+                    <span>待选药材</span>
+                </div>
+                <div class="herbs-grid" id="prescriptionHerbsGrid"></div>
+            </div>
+        </main>
+
+        <footer class="game-footer">
+            <button class="btn btn-reset" onclick="resetPrescriptionLevel()">
+                <span>↻</span>
+                重置关卡
+            </button>
+            <button class="btn btn-next" id="prescriptionNextBtn" onclick="nextPrescriptionLevel()" disabled>
+                <span>→</span>
+                下一关
+            </button>
+            <button class="btn btn-back" onclick="goBack()">
+                <span>←</span>
+                返回大厅
+            </button>
+        </footer>
+    </div>
+
+    <!-- 中药猜猜乐游戏页面 -->
+    <div id="herbsGame" class="page">
+        <header class="game-header">
+            <div class="header-content">
+                <h1 class="game-title">
+                    <span class="icon">🌿</span>
+                    中药猜猜乐
+                </h1>
+                <div class="game-stats">
+                    <div class="stat-item">
+                        <div class="stat-label">得分</div>
+                        <div class="stat-value" id="herbsScore">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">进度</div>
+                        <div class="stat-value" id="herbsProgress">1/8</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="game-container">
+            <div class="quiz-question">
+                <div class="quiz-icon">💊</div>
+                <div class="quiz-desc" id="herbsDesc">解表散寒、宣肺平喘</div>
+                <div class="quiz-subtitle">请问这是哪味中药的功效？</div>
+            </div>
+            <div class="options-grid" id="herbsOptions"></div>
+        </main>
+
+        <footer class="game-footer">
+            <button class="btn btn-reset" onclick="resetHerbsGame()">
+                <span>↻</span>
+                重置游戏
+            </button>
+            <button class="btn btn-back" onclick="goBack()">
+                <span>←</span>
+                返回大厅
+            </button>
+        </footer>
+    </div>
+
+    <!-- 经络穴位游戏页面 -->
+    <div id="meridianGame" class="page">
+        <header class="game-header">
+            <div class="header-content">
+                <h1 class="game-title">
+                    <span>📍</span>
+                    经络穴位定位
+                </h1>
+                <div class="game-stats">
+                    <div class="stat-item">
+                        <div class="stat-label">已找到</div>
+                        <div class="stat-value"><span id="meridianFound">0</span>/<span id="meridianTotal">10</span></div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">错误</div>
+                        <div class="stat-value" id="meridianWrong">0</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="meridian-game-container">
+            <!-- 计时器和得分 -->
+            <div style="display: flex; justify-content: center; gap: 20px;">
+                <div class="timer-display-meridian">
+                    <span class="icon">⏱️</span>
+                    <span class="time" id="meridianTimer">00:00</span>
+                </div>
+                <div class="score-display-meridian">
+                    <div class="score-label">得分</div>
+                    <div class="score-value" id="meridianScore">0</div>
+                </div>
+            </div>
+
+            <!-- 主游戏区 -->
+            <div class="game-main-area-meridian">
+                <div class="body-area">
+                    <div class="body-display" id="bodyDisplay">
+                        <svg class="body-svg" viewBox="0 0 200 360">
+                            <!-- 人体轮廓 -->
+                            <defs>
+                                <linearGradient id="skinGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#F5E6D3"/>
+                                    <stop offset="100%" style="stop-color:#E8D4BE"/>
+                                </linearGradient>
+                            </defs>
+
+                            <!-- 头部 -->
+                            <ellipse cx="100" cy="35" rx="30" ry="35" fill="url(#skinGradient)" stroke="#D4C4B0" stroke-width="2"/>
+
+                            <!-- 颈部 -->
+                            <path d="M85 65 L85 80 L115 80 L115 65" fill="url(#skinGradient)" stroke="#D4C4B0" stroke-width="2"/>
+
+                            <!-- 躯干 -->
+                            <path d="M70 80 L60 180 L140 180 L130 80 Z" fill="url(#skinGradient)" stroke="#D4C4B0" stroke-width="2"/>
+
+                            <!-- 左臂 -->
+                            <path d="M60 90 L35 160 L45 165 L70 100" fill="url(#skinGradient)" stroke="#D4C4B0" stroke-width="2"/>
+                            <path d="M35 160 L25 220 L35 225 L45 165" fill="url(#skinGradient)" stroke="#D4C4B0" stroke-width="2"/>
+
+                            <!-- 右臂 -->
+                            <path d="M140 90 L165 160 L155 165 L130 100" fill="url(#skinGradient)" stroke="#D4C4B0" stroke-width="2"/>
+                            <path d="M165 160 L175 220 L165 225 L155 165" fill="url(#skinGradient)" stroke="#D4C4B0" stroke-width="2"/>
+
+                            <!-- 左腿 -->
+                            <path d="M70 180 L60 300 L80 300 L85 180" fill="url(#skinGradient)" stroke="#D4C4B0" stroke-width="2"/>
+
+                            <!-- 右腿 -->
+                            <path d="M130 180 L140 300 L120 300 L115 180" fill="url(#skinGradient)" stroke="#D4C4B0" stroke-width="2"/>
+
+                            <!-- 经络线 -->
+                            <path d="M100 70 L100 175" stroke="#E57373" stroke-width="2" fill="none" opacity="0.6" stroke-dasharray="5,5"/>
+                            <path d="M85 90 L40 160 L30 220" stroke="#64B5F6" stroke-width="2" fill="none" opacity="0.6" stroke-dasharray="5,5"/>
+                            <path d="M115 90 L160 160 L170 220" stroke="#64B5F6" stroke-width="2" fill="none" opacity="0.6" stroke-dasharray="5,5"/>
+                            <path d="M75 185 L70 295" stroke="#81C784" stroke-width="2" fill="none" opacity="0.6" stroke-dasharray="5,5"/>
+                            <path d="M125 185 L130 295" stroke="#81C784" stroke-width="2" fill="none" opacity="0.6" stroke-dasharray="5,5"/>
+                        </svg>
+
+                        <!-- 穴位点将通过JS动态生成 -->
+                    </div>
+                </div>
+
+                <div class="info-area-meridian">
+                    <div class="question-panel-meridian">
+                        <h3 class="question-title-meridian">
+                            <span>❓</span>
+                            <span>请找到以下穴位</span>
+                        </h3>
+                        <p class="question-text-meridian" id="meridianQuestionText">百会穴</p>
+                        <p class="question-hint-meridian" id="meridianQuestionHint">位于头顶正中线与两耳尖连线的交点处</p>
+                    </div>
+
+                    <div class="found-panel-meridian">
+                        <h3 class="found-title-meridian">已找到的穴位</h3>
+                        <div class="found-list-meridian" id="meridianFoundList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="game-footer">
+            <button class="btn btn-reset" onclick="resetMeridianGame()">
+                <span>↻</span>
+                重置
+            </button>
+            <button class="btn btn-hint-meridian" onclick="showMeridianHint()">
+                <span>💡</span>
+                提示
+            </button>
+            <button class="btn btn-back" onclick="goBack()">
+                <span>←</span>
+                返回
+            </button>
+        </footer>
+
+    </div>
+
+    <!-- 望闻问切游戏页面 -->
+    <div id="diagnosisGame" class="page">
+        <header class="game-header">
+            <div class="header-content">
+                <h1 class="game-title">
+                    <span class="icon">🩺</span>
+                    望闻问切挑战
+                </h1>
+                <div class="game-stats">
+                    <div class="stat-item">
+                        <div class="stat-label">得分</div>
+                        <div class="stat-value" id="diagnosisScore">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">进度</div>
+                        <div class="stat-value" id="diagnosisProgress">1/6</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="game-container">
+            <div class="diagnosis-case">
+                <div class="case-header">
+                    <span class="case-icon">👤</span>
+                    <h3 class="case-title">患者病例</h3>
+                </div>
+                <div class="case-content" id="diagnosisCase">
+                    <p><span class="case-label">望：</span><span id="diagnosisLook">面色苍白，舌淡苔薄白</span></p>
+                    <p><span class="case-label">闻：</span><span id="diagnosisListen">语声低微，呼吸短促</span></p>
+                    <p><span class="case-label">问：</span><span id="diagnosisAsk">神疲乏力，气短懒言，自汗</span></p>
+                    <p><span class="case-label">切：</span><span id="diagnosisPulse">脉虚无力</span></p>
+                </div>
+            </div>
+            <div class="diagnosis-options" id="diagnosisOptions"></div>
+        </main>
+
+        <footer class="game-footer">
+            <button class="btn btn-reset" onclick="resetDiagnosisGame()">
+                <span>↻</span>
+                重置游戏
+            </button>
+            <button class="btn btn-back" onclick="goBack()">
+                <span>←</span>
+                返回大厅
+            </button>
+        </footer>
+    </div>
+
+    <!-- 胜利弹窗（统一） -->
+    <div class="modal-overlay" id="victoryModal">
+        <div class="modal-content">
+            <div class="modal-icon" id="victoryIcon">🏆</div>
+            <h2 class="modal-title" id="victoryTitle">恭喜通关！</h2>
+            <p class="modal-subtitle" id="victorySubtitle">游戏大师</p>
+            <p class="modal-text" id="victoryText">你已经掌握了相关知识！</p>
+            <div class="modal-stats" id="victoryStats">
+                <div class="modal-stat-item">
+                    <div class="modal-stat-label">最终得分</div>
+                    <div class="modal-stat-value" id="finalScore">0</div>
+                </div>
+            </div>
+            <button class="btn btn-primary" id="victoryBtn" onclick="closeVictoryModal()">
+                继续学习
+            </button>
+        </div>
+    </div>
+
+    <!-- 提示信息 -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // 页面切换功能
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(pageId).classList.add('active');
+        }
+
+        function goBack() {
+            showPage('mainPage');
+        }
+
+        function startGame(gameType) {
+            switch(gameType) {
+                case 'elements':
+                    showPage('elementsGame');
+                    initElementsGame();
+                    break;
+                case 'tongue':
+                    showPage('tongueGame');
+                    initTongueGame();
+                    break;
+                case 'prescription':
+                    showPage('prescriptionGame');
+                    initPrescriptionGame();
+                    break;
+                case 'herbs':
+                    showPage('herbsGame');
+                    initHerbsGame();
+                    break;
+                case 'meridian':
+                    showPage('meridianGame');
+                    initMeridianGame();
+                    break;
+                case 'diagnosis':
+                    showPage('diagnosisGame');
+                    initDiagnosisGame();
+                    break;
+            }
+        }
+
+        function showToast(message, type) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        let _victoryCloseCallback = null;
+
+        function showVictory(title, subtitle, text, score, options = {}) {
+            document.getElementById('victoryIcon').textContent = options.icon || '🏆';
+            document.getElementById('victoryTitle').textContent = title || '恭喜通关！';
+            document.getElementById('victorySubtitle').textContent = subtitle;
+            document.getElementById('victoryText').textContent = text;
+            document.getElementById('finalScore').textContent = score;
+
+            const btn = document.getElementById('victoryBtn');
+            btn.textContent = options.buttonText || '继续学习';
+            _victoryCloseCallback = options.onClose || null;
+
+            document.getElementById('victoryModal').classList.add('show');
+
+            // 提交分数到后端
+            if (options.gameType && score > 0) {
+                submitHubScore(options.gameType, score, options.accuracy || 100, options.duration || 0);
+            }
+        }
+
+        async function submitHubScore(gameType, score, accuracy, duration) {
+            try {
+                const token = localStorage.getItem('token') || '';
+                await fetch('/api/games/score', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify({ gameType, score, accuracy, durationSeconds: duration })
+                });
+            } catch {}
+        }
+
+        function closeVictoryModal() {
+            document.getElementById('victoryModal').classList.remove('show');
+            if (_victoryCloseCallback) {
+                _victoryCloseCallback();
+                _victoryCloseCallback = null;
+            } else {
+                goBack();
+            }
+        }
+
+        // 五行配对游戏
+        const elementsData = [
+            { name: '木', pinyin: 'Mù', organ: '肝' },
+            { name: '火', pinyin: 'Huǒ', organ: '心' },
+            { name: '土', pinyin: 'Tǔ', organ: '脾' },
+            { name: '金', pinyin: 'Jīn', organ: '肺' },
+            { name: '水', pinyin: 'Shuǐ', organ: '肾' }
+        ];
+
+        let elementsState = {
+            selectedElement: null,
+            selectedOrgan: null,
+            matches: 0,
+            startTime: null,
+            timer: null
+        };
+
+        function initElementsGame() {
+            elementsState = {
+                selectedElement: null,
+                selectedOrgan: null,
+                matches: 0,
+                startTime: Date.now(),
+                timer: null
+            };
+
+            document.getElementById('elementsScore').textContent = '0/5';
+            document.getElementById('elementsTime').textContent = '0秒';
+
+            const elementsList = document.getElementById('elementsList');
+            elementsList.innerHTML = '';
+            elementsData.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'element-card';
+                card.dataset.element = item.name;
+                card.innerHTML = `
+                    <div class="element-name">${item.name}</div>
+                    <div class="element-pinyin">${item.pinyin}</div>
+                `;
+                card.onclick = () => selectElement(card, item.name);
+                elementsList.appendChild(card);
+            });
+
+            const organsList = document.getElementById('organsList');
+            organsList.innerHTML = '';
+            const shuffledOrgans = [...elementsData].sort(() => Math.random() - 0.5);
+            shuffledOrgans.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'element-card';
+                card.dataset.organ = item.organ;
+                card.innerHTML = `
+                    <div class="element-name">${item.organ}</div>
+                    <div class="element-pinyin">${item.organ}</div>
+                `;
+                card.onclick = () => selectOrgan(card, item.organ);
+                organsList.appendChild(card);
+            });
+
+            elementsState.timer = setInterval(updateElementsTimer, 1000);
+        }
+
+        function selectElement(card, element) {
+            if (card.classList.contains('correct')) return;
+
+            document.querySelectorAll('#elementsList .element-card').forEach(c => {
+                c.classList.remove('selected');
+            });
+            card.classList.add('selected');
+            elementsState.selectedElement = element;
+            checkElementsMatch();
+        }
+
+        function selectOrgan(card, organ) {
+            if (card.classList.contains('correct')) return;
+
+            document.querySelectorAll('#organsList .element-card').forEach(c => {
+                c.classList.remove('selected');
+            });
+            card.classList.add('selected');
+            elementsState.selectedOrgan = organ;
+            checkElementsMatch();
+        }
+
+        function checkElementsMatch() {
+            if (!elementsState.selectedElement || !elementsState.selectedOrgan) return;
+
+            const matchData = elementsData.find(item => item.name === elementsState.selectedElement);
+            if (matchData && matchData.organ === elementsState.selectedOrgan) {
+                const elementCard = document.querySelector(`#elementsList .element-card[data-element="${elementsState.selectedElement}"]`);
+                const organCard = document.querySelector(`#organsList .element-card[data-organ="${elementsState.selectedOrgan}"]`);
+
+                elementCard.classList.remove('selected');
+                organCard.classList.remove('selected');
+                elementCard.classList.add('correct');
+                organCard.classList.add('correct');
+
+                elementsState.matches++;
+                document.getElementById('elementsScore').textContent = `${elementsState.matches}/5`;
+                showToast('配对正确！', 'correct');
+
+                if (elementsState.matches === 5) {
+                    clearInterval(elementsState.timer);
+                    const timeUsed = Math.floor((Date.now() - elementsState.startTime) / 1000);
+                    setTimeout(() => {
+                        showVictory('五行配对大师', '恭喜通关！', `你已经掌握了五行与脏腑的对应关系！用时：${timeUsed}秒`, elementsState.matches * 20, { gameType: 'wuxing', duration: timeUsed });
+                    }, 500);
+                }
+            } else {
+                showToast('配对错误，请重新选择', 'wrong');
+            }
+
+            elementsState.selectedElement = null;
+            elementsState.selectedOrgan = null;
+        }
+
+        function updateElementsTimer() {
+            const seconds = Math.floor((Date.now() - elementsState.startTime) / 1000);
+            document.getElementById('elementsTime').textContent = `${seconds}秒`;
+        }
+
+        function resetElementsGame() {
+            clearInterval(elementsState.timer);
+            initElementsGame();
+        }
+
+        function showElementsHint() {
+            const unmatched = elementsData.filter(item => {
+                const elementCard = document.querySelector(`#elementsList .element-card[data-element="${item.name}"]`);
+                return !elementCard.classList.contains('correct');
+            });
+            if (unmatched.length > 0) {
+                const hint = unmatched[0];
+                showToast(`提示：${hint.name} 对应 ${hint.organ}`, 'info');
+            }
+        }
+
+        // 舌诊挑战游戏 - 完整版
+        const tongueQuestions = [
+            {
+                tongueColor: '#FFE4C4',
+                coatingColor: '#F5F5DC',
+                coatingOpacity: 0.7,
+                description: '舌色淡红，舌苔薄白而润',
+                options: [
+                    { label: '寒证', desc: '寒邪凝滞，阳气不足', correct: true },
+                    { label: '热证', desc: '邪热炽盛，耗伤津液', correct: false },
+                    { label: '气虚', desc: '元气不足，机能减退', correct: false },
+                    { label: '湿盛', desc: '湿邪内蕴，困阻脾胃', correct: false }
+                ],
+                explanation: '【寒证】舌苔薄白而润，是寒邪侵袭或阳气不足的表现。寒邪凝滞收引，阳气被遏，故见薄白苔。舌色淡红示寒邪未伤及气血。'
+            },
+            {
+                tongueColor: '#FF9999',
+                coatingColor: '#FFEB3B',
+                coatingOpacity: 0.8,
+                description: '舌色红，舌苔黄燥',
+                options: [
+                    { label: '寒证', desc: '寒邪凝滞，阳气不足', correct: false },
+                    { label: '热证', desc: '邪热炽盛，耗伤津液', correct: true },
+                    { label: '气虚', desc: '元气不足，机能减退', correct: false },
+                    { label: '阴虚', desc: '阴液亏损，虚热内生', correct: false }
+                ],
+                explanation: '【热证】舌红示热邪炽盛，热邪伤津故苔黄而燥。舌质红绛，苔黄为邪热入里化热之象，属实热证。'
+            },
+            {
+                tongueColor: '#FFD0D0',
+                coatingColor: 'transparent',
+                coatingOpacity: 0,
+                description: '舌质淡胖，边有齿痕',
+                options: [
+                    { label: '寒证', desc: '寒邪凝滞，阳气不足', correct: false },
+                    { label: '热证', desc: '邪热炽盛，耗伤津液', correct: false },
+                    { label: '气虚', desc: '元气不足，机能减退', correct: true },
+                    { label: '湿盛', desc: '湿邪内蕴，困阻脾胃', correct: false }
+                ],
+                explanation: '【气虚】舌质淡胖为气血不足，不能上荣于舌；齿痕乃脾气虚弱，运化失职，水湿内停所致。舌体胖大有齿痕是气虚的典型表现。'
+            }
+        ];
+
+        let tongueState = {
+            currentQuestion: 0,
+            score: 0,
+            answered: false
+        };
+
+        function initTongueGame() {
+            tongueState = {
+                currentQuestion: 0,
+                score: 0,
+                answered: false
+            };
+
+            document.getElementById('tongueScore').textContent = '0';
+            document.getElementById('tongueTotalQ').textContent = tongueQuestions.length;
+            document.getElementById('tongueExplanationArea').classList.remove('show');
+            document.getElementById('tongueNextBtn').disabled = true;
+
+            loadTongueQuestion();
+        }
+
+        function loadTongueQuestion() {
+            const q = tongueQuestions[tongueState.currentQuestion];
+
+            // 更新进度
+            document.getElementById('tongueCurrentQ').textContent = tongueState.currentQuestion + 1;
+            document.getElementById('tongueQNum').textContent = tongueState.currentQuestion + 1;
+
+            // 更新舌象
+            document.getElementById('tongueBody').style.background = q.tongueColor;
+            document.getElementById('tongueCoating').style.background = q.coatingColor;
+            document.getElementById('tongueCoating').style.opacity = q.coatingOpacity;
+
+            // 更新描述
+            document.getElementById('tongueDesc').textContent = q.description;
+
+            // 隐藏解析
+            document.getElementById('tongueExplanationArea').classList.remove('show');
+
+            // 生成选项
+            const optionsGrid = document.getElementById('tongueOptions');
+            optionsGrid.innerHTML = '';
+
+            q.options.forEach((option, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn-tongue';
+                btn.innerHTML = `
+                    <div class="option-label-tongue">${option.label}</div>
+                    <div class="option-desc-tongue">${option.desc}</div>
+                `;
+                btn.onclick = () => checkTongueAnswer(btn, option.correct, q.explanation);
+                optionsGrid.appendChild(btn);
+            });
+
+            tongueState.answered = false;
+            document.getElementById('tongueNextBtn').disabled = true;
+        }
+
+        function checkTongueAnswer(btn, isCorrect, explanation) {
+            if (tongueState.answered) return;
+            tongueState.answered = true;
+
+            const allBtns = document.querySelectorAll('.option-btn-tongue');
+            allBtns.forEach(b => b.disabled = true);
+
+            // 每题20分
+            if (isCorrect) {
+                btn.classList.add('correct');
+                tongueState.score += 20;
+                document.getElementById('tongueScore').textContent = tongueState.score;
+            } else {
+                btn.classList.add('wrong');
+                // 高亮正确答案
+                const q = tongueQuestions[tongueState.currentQuestion];
+                allBtns.forEach(b => {
+                    const label = b.querySelector('.option-label-tongue').textContent;
+                    if (q.options.find(o => o.label === label)?.correct) {
+                        b.classList.add('correct');
+                    }
+                });
+            }
+
+            // 显示解析
+            document.getElementById('tongueExplanationText').textContent = explanation;
+            document.getElementById('tongueExplanationArea').classList.add('show');
+
+            // 启用下一题按钮
+            document.getElementById('tongueNextBtn').disabled = false;
+        }
+
+        function nextTongueQuestion() {
+            tongueState.currentQuestion++;
+
+            if (tongueState.currentQuestion >= tongueQuestions.length) {
+                showTongueResult();
+            } else {
+                loadTongueQuestion();
+            }
+        }
+
+        function showTongueResult() {
+            const score = tongueState.score;
+            const maxScore = tongueQuestions.length * 20;
+            const percentage = (score / maxScore) * 100;
+
+            let icon, title, subtitle, text;
+
+            if (percentage === 100) {
+                icon = '🏆';
+                title = '完美通关！';
+                subtitle = '望诊圣手';
+                text = '你对舌诊知识的掌握已经炉火纯青！';
+            } else if (percentage >= 80) {
+                icon = '🎉';
+                title = '挑战完成！';
+                subtitle = '望诊小成';
+                text = '你已经掌握了舌诊的基本知识，继续加油！';
+            } else if (percentage >= 60) {
+                icon = '👍';
+                title = '挑战完成！';
+                subtitle = '初窥门径';
+                text = '你对舌诊有了一定了解，建议多加练习！';
+            } else {
+                icon = '💪';
+                title = '挑战完成！';
+                subtitle = '仍需努力';
+                text = '建议复习一下舌诊相关知识，再战江湖！';
+            }
+
+            showVictory(title, subtitle, text, score, { icon, buttonText: '再玩一次', onClose: resetTongueGame, gameType: 'tongue', accuracy: Math.round((tongueState.correct / tongueState.total) * 100) });
+        }
+
+        function resetTongueGame() {
+            initTongueGame();
+        }
+
+        // 方剂配伍游戏
+        const prescriptions = [
+            {
+                name: '麻黄汤',
+                origin: '出自《伤寒论》',
+                correctHerbs: [
+                    { name: '麻黄', pinyin: 'Má Huáng', icon: '🌾' },
+                    { name: '桂枝', pinyin: 'Guì Zhī', icon: '🪵' },
+                    { name: '杏仁', pinyin: 'Xìng Rén', icon: '🥜' },
+                    { name: '甘草', pinyin: 'Gān Cǎo', icon: '🌱' }
+                ],
+                distractHerbs: [
+                    { name: '石膏', pinyin: 'Shí Gāo', icon: '🪨' },
+                    { name: '人参', pinyin: 'Rén Shēn', icon: '🌿' }
+                ]
+            },
+            {
+                name: '银翘散',
+                origin: '出自《温病条辨》',
+                correctHerbs: [
+                    { name: '金银花', pinyin: 'Jīn Yín Huā', icon: '🌼' },
+                    { name: '连翘', pinyin: 'Lián Qiào', icon: '🌿' },
+                    { name: '薄荷', pinyin: 'Bò He', icon: '🍃' },
+                    { name: '荆芥', pinyin: 'Jīng Jiè', icon: '🌾' },
+                    { name: '淡豆豉', pinyin: 'Dàn Dòu Chǐ', icon: '🫘' }
+                ],
+                distractHerbs: [
+                    { name: '麻黄', pinyin: 'Má Huáng', icon: '🌾' },
+                    { name: '桂枝', pinyin: 'Guì Zhī', icon: '🪵' },
+                    { name: '黄芩', pinyin: 'Huáng Qín', icon: '🌿' }
+                ]
+            },
+            {
+                name: '六味地黄丸',
+                origin: '出自《小儿药证直诀》',
+                correctHerbs: [
+                    { name: '熟地黄', pinyin: 'Shú Dì Huáng', icon: '🟤' },
+                    { name: '山茱萸', pinyin: 'Shān Zhū Yú', icon: '🔴' },
+                    { name: '山药', pinyin: 'Shān Yào', icon: '🥔' },
+                    { name: '泽泻', pinyin: 'Zé Xiè', icon: '⚪' },
+                    { name: '牡丹皮', pinyin: 'Mǔ Dān Pí', icon: '🌸' },
+                    { name: '茯苓', pinyin: 'Fú Líng', icon: '🍄' }
+                ],
+                distractHerbs: [
+                    { name: '当归', pinyin: 'Dāng Guī', icon: '🌿' },
+                    { name: '白芍', pinyin: 'Bái Sháo', icon: '🌼' },
+                    { name: '川芎', pinyin: 'Chuān Xiōng', icon: '🌱' }
+                ]
+            }
+        ];
+
+        let prescriptionState = {
+            currentLevel: 0,
+            score: 0,
+            lives: 3,
+            selectedHerbs: [],
+            availableHerbs: []
+        };
+
+        function initPrescriptionGame() {
+            prescriptionState = {
+                currentLevel: 0,
+                score: 0,
+                lives: 3,
+                selectedHerbs: [],
+                availableHerbs: []
+            };
+            updatePrescriptionLives();
+            document.getElementById('prescriptionScore').textContent = '0';
+            loadPrescriptionLevel();
+        }
+
+        function loadPrescriptionLevel() {
+            const prescription = prescriptions[prescriptionState.currentLevel];
+            prescriptionState.selectedHerbs = [];
+
+            const allHerbs = shuffleArray([
+                ...prescription.correctHerbs.map(h => ({ ...h, correct: true })),
+                ...prescription.distractHerbs.map(h => ({ ...h, correct: false }))
+            ]);
+            prescriptionState.availableHerbs = allHerbs;
+
+            document.getElementById('prescriptionLevelNum').textContent = prescriptionState.currentLevel + 1;
+            document.getElementById('prescriptionName').textContent = prescription.name;
+            document.getElementById('prescriptionOrigin').textContent = prescription.origin;
+            document.getElementById('prescriptionNextBtn').disabled = true;
+
+            updatePrescriptionProgress();
+            renderPrescriptionHerbs();
+            renderPrescriptionSelected();
+        }
+
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function renderPrescriptionHerbs() {
+            const grid = document.getElementById('prescriptionHerbsGrid');
+            grid.innerHTML = '';
+
+            prescriptionState.availableHerbs.forEach((herb, index) => {
+                const card = document.createElement('div');
+                card.className = 'herb-card';
+                if (prescriptionState.selectedHerbs.includes(herb)) {
+                    card.classList.add('selected');
+                }
+                card.innerHTML = `
+                    <span class="herb-icon">${herb.icon}</span>
+                    <div class="herb-name">${herb.name}</div>
+                    <div class="herb-pinyin">${herb.pinyin}</div>
+                `;
+                card.onclick = () => selectPrescriptionHerb(herb, card);
+                grid.appendChild(card);
+            });
+        }
+
+        function renderPrescriptionSelected() {
+            const container = document.getElementById('prescriptionSelectedHerbs');
+            const area = document.getElementById('prescriptionSelectedArea');
+
+            if (prescriptionState.selectedHerbs.length === 0) {
+                container.innerHTML = '<span style="color: #999; font-size: 14px; padding: 20px;">请从下方选择正确的药材...</span>';
+                area.classList.remove('has-items');
+            } else {
+                area.classList.add('has-items');
+                container.innerHTML = '';
+
+                prescriptionState.selectedHerbs.forEach((herb, index) => {
+                    const tag = document.createElement('span');
+                    tag.className = 'selected-tag';
+                    tag.innerHTML = `
+                        <span class="herb-icon">${herb.icon}</span>
+                        <span>${herb.name}</span>
+                    `;
+                    tag.onclick = () => removePrescriptionHerb(index);
+                    container.appendChild(tag);
+                });
+            }
+        }
+
+        function selectPrescriptionHerb(herb, card) {
+            if (prescriptionState.selectedHerbs.includes(herb)) return;
+
+            if (herb.correct) {
+                prescriptionState.selectedHerbs.push(herb);
+                prescriptionState.score += 10;
+                document.getElementById('prescriptionScore').textContent = prescriptionState.score;
+
+                card.classList.add('correct-select');
+                setTimeout(() => {
+                    card.classList.add('selected');
+                    renderPrescriptionSelected();
+                    updatePrescriptionProgress();
+                    checkPrescriptionLevelComplete();
+                }, 500);
+
+                showToast('正确！+10分', 'correct');
+            } else {
+                card.classList.add('wrong-select');
+                prescriptionState.lives--;
+                updatePrescriptionLives();
+
+                setTimeout(() => {
+                    card.classList.remove('wrong-select');
+                }, 500);
+
+                showToast('错误！不是该方剂的组成药材', 'wrong');
+
+                if (prescriptionState.lives <= 0) {
+                    setTimeout(() => {
+                        showVictory('游戏结束', '再接再厉', '生命值已耗尽，请重新挑战！', prescriptionState.score, { gameType: 'prescription', accuracy: Math.round((prescriptionState.lives / 3) * 100) });
+                        initPrescriptionGame();
+                    }, 600);
+                }
+            }
+        }
+
+        function removePrescriptionHerb(index) {
+            const herb = prescriptionState.selectedHerbs[index];
+            prescriptionState.selectedHerbs.splice(index, 1);
+            prescriptionState.score = Math.max(0, prescriptionState.score - 5);
+            document.getElementById('prescriptionScore').textContent = prescriptionState.score;
+
+            renderPrescriptionHerbs();
+            renderPrescriptionSelected();
+            updatePrescriptionProgress();
+            document.getElementById('prescriptionNextBtn').disabled = true;
+
+            showToast('已移除药材，-5分', 'info');
+        }
+
+        function updatePrescriptionProgress() {
+            const prescription = prescriptions[prescriptionState.currentLevel];
+            const total = prescription.correctHerbs.length;
+            const selected = prescriptionState.selectedHerbs.length;
+            const remaining = total - selected;
+
+            document.getElementById('prescriptionProgressText').textContent = `${selected}/${total}`;
+            document.getElementById('prescriptionRemaining').textContent = remaining;
+            document.getElementById('prescriptionProgressFill').style.width = `${(selected / total) * 100}%`;
+        }
+
+        function updatePrescriptionLives() {
+            for (let i = 1; i <= 3; i++) {
+                const heart = document.getElementById(`prescriptionLife${i}`);
+                if (i <= prescriptionState.lives) {
+                    heart.classList.remove('lost');
+                } else {
+                    heart.classList.add('lost');
+                }
+            }
+        }
+
+        function checkPrescriptionLevelComplete() {
+            const prescription = prescriptions[prescriptionState.currentLevel];
+            const total = prescription.correctHerbs.length;
+
+            if (prescriptionState.selectedHerbs.length === total) {
+                document.getElementById('prescriptionNextBtn').disabled = false;
+                showToast('恭喜！该方剂配伍完成！', 'correct');
+            }
+        }
+
+        function nextPrescriptionLevel() {
+            prescriptionState.currentLevel++;
+
+            if (prescriptionState.currentLevel >= prescriptions.length) {
+                showVictory('方剂大师', '恭喜通关！', '你已经掌握了所有经典方剂的配伍知识！', prescriptionState.score, { gameType: 'prescription', accuracy: Math.round((prescriptionState.lives / 3) * 100) });
+                initPrescriptionGame();
+            } else {
+                document.getElementById('prescriptionNextBtn').disabled = true;
+                loadPrescriptionLevel();
+            }
+        }
+
+        function resetPrescriptionLevel() {
+            loadPrescriptionLevel();
+        }
+
+        // 中药猜猜乐游戏
+        const herbsQuestions = [
+            { desc: '解表散寒、宣肺平喘', options: ['麻黄', '桂枝', '葛根', '柴胡'], answer: '麻黄' },
+            { desc: '发汗解肌、温通经脉', options: ['麻黄', '桂枝', '防风', '羌活'], answer: '桂枝' },
+            { desc: '清热燥湿、泻火解毒', options: ['黄芩', '黄连', '黄柏', '龙胆草'], answer: '黄芩' },
+            { desc: '补气固表、利尿托毒', options: ['人参', '黄芪', '白术', '甘草'], answer: '黄芪' },
+            { desc: '养血调经、平肝止痛', options: ['当归', '川芎', '白芍', '熟地'], answer: '当归' },
+            { desc: '滋阴润肺、益胃生津', options: ['麦冬', '天冬', '玉竹', '石斛'], answer: '麦冬' },
+            { desc: '活血化瘀、通经止痛', options: ['丹参', '川芎', '红花', '桃仁'], answer: '川芎' },
+            { desc: '健脾益气、燥湿利水', options: ['白术', '苍术', '茯苓', '薏仁'], answer: '白术' }
+        ];
+
+        let herbsState = {
+            currentQuestion: 0,
+            score: 0,
+            answered: false
+        };
+
+        function initHerbsGame() {
+            herbsState = {
+                currentQuestion: 0,
+                score: 0,
+                answered: false
+            };
+            document.getElementById('herbsScore').textContent = '0';
+            loadHerbsQuestion();
+        }
+
+        function loadHerbsQuestion() {
+            const question = herbsQuestions[herbsState.currentQuestion];
+            document.getElementById('herbsDesc').textContent = question.desc;
+            document.getElementById('herbsProgress').textContent = `${herbsState.currentQuestion + 1}/8`;
+
+            const optionsContainer = document.getElementById('herbsOptions');
+            optionsContainer.innerHTML = '';
+            question.options.forEach(option => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = option;
+                btn.onclick = () => checkHerbsAnswer(option, btn);
+                optionsContainer.appendChild(btn);
+            });
+            herbsState.answered = false;
+        }
+
+        function checkHerbsAnswer(selected, btn) {
+            if (herbsState.answered) return;
+            herbsState.answered = true;
+
+            const question = herbsQuestions[herbsState.currentQuestion];
+            if (selected === question.answer) {
+                btn.classList.add('correct');
+                herbsState.score += 10;
+                document.getElementById('herbsScore').textContent = herbsState.score;
+                showToast('正确！+10分', 'correct');
+                setTimeout(() => {
+                    nextHerbsQuestion();
+                }, 1000);
+            } else {
+                btn.classList.add('wrong');
+                showToast(`错误！正确答案是：${question.answer}`, 'wrong');
+                setTimeout(() => {
+                    nextHerbsQuestion();
+                }, 2000);
+            }
+        }
+
+        function nextHerbsQuestion() {
+            herbsState.currentQuestion++;
+            if (herbsState.currentQuestion < herbsQuestions.length) {
+                loadHerbsQuestion();
+            } else {
+                let rank = '初识本草';
+                if (herbsState.score >= 80) rank = '中药大师';
+                else if (herbsState.score >= 50) rank = '识药能手';
+                showVictory('中药猜猜乐完成', rank, `你已经完成了所有题目！总分：${herbsState.score}分`, herbsState.score, { gameType: 'herb', accuracy: Math.round((herbsState.score / (herbsState.total * 10)) * 100) });
+            }
+        }
+
+        function resetHerbsGame() {
+            initHerbsGame();
+        }
+
+        // 经络穴位定位游戏 - 完整版
+        const acupoints = [
+            { id: 1, name: '百会', hint: '位于头顶正中线与两耳尖连线的交点处', x: 100, y: 15 },
+            { id: 2, name: '印堂', hint: '位于两眉头连线的中点', x: 100, y: 28 },
+            { id: 3, name: '膻中', hint: '位于前正中线上，平第4肋间', x: 100, y: 120 },
+            { id: 4, name: '中脘', hint: '位于前正中线上，脐上4寸', x: 100, y: 150 },
+            { id: 5, name: '气海', hint: '位于前正中线上，脐下1.5寸', x: 100, y: 170 }
+        ];
+
+        let meridianState = {
+            currentIndex: 0,
+            foundCount: 0,
+            wrongCount: 0,
+            foundPoints: [],
+            shuffledPoints: [],
+            score: 0,
+            startTime: null,
+            timerInterval: null
+        };
+
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function startMeridianTimer() {
+            meridianState.startTime = Date.now();
+            meridianState.timerInterval = setInterval(updateMeridianTimer, 1000);
+        }
+
+        function updateMeridianTimer() {
+            const elapsed = Math.floor((Date.now() - meridianState.startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const seconds = (elapsed % 60).toString().padStart(2, '0');
+            document.getElementById('meridianTimer').textContent = `${minutes}:${seconds}`;
+        }
+
+        function stopMeridianTimer() {
+            if (meridianState.timerInterval) {
+                clearInterval(meridianState.timerInterval);
+                meridianState.timerInterval = null;
+            }
+        }
+
+        function formatMeridianTime(ms) {
+            const seconds = Math.floor(ms / 1000);
+            const minutes = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const secs = (seconds % 60).toString().padStart(2, '0');
+            return `${minutes}:${secs}`;
+        }
+
+        function initMeridianGame() {
+            stopMeridianTimer();
+
+            meridianState = {
+                currentIndex: 0,
+                foundCount: 0,
+                wrongCount: 0,
+                foundPoints: [],
+                shuffledPoints: shuffleArray([...acupoints]),
+                score: 0,
+                startTime: null,
+                timerInterval: null
+            };
+
+            document.getElementById('meridianFound').textContent = '0';
+            document.getElementById('meridianWrong').textContent = '0';
+            document.getElementById('meridianTotal').textContent = acupoints.length;
+            document.getElementById('meridianScore').textContent = '0';
+            document.getElementById('meridianTimer').textContent = '00:00';
+            document.getElementById('meridianFoundList').innerHTML = '';
+
+            renderMeridianAcupoints();
+            loadMeridianQuestion();
+            startMeridianTimer();
+        }
+
+        function renderMeridianAcupoints() {
+            const bodyDisplay = document.getElementById('bodyDisplay');
+            bodyDisplay.querySelectorAll('.acupoint').forEach(el => el.remove());
+
+            // 使用百分比定位，更简单且响应式
+            acupoints.forEach(point => {
+                const acupointEl = document.createElement('div');
+                acupointEl.className = 'acupoint';
+                acupointEl.dataset.id = point.id;
+
+                // 直接使用百分比，基于SVG viewBox (200x360)
+                acupointEl.style.left = `${(point.x / 200) * 100}%`;
+                acupointEl.style.top = `${(point.y / 360) * 100}%`;
+                acupointEl.textContent = point.id;
+                acupointEl.addEventListener('click', () => checkMeridianAcupoint(point.id));
+                bodyDisplay.appendChild(acupointEl);
+            });
+        }
+
+        function loadMeridianQuestion() {
+            if (meridianState.currentIndex >= meridianState.shuffledPoints.length) {
+                showMeridianVictory();
+                return;
+            }
+
+            const currentPoint = meridianState.shuffledPoints[meridianState.currentIndex];
+            document.getElementById('meridianQuestionText').textContent = `${currentPoint.name}穴`;
+            document.getElementById('meridianQuestionHint').textContent = currentPoint.hint;
+        }
+
+        function checkMeridianAcupoint(pointId) {
+            const currentPoint = meridianState.shuffledPoints[meridianState.currentIndex];
+            const acupointEl = document.querySelector(`.acupoint[data-id="${pointId}"]`);
+
+            if (meridianState.foundPoints.includes(pointId)) {
+                return;
+            }
+
+            if (pointId === currentPoint.id) {
+                acupointEl.classList.add('correct', 'found');
+                meridianState.foundPoints.push(pointId);
+                meridianState.foundCount++;
+
+                // 计算得分 (基础分100 + 时间奖励)
+                const baseScore = 100;
+                const timeBonus = Math.max(0, 50 - Math.floor((Date.now() - meridianState.startTime) / 1000));
+                const roundScore = baseScore + timeBonus;
+                meridianState.score += roundScore;
+
+                document.getElementById('meridianFound').textContent = meridianState.foundCount;
+                document.getElementById('meridianScore').textContent = meridianState.score;
+
+                const foundItem = document.createElement('div');
+                foundItem.className = 'found-item-meridian';
+                foundItem.textContent = currentPoint.name;
+                document.getElementById('meridianFoundList').appendChild(foundItem);
+
+                setTimeout(() => {
+                    acupointEl.classList.remove('correct');
+                    meridianState.currentIndex++;
+                    loadMeridianQuestion();
+                }, 500);
+            } else {
+                acupointEl.classList.add('wrong');
+                meridianState.wrongCount++;
+                meridianState.score = Math.max(0, meridianState.score - 50);
+                document.getElementById('meridianWrong').textContent = meridianState.wrongCount;
+                document.getElementById('meridianScore').textContent = meridianState.score;
+
+                setTimeout(() => {
+                    acupointEl.classList.remove('wrong');
+                }, 500);
+            }
+        }
+
+        function showMeridianVictory() {
+            stopMeridianTimer();
+            const finalTime = Date.now() - meridianState.startTime;
+            showVictory('恭喜通关！', '经络达人', `你已经掌握了这些常用穴位的位置！用时：${formatMeridianTime(finalTime)}`, meridianState.score, { icon: '🎉', buttonText: '再玩一次', onClose: resetMeridianGame, gameType: 'acupoint', accuracy: Math.round((meridianState.found / Math.max(meridianState.found + meridianState.wrong, 1)) * 100), duration: finalTime });
+        }
+
+        function resetMeridianGame() {
+            initMeridianGame();
+        }
+
+        function showMeridianHint() {
+            const currentPoint = meridianState.shuffledPoints[meridianState.currentIndex];
+            const acupointEl = document.querySelector(`.acupoint[data-id="${currentPoint.id}"]`);
+
+            acupointEl.classList.add('selected');
+
+            setTimeout(() => {
+                acupointEl.classList.remove('selected');
+            }, 1500);
+
+            // 使用提示扣分
+            meridianState.score = Math.max(0, meridianState.score - 30);
+            document.getElementById('meridianScore').textContent = meridianState.score;
+        }
+
+        // 望闻问切游戏
+        const diagnosisQuestions = [
+            {
+                look: '面色苍白，舌淡苔薄白',
+                listen: '语声低微',
+                ask: '恶寒发热，无汗，头痛，鼻塞流清涕',
+                pulse: '脉浮紧',
+                options: ['风寒感冒', '风热感冒', '暑湿感冒'],
+                answer: '风寒感冒'
+            },
+            {
+                look: '面色潮红，舌红苔黄',
+                listen: '咳嗽声重',
+                ask: '发热重，微恶风，咽痛，口渴，痰黄稠',
+                pulse: '脉浮数',
+                options: ['风寒感冒', '风热感冒', '气虚感冒'],
+                answer: '风热感冒'
+            },
+            {
+                look: '面色苍白，舌淡有齿痕',
+                listen: '语声低微',
+                ask: '神疲乏力，气短懒言，自汗',
+                pulse: '脉虚无力',
+                options: ['气虚证', '血虚证', '阳虚证'],
+                answer: '气虚证'
+            },
+            {
+                look: '两颧潮红，舌红少苔',
+                listen: '语声低',
+                ask: '五心烦热，盗汗',
+                pulse: '脉细数',
+                options: ['阴虚证', '阳虚证', '实热证'],
+                answer: '阴虚证'
+            },
+            {
+                look: '面色晦暗，舌苔厚腻',
+                listen: '语声重浊',
+                ask: '脘腹胀满，纳呆呕恶，肢体困重',
+                pulse: '脉濡',
+                options: ['寒湿证', '湿热证', '食积证'],
+                answer: '寒湿证'
+            },
+            {
+                look: '面色青黄，舌淡红',
+                listen: '善太息',
+                ask: '胸胁胀痛，烦躁易怒',
+                pulse: '脉弦',
+                options: ['肝气郁结', '肝火上炎', '肝血虚'],
+                answer: '肝气郁结'
+            }
+        ];
+
+        let diagnosisState = {
+            currentQuestion: 0,
+            score: 0,
+            answered: false
+        };
+
+        function initDiagnosisGame() {
+            diagnosisState = {
+                currentQuestion: 0,
+                score: 0,
+                answered: false
+            };
+            document.getElementById('diagnosisScore').textContent = '0';
+            loadDiagnosisQuestion();
+        }
+
+        function loadDiagnosisQuestion() {
+            const question = diagnosisQuestions[diagnosisState.currentQuestion];
+            document.getElementById('diagnosisLook').textContent = question.look;
+            document.getElementById('diagnosisListen').textContent = question.listen;
+            document.getElementById('diagnosisAsk').textContent = question.ask;
+            document.getElementById('diagnosisPulse').textContent = question.pulse;
+            document.getElementById('diagnosisProgress').textContent = `${diagnosisState.currentQuestion + 1}/6`;
+
+            const optionsContainer = document.getElementById('diagnosisOptions');
+            optionsContainer.innerHTML = '';
+            question.options.forEach(option => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = option;
+                btn.onclick = () => checkDiagnosisAnswer(option, btn);
+                optionsContainer.appendChild(btn);
+            });
+            diagnosisState.answered = false;
+        }
+
+        function checkDiagnosisAnswer(selected, btn) {
+            if (diagnosisState.answered) return;
+            diagnosisState.answered = true;
+
+            const question = diagnosisQuestions[diagnosisState.currentQuestion];
+            if (selected === question.answer) {
+                btn.classList.add('correct');
+                diagnosisState.score += 10;
+                document.getElementById('diagnosisScore').textContent = diagnosisState.score;
+                showToast('正确！+10分', 'correct');
+                setTimeout(() => {
+                    nextDiagnosisQuestion();
+                }, 1000);
+            } else {
+                btn.classList.add('wrong');
+                showToast(`错误！正确答案是：${question.answer}`, 'wrong');
+                setTimeout(() => {
+                    nextDiagnosisQuestion();
+                }, 2000);
+            }
+        }
+
+        function nextDiagnosisQuestion() {
+            diagnosisState.currentQuestion++;
+            if (diagnosisState.currentQuestion < diagnosisQuestions.length) {
+                loadDiagnosisQuestion();
+            } else {
+                let rank = '初涉医理';
+                if (diagnosisState.score >= 60) rank = '明医之才';
+                else if (diagnosisState.score >= 40) rank = '辨证入门';
+                showVictory('望闻问切挑战完成', rank, `你已经完成了所有辨证题目！总分：${diagnosisState.score}分`, diagnosisState.score, { gameType: 'diagnosis', accuracy: Math.round((diagnosisState.correct / diagnosisState.total) * 100) });
+            }
+        }
+
+        function resetDiagnosisGame() {
+            initDiagnosisGame();
+        }
+
+        // ==================== URL参数支持 ====================
+        // 支持 ?game=elements&mode=embed 自动启动指定游戏
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            const gameParam = params.get('game');
+            const modeParam = params.get('mode');
+
+            if (gameParam) {
+                // 嵌入模式：隐藏大厅和返回按钮
+                if (modeParam === 'embed') {
+                    // 隐藏主页面
+                    const mainPage = document.getElementById('mainPage');
+                    if (mainPage) mainPage.style.display = 'none';
+                    // 隐藏所有返回按钮
+                    document.querySelectorAll('.btn-back').forEach(btn => btn.style.display = 'none');
+                    // 隐藏胜利弹窗中的"继续学习"按钮（改为关闭iframe通信）
+                    // body 背景透明化用于嵌入
+                    document.body.style.background = 'transparent';
+                }
+                // 自动启动指定游戏
+                const validGames = ['elements', 'tongue', 'prescription', 'herbs', 'meridian', 'diagnosis'];
+                if (validGames.includes(gameParam)) {
+                    startGame(gameParam);
+                }
+            }
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>智课精灵 - 登录</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.7/dist/iconify-icon.min.js"></script>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+    body { font-family: 'Inter', 'Noto Serif SC', serif; }
+
+    /* 背景 */
+    .login-bg {
+        background: linear-gradient(135deg, #F9F6F0 0%, #EDE8DC 50%, #F5F0E5 100%);
+        min-height: 100vh;
+    }
+    .login-bg::before {
+        content: '';
+        position: fixed;
+        top: -50%;
+        right: -30%;
+        width: 80%;
+        height: 80%;
+        background: radial-gradient(circle, rgba(139,90,43,0.06) 0%, transparent 70%);
+        pointer-events: none;
+    }
+    .login-bg::after {
+        content: '';
+        position: fixed;
+        bottom: -40%;
+        left: -20%;
+        width: 60%;
+        height: 60%;
+        background: radial-gradient(circle, rgba(194,59,34,0.04) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    /* 装饰图案 */
+    .deco-circle {
+        position: absolute;
+        border-radius: 50%;
+        border: 1px solid rgba(139,90,43,0.08);
+        pointer-events: none;
+    }
+
+    /* 卡片 */
+    .login-card {
+        background: rgba(255,255,255,0.85);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(139,90,43,0.1);
+        box-shadow: 0 20px 60px rgba(139,90,43,0.08), 0 4px 16px rgba(0,0,0,0.04);
+    }
+
+    /* 输入框 */
+    .login-input {
+        transition: all 0.2s;
+        border: 1.5px solid #E5DCC8;
+        background: rgba(255,255,255,0.8);
+    }
+    .login-input:focus {
+        border-color: #8B5A2B;
+        box-shadow: 0 0 0 3px rgba(139,90,43,0.1);
+        background: white;
+    }
+
+    /* 按钮 */
+    .login-btn {
+        background: linear-gradient(135deg, #8B5A2B, #A0723D);
+        transition: all 0.3s;
+    }
+    .login-btn:hover {
+        background: linear-gradient(135deg, #7A4F25, #8B5A2B);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(139,90,43,0.3);
+    }
+    .login-btn:active {
+        transform: translateY(0);
+    }
+
+    .offline-btn {
+        border: 1.5px solid #E5DCC8;
+        transition: all 0.2s;
+    }
+    .offline-btn:hover {
+        border-color: #8B5A2B;
+        color: #8B5A2B;
+        background: rgba(139,90,43,0.05);
+    }
+
+    /* 加载动画 */
+    .spinner {
+        display: inline-block;
+        width: 18px; height: 18px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* 淡入 */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(16px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in { animation: fadeIn 0.5s ease-out; }
+
+    /* 错误抖动 */
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        20%, 60% { transform: translateX(-6px); }
+        40%, 80% { transform: translateX(6px); }
+    }
+    .shake { animation: shake 0.4s ease; }
+
+    /* 移动端适配 */
+    @media (max-width: 640px) {
+        .deco-circle { display: none; }
+        .login-card { padding: 1.5rem !important; }
+        #devAccounts { padding: 1rem !important; }
+    }
+</style>
+</head>
+<body class="login-bg">
+
+<!-- 装饰圆 -->
+<div class="deco-circle" style="width:300px;height:300px;top:10%;left:5%;"></div>
+<div class="deco-circle" style="width:200px;height:200px;bottom:15%;right:8%;"></div>
+<div class="deco-circle" style="width:150px;height:150px;top:60%;left:15%;"></div>
+
+<!-- 主容器 -->
+<div class="min-h-screen flex items-center justify-center px-4 py-8 relative z-10">
+<div class="w-full max-w-md fade-in">
+
+    <!-- Logo 区域 -->
+    <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4" style="background: linear-gradient(135deg, #8B5A2B, #A0723D); box-shadow: 0 8px 24px rgba(139,90,43,0.25);">
+            <iconify-icon icon="solar:body-bold" class="text-white text-3xl"></iconify-icon>
+        </div>
+        <h1 class="text-2xl font-bold" style="color: #333;">智课精灵</h1>
+        <p class="text-sm text-slate-500 mt-1">教研备课中心智能体系统</p>
+    </div>
+
+    <!-- 登录卡片 -->
+    <div class="login-card rounded-2xl p-8" id="loginCard">
+        <!-- 后端状态指示 -->
+        <div id="backendStatus" class="flex items-center gap-2 mb-6 px-3 py-2 rounded-lg text-xs" style="background: rgba(139,90,43,0.06);">
+            <span id="statusDot" class="w-2 h-2 rounded-full bg-amber-400"></span>
+            <span id="statusText" class="text-slate-500">正在检测服务器...</span>
+        </div>
+
+        <!-- 登录表单 -->
+        <form id="loginForm" onsubmit="return handleLogin(event)">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-slate-600 mb-1.5">用户名</label>
+                <div class="relative">
+                    <iconify-icon icon="solar:user-linear" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></iconify-icon>
+                    <input type="text" id="username" placeholder="请输入用户名" autocomplete="username"
+                        class="login-input w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none">
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-slate-600 mb-1.5">密码</label>
+                <div class="relative">
+                    <iconify-icon icon="solar:lock-linear" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></iconify-icon>
+                    <input type="password" id="password" placeholder="请输入密码" autocomplete="current-password"
+                        class="login-input w-full pl-10 pr-10 py-3 rounded-xl text-sm outline-none">
+                    <button type="button" onclick="togglePassword()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                        <iconify-icon id="eyeIcon" icon="solar:eye-closed-linear" class="text-lg"></iconify-icon>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 错误提示 -->
+            <div id="errorMsg" class="hidden mb-4 px-3 py-2 rounded-lg text-sm bg-red-50 text-red-600 border border-red-100"></div>
+
+            <!-- 登录按钮 -->
+            <button type="submit" id="loginBtn" class="login-btn w-full py-3 rounded-xl text-white font-medium text-sm flex items-center justify-center gap-2">
+                <span id="loginBtnText">登 录</span>
+            </button>
+        </form>
+
+        <!-- 离线模式 -->
+        <div id="offlineSection" class="mt-4 hidden">
+            <div class="flex items-center gap-3 my-4">
+                <div class="flex-1 h-px bg-slate-200"></div>
+                <span class="text-xs text-slate-400">或</span>
+                <div class="flex-1 h-px bg-slate-200"></div>
+            </div>
+            <button onclick="enterOffline()" class="offline-btn w-full py-3 rounded-xl text-sm font-medium text-slate-500 bg-white flex items-center justify-center gap-2">
+                <iconify-icon icon="solar:shield-warning-linear" class="text-base"></iconify-icon>
+                离线模式进入
+            </button>
+            <p class="text-[11px] text-slate-400 text-center mt-2">离线模式下AI生成使用本地模板，数据保存在浏览器中</p>
+        </div>
+    </div>
+
+    <!-- 底部信息 -->
+    <div class="text-center mt-4 sm:mt-6 space-y-2 sm:space-y-3">
+        <div class="flex items-center justify-center gap-3 sm:gap-4 text-xs text-slate-400">
+            <span class="flex items-center gap-1"><iconify-icon icon="solar:lock-bold" class="text-emerald-500"></iconify-icon> <span class="hidden xs:inline">数据</span>加密</span>
+            <span class="flex items-center gap-1"><iconify-icon icon="solar:server-bold" class="text-emerald-500"></iconify-icon> <span class="hidden xs:inline">本地</span>部署</span>
+            <span class="flex items-center gap-1"><iconify-icon icon="solar:shield-check-bold" class="text-emerald-500"></iconify-icon> <span class="hidden xs:inline">隐私</span>安全</span>
+        </div>
+        <p class="text-xs text-slate-300">智课精灵 v2.0 &copy; 2026</p>
+    </div>
+
+    <!-- 测试账号提示（开发模式） -->
+    <div id="devAccounts" class="hidden mt-4 login-card rounded-xl p-5">
+        <p class="text-xs text-slate-500 text-center">请使用自行注册的学生账号登录。管理员账号须通过环境变量初始化。</p>
+    </div>
+</div>
+</div>
+
+<script>
+    let backendAvailable = false;
+
+    // ==================== 快速填入账号 ====================
+    function fillAccount(user, pass) {
+        document.getElementById('username').value = user;
+        document.getElementById('password').value = pass;
+        document.getElementById('password').type = 'text';
+        document.getElementById('eyeIcon').setAttribute('icon', 'solar:eye-linear');
+        document.getElementById('username').focus();
+    }
+
+    // ==================== 检测后端 ====================
+    async function checkBackend() {
+        try {
+            const resp = await fetch('/api/health', { signal: AbortSignal.timeout(3000) });
+            if (resp.ok) {
+                backendAvailable = true;
+                document.getElementById('statusDot').className = 'w-2 h-2 rounded-full bg-emerald-500';
+                document.getElementById('statusText').textContent = '服务器已连接';
+                document.getElementById('backendStatus').style.background = 'rgba(16,185,129,0.08)';
+                document.getElementById('devAccounts').classList.remove('hidden');
+                return true;
+            }
+        } catch {}
+        backendAvailable = false;
+        document.getElementById('statusDot').className = 'w-2 h-2 rounded-full bg-red-400';
+        document.getElementById('statusText').textContent = '服务器未连接，可使用离线模式';
+        document.getElementById('backendStatus').style.background = 'rgba(239,68,68,0.06)';
+        document.getElementById('offlineSection').classList.remove('hidden');
+        document.getElementById('loginBtn').disabled = true;
+        document.getElementById('loginBtn').style.opacity = '0.5';
+        return false;
+    }
+
+    // ==================== 检查已登录 ====================
+    async function checkExistingAuth() {
+        const token = localStorage.getItem('token');
+        if (!token || !backendAvailable) return;
+
+        try {
+            const resp = await fetch('/api/auth/me', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (resp.ok) {
+                const user = await resp.json();
+                // token有效，直接跳转
+                redirectAfterLogin(user);
+            } else {
+                localStorage.removeItem('token');
+            }
+        } catch {
+            localStorage.removeItem('token');
+        }
+    }
+
+
+    // AI辅助生成：DeepSeek-R1，网页端，2026-04-18
+    // 用途：登录状态校验与错误处理建议
+    // 说明：团队人工修改并测试后使用
+    // 对应序号：2
+    // ==================== 登录 ====================
+    async function handleLogin(e) {
+        e.preventDefault();
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        const errEl = document.getElementById('errorMsg');
+        const btnText = document.getElementById('loginBtnText');
+        const btn = document.getElementById('loginBtn');
+
+        errEl.classList.add('hidden');
+
+        if (!username || !password) {
+            showError('请输入用户名和密码');
+            return false;
+        }
+
+        // 按钮加载状态
+        btn.disabled = true;
+        btnText.innerHTML = '<span class="spinner"></span>';
+
+        try {
+            const resp = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await resp.json();
+
+            if (resp.ok && data.token) {
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+
+                btnText.textContent = '登录成功';
+                btn.style.background = 'linear-gradient(135deg, #059669, #34d399)';
+
+                setTimeout(() => redirectAfterLogin(data.user), 400);
+            } else {
+                showError(data.error || '登录失败');
+                btn.disabled = false;
+                btnText.textContent = '登 录';
+            }
+        } catch (err) {
+            showError('网络错误：' + err.message);
+            btn.disabled = false;
+            btnText.textContent = '登 录';
+        }
+        return false;
+    }
+
+    function showError(msg) {
+        const errEl = document.getElementById('errorMsg');
+        errEl.textContent = msg;
+        errEl.classList.remove('hidden');
+        document.getElementById('loginCard').classList.add('shake');
+        setTimeout(() => document.getElementById('loginCard').classList.remove('shake'), 400);
+    }
+
+    // ==================== 登录后跳转 ====================
+    function redirectAfterLogin(user) {
+        // 管理员去后台，其他人去看板
+        const params = new URLSearchParams(window.location.search);
+        const defaultPage = user.role === 'admin' ? 'tcm-admin.html' : user.role === 'student' ? 'tcm-student.html' : 'tcm-dashboard.html';
+        const redirect = params.get('redirect') || defaultPage;
+        window.location.href = redirect;
+    }
+
+    // ==================== 离线模式 ====================
+    function enterOffline() {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        // 跳转到工作台（匿名模式）
+        window.location.href = 'tcm-workspace.html';
+    }
+
+    // ==================== 密码显示切换 ====================
+    function togglePassword() {
+        const inp = document.getElementById('password');
+        const icon = document.getElementById('eyeIcon');
+        if (inp.type === 'password') {
+            inp.type = 'text';
+            icon.setAttribute('icon', 'solar:eye-linear');
+        } else {
+            inp.type = 'password';
+            icon.setAttribute('icon', 'solar:eye-closed-linear');
+        }
+    }
+
+    // ==================== 初始化 ====================
+    document.addEventListener('DOMContentLoaded', async () => {
+        await checkBackend();
+        if (backendAvailable) {
+            await checkExistingAuth();
+        }
+
+        // 自动聚焦
+        document.getElementById('username').focus();
+    });
+</script>
+</body>
+</html>

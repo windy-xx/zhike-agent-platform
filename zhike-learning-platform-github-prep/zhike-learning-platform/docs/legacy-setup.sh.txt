@@ -1,0 +1,130 @@
+#!/bin/bash
+# 智课精灵 - 一键部署脚本
+# 用法：将本压缩包上传到服务器后，执行 bash setup.sh
+
+echo "========================================="
+echo "  智课精灵 - 一键部署"
+echo "========================================="
+
+# 1. 安装nginx（自动检测系统）
+if command -v yum &>/dev/null; then
+    echo "[1/7] 安装nginx (yum)..."
+    yum install -y nginx
+elif command -v apt &>/dev/null; then
+    echo "[1/7] 安装nginx (apt)..."
+    apt update && apt install -y nginx
+else
+    echo "[1/7] 已安装nginx，跳过"
+fi
+
+# 2. 安装 Node.js（如果未安装）
+if ! command -v node &>/dev/null; then
+    echo "[2/7] 安装 Node.js..."
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - 2>/dev/null || {
+        # 如果 nodesource 不可用，使用系统包管理器
+        if command -v yum &>/dev/null; then
+            yum install -y nodejs
+        elif command -v apt &>/dev/null; then
+            apt install -y nodejs
+        fi
+    }
+else
+    echo "[2/7] Node.js 已安装 ($(node -v))，跳过"
+fi
+
+# 3. 安装后端依赖
+echo "[3/7] 安装后端依赖..."
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$SCRIPT_DIR/package.json" ]; then
+    cd "$SCRIPT_DIR" && npm install --production 2>&1 | tail -5
+else
+    echo "  未找到 package.json，跳过后端安装"
+fi
+
+# 4. 复制网站文件
+echo "[4/7] 复制网站文件到 /var/www/zhike ..."
+mkdir -p /var/www/zhike
+cp -r *.html *.js models /var/www/zhike/ 2>/dev/null
+# 复制后端文件到 /opt/zhike-server
+mkdir -p /opt/zhike-server
+cp -r server.js package.json ecosystem.config.js /opt/zhike-server/ 2>/dev/null
+if [ -d "$SCRIPT_DIR/node_modules" ]; then
+    cp -r "$SCRIPT_DIR/node_modules" /opt/zhike-server/ 2>/dev/null
+else
+    cd /opt/zhike-server && npm install --production 2>&1 | tail -5
+fi
+chmod -R 755 /var/www/zhike
+
+# 5. 配置nginx
+echo "[5/7] 配置nginx..."
+cp nginx.conf /etc/nginx/conf.d/zhike.conf
+
+# 检查nginx主配置是否正确
+if ! nginx -t 2>/dev/null; then
+    echo "  修复nginx主配置..."
+    cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak 2>/dev/null
+    cat > /etc/nginx/nginx.conf << 'NGINXEOF'
+worker_processes auto;
+events { worker_connections 1024; }
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+    sendfile      on;
+    include /etc/nginx/conf.d/*.conf;
+}
+NGINXEOF
+fi
+
+# 6. 启动服务
+echo "[6/7] 启动服务..."
+
+# 启动nginx
+systemctl start nginx
+systemctl enable nginx
+
+# 启动 Node.js 后端（使用 pm2 或 nohup）
+if command -v pm2 &>/dev/null; then
+    cd /opt/zhike-server && pm2 start ecosystem.config.js
+    pm2 save
+    pm2 startup 2>/dev/null
+    echo "  后端服务已通过 pm2 启动"
+else
+    cd /opt/zhike-server && nohup node server.js > /var/log/zhike-server.log 2>&1 &
+    echo $! > /var/run/zhike-server.pid
+    echo "  后端服务已启动 (PID: $(cat /var/run/zhike-server.pid))"
+    echo "  建议安装 pm2: npm install -g pm2"
+fi
+
+# 7. 验证
+echo "[7/7] 验证..."
+sleep 2
+
+BACKEND_OK=false
+if curl -s http://127.0.0.1:3000/api/health | grep -q "ok" 2>/dev/null; then
+    BACKEND_OK=true
+fi
+
+if systemctl is-active --quiet nginx; then
+    SERVER_IP=$(hostname -I | awk '{print $1}')
+    echo ""
+    echo "========================================="
+    echo "  部署成功！"
+    echo "========================================="
+    echo ""
+    echo "  访问地址："
+    echo "    首页：    http://$SERVER_IP"
+    echo "    工作台：  http://$SERVER_IP/tcm-workspace.html"
+    echo "    PPT编辑： http://$SERVER_IP/tcm-ppt.html"
+    echo "    RAG检索： http://$SERVER_IP/tcm-rag.html"
+    echo "    互动：    http://$SERVER_IP/tcm-interaction.html"
+    echo "    教案：    http://$SERVER_IP/tcm-lesson.html"
+    echo "    游戏：    http://$SERVER_IP/tcm-game-hub.html"
+    echo ""
+    echo "  后端状态：$([ "$BACKEND_OK" = true ] && echo '正常运行' || echo '未启动（系统将以纯前端模式运行）')"
+    echo "  后端日志：/var/log/zhike-server.log"
+    echo ""
+    echo "  注意：确保安全组已开放80端口"
+    echo "========================================="
+else
+    echo "❌ nginx启动失败，请检查：nginx -t"
+fi

@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理后台 - 智课精灵</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.7/dist/iconify-icon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', 'Noto Serif SC', serif; }
+        .tcm-primary { color: #8B5A2B; }
+        .tcm-accent { color: #C23B22; }
+        .bg-tcm-primary { background-color: #8B5A2B; }
+        .bg-tcm-accent { background-color: #C23B22; }
+        .bg-tcm-light { background-color: #F9F6F0; }
+        .border-tcm-primary { border-color: #8B5A2B; }
+        .hover-tcm:hover { background-color: #8B5A2B; color: white; }
+        .glass-card {
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(139,90,43,0.1);
+        }
+        .sidebar-link {
+            transition: all 0.2s;
+        }
+        .sidebar-link:hover, .sidebar-link.active {
+            background-color: rgba(139,90,43,0.1);
+            color: #8B5A2B;
+        }
+        .sidebar-link.active {
+            border-right: 3px solid #8B5A2B;
+        }
+        .stat-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(139,90,43,0.15);
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        tcm: { primary: '#8B5A2B', accent: '#C23B22', light: '#F9F6F0' }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-tcm-light min-h-screen">
+
+<!-- 顶部导航 -->
+<nav class="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-amber-100 shadow-sm">
+    <div class="max-w-[1600px] mx-auto px-4 h-14 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 bg-tcm-primary rounded-lg flex items-center justify-center">
+                <iconify-icon icon="solar:shield-check-bold" class="text-white text-lg"></iconify-icon>
+            </div>
+            <div>
+                <span class="font-semibold text-slate-800">管理后台</span>
+                <span class="text-xs text-slate-400 ml-2">智课精灵 Admin</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <a href="tcm-dashboard.html" class="text-sm text-slate-500 hover:tcm-primary flex items-center gap-1">
+                <iconify-icon icon="solar:arrow-left-linear" class="text-base"></iconify-icon>
+                返回看板
+            </a>
+            <div id="adminInfo" class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-tcm-primary/10 rounded-full flex items-center justify-center">
+                    <span class="text-sm tcm-primary font-medium">A</span>
+                </div>
+                <span class="text-sm text-slate-600" id="adminName">管理员</span>
+            </div>
+            <button onclick="doLogout()" class="text-xs text-slate-400 hover:text-red-500 ml-2">退出登录</button>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- 移动端顶部汉堡按钮 -->
+<button onclick="toggleAdminSidebar()" class="lg:hidden fixed top-3.5 left-3 z-[60] w-9 h-9 bg-white rounded-lg shadow flex items-center justify-center border border-amber-200">
+    <iconify-icon icon="solar:hamburger-menu-linear" class="text-lg tcm-primary"></iconify-icon>
+</button>
+<!-- 侧边栏遮罩 -->
+<div id="sidebarOverlay" class="lg:hidden fixed inset-0 bg-black/30 z-[55] hidden" onclick="toggleAdminSidebar()"></div>
+
+<!-- 主体布局 -->
+<div class="flex max-w-[1600px] mx-auto">
+    <!-- 侧边栏 — 桌面端固定，移动端抽屉 -->
+    <aside id="adminSidebar" class="w-56 min-h-[calc(100vh-56px)] bg-white border-r border-amber-100 py-4 flex-shrink-0 fixed lg:relative z-[56] -translate-x-full lg:translate-x-0 transition-transform duration-200">
+        <nav class="flex flex-col">
+            <a href="#" class="sidebar-link active flex items-center gap-3 px-5 py-3 text-sm text-slate-600" data-tab="overview" onclick="switchTab('overview')">
+                <iconify-icon icon="solar:chart-square-linear" class="text-lg"></iconify-icon>
+                数据总览
+            </a>
+            <a href="#" class="sidebar-link flex items-center gap-3 px-5 py-3 text-sm text-slate-600" data-tab="users" onclick="switchTab('users')">
+                <iconify-icon icon="solar:users-group-rounded-linear" class="text-lg"></iconify-icon>
+                用户管理
+            </a>
+            <a href="#" class="sidebar-link flex items-center gap-3 px-5 py-3 text-sm text-slate-600" data-tab="generations" onclick="switchTab('generations')">
+                <iconify-icon icon="solar:magic-stick-3-linear" class="text-lg"></iconify-icon>
+                生成统计
+            </a>
+            <a href="#" class="sidebar-link flex items-center gap-3 px-5 py-3 text-sm text-slate-600" data-tab="logs" onclick="switchTab('logs')">
+                <iconify-icon icon="solar:document-text-linear" class="text-lg"></iconify-icon>
+                系统日志
+            </a>
+            <a href="#" class="sidebar-link flex items-center gap-3 px-5 py-3 text-sm text-slate-600" data-tab="settings" onclick="switchTab('settings')">
+                <iconify-icon icon="solar:settings-linear" class="text-lg"></iconify-icon>
+                系统设置
+            </a>
+        </nav>
+    </aside>
+
+    <!-- 内容区 -->
+    <main class="flex-1 p-3 md:p-6 min-h-[calc(100vh-56px)] overflow-x-auto">
+
+        <!-- ===== 数据总览 ===== -->
+        <div id="tab-overview" class="tab-content">
+            <h2 class="text-xl font-semibold text-slate-800 mb-6">数据总览</h2>
+            <!-- 统计卡片 -->
+            <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+                <div class="stat-card glass-card rounded-xl p-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                            <iconify-icon icon="solar:users-group-rounded-bold" class="text-blue-500 text-xl"></iconify-icon>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-slate-800" id="statUsers">-</div>
+                            <div class="text-xs text-slate-400">总用户</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card glass-card rounded-xl p-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
+                            <iconify-icon icon="solar:folder-bold" class="text-green-500 text-xl"></iconify-icon>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-slate-800" id="statProjects">-</div>
+                            <div class="text-xs text-slate-400">总项目</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card glass-card rounded-xl p-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center">
+                            <iconify-icon icon="solar:magic-stick-3-bold" class="text-purple-500 text-xl"></iconify-icon>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-slate-800" id="statGen">-</div>
+                            <div class="text-xs text-slate-400">总生成</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card glass-card rounded-xl p-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center">
+                            <iconify-icon icon="solar:calendar-bold" class="text-amber-500 text-xl"></iconify-icon>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-slate-800" id="statToday">-</div>
+                            <div class="text-xs text-slate-400">今日生成</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card glass-card rounded-xl p-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-rose-50 rounded-lg flex items-center justify-center">
+                            <iconify-icon icon="solar:upload-bold" class="text-rose-500 text-xl"></iconify-icon>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-slate-800" id="statUploads">-</div>
+                            <div class="text-xs text-slate-400">文件上传</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 图表 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div class="glass-card rounded-xl p-4">
+                    <h3 class="text-sm font-medium text-slate-600 mb-3">生成趋势（近7天）</h3>
+                    <div id="chartTrend" style="height:300px"></div>
+                </div>
+                <div class="glass-card rounded-xl p-4">
+                    <h3 class="text-sm font-medium text-slate-600 mb-3">生成类型分布</h3>
+                    <div id="chartType" style="height:300px"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 用户管理 ===== -->
+        <div id="tab-users" class="tab-content hidden">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-semibold text-slate-800">用户管理</h2>
+                <button onclick="showCreateUserModal()" class="px-4 py-2 bg-tcm-primary text-white rounded-lg text-sm hover:opacity-90 flex items-center gap-2">
+                    <iconify-icon icon="solar:add-circle-linear" class="text-base"></iconify-icon>
+                    新增用户
+                </button>
+            </div>
+            <!-- 筛选 -->
+            <div class="glass-card rounded-xl p-4 mb-4 flex items-center gap-4 flex-wrap">
+                <input type="text" id="userSearch" placeholder="搜索用户名..." class="px-3 py-2 border border-amber-200 rounded-lg text-sm flex-1 min-w-[200px]" onkeyup="loadUsers()">
+                <select id="userRoleFilter" class="px-3 py-2 border border-amber-200 rounded-lg text-sm" onchange="loadUsers()">
+                    <option value="">全部角色</option>
+                    <option value="admin">管理员</option>
+                    <option value="teacher">教师</option>
+                    <option value="student">学生</option>
+                </select>
+            </div>
+            <!-- 用户表格 -->
+            <div class="glass-card rounded-xl overflow-x-auto">
+                <table class="w-full text-sm min-w-[640px]">
+                    <thead class="bg-amber-50/50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-slate-500 font-medium">用户名</th>
+                            <th class="px-4 py-3 text-left text-slate-500 font-medium">昵称</th>
+                            <th class="px-4 py-3 text-left text-slate-500 font-medium">角色</th>
+                            <th class="px-4 py-3 text-left text-slate-500 font-medium">状态</th>
+                            <th class="px-4 py-3 text-left text-slate-500 font-medium hidden md:table-cell">最后登录</th>
+                            <th class="px-4 py-3 text-left text-slate-500 font-medium hidden md:table-cell">注册时间</th>
+                            <th class="px-4 py-3 text-center text-slate-500 font-medium">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTableBody">
+                        <tr><td colspan="7" class="text-center py-8 text-slate-400">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="flex justify-between items-center mt-4 text-sm text-slate-500">
+                <span id="userPagination"></span>
+                <div class="flex gap-2">
+                    <button onclick="prevUserPage()" class="px-3 py-1 border border-amber-200 rounded hover:bg-amber-50">上一页</button>
+                    <button onclick="nextUserPage()" class="px-3 py-1 border border-amber-200 rounded hover:bg-amber-50">下一页</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 生成统计 ===== -->
+        <div id="tab-generations" class="tab-content hidden">
+            <h2 class="text-xl font-semibold text-slate-800 mb-6">生成统计</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+                <div class="glass-card rounded-xl p-4">
+                    <h3 class="text-sm font-medium text-slate-600 mb-3">按类型统计</h3>
+                    <div id="chartGenType" style="height:300px"></div>
+                </div>
+                <div class="glass-card rounded-xl p-4">
+                    <h3 class="text-sm font-medium text-slate-600 mb-3">按模型统计</h3>
+                    <div id="chartGenModel" style="height:300px"></div>
+                </div>
+            </div>
+            <div class="glass-card rounded-xl p-4 overflow-x-auto">
+                <h3 class="text-sm font-medium text-slate-600 mb-3">活跃用户 TOP 20</h3>
+                <table class="w-full text-sm min-w-[400px]">
+                    <thead class="bg-amber-50/50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-slate-500">用户名</th>
+                            <th class="px-4 py-3 text-left text-slate-500">昵称</th>
+                            <th class="px-4 py-3 text-left text-slate-500">生成次数</th>
+                            <th class="px-4 py-3 text-left text-slate-500">最后活跃</th>
+                        </tr>
+                    </thead>
+                    <tbody id="activeUsersBody">
+                        <tr><td colspan="4" class="text-center py-8 text-slate-400">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ===== 系统日志 ===== -->
+        <div id="tab-logs" class="tab-content hidden">
+            <h2 class="text-xl font-semibold text-slate-800 mb-6">系统日志</h2>
+            <div class="glass-card rounded-xl p-4 mb-4 flex items-center gap-4 flex-wrap">
+                <select id="logActionFilter" class="px-3 py-2 border border-amber-200 rounded-lg text-sm" onchange="loadLogs()">
+                    <option value="">全部操作</option>
+                    <option value="user_login">用户登录</option>
+                    <option value="user_register">用户注册</option>
+                    <option value="generate_ppt">生成PPT</option>
+                    <option value="generate_lesson">生成教案</option>
+                    <option value="generate_cases">生成医案</option>
+                    <option value="generate_quiz">生成测验</option>
+                    <option value="generate_knowledge">生成图谱</option>
+                    <option value="project_create">创建项目</option>
+                    <option value="project_delete">删除项目</option>
+                    <option value="file_upload">文件上传</option>
+                    <option value="admin_create_user">管理员创建用户</option>
+                </select>
+                <input type="date" id="logStartDate" class="px-3 py-2 border border-amber-200 rounded-lg text-sm" onchange="loadLogs()">
+                <input type="date" id="logEndDate" class="px-3 py-2 border border-amber-200 rounded-lg text-sm" onchange="loadLogs()">
+            </div>
+            <div class="glass-card rounded-xl overflow-x-auto">
+                <table class="w-full text-sm min-w-[400px]">
+                    <thead class="bg-amber-50/50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-slate-500">时间</th>
+                            <th class="px-4 py-3 text-left text-slate-500">操作</th>
+                            <th class="px-4 py-3 text-left text-slate-500">详情</th>
+                            <th class="px-4 py-3 text-left text-slate-500 hidden sm:table-cell">IP</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logTableBody">
+                        <tr><td colspan="4" class="text-center py-8 text-slate-400">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="flex justify-between items-center mt-4 text-sm text-slate-500">
+                <span id="logPagination"></span>
+                <div class="flex gap-2">
+                    <button onclick="prevLogPage()" class="px-3 py-1 border border-amber-200 rounded hover:bg-amber-50">上一页</button>
+                    <button onclick="nextLogPage()" class="px-3 py-1 border border-amber-200 rounded hover:bg-amber-50">下一页</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 系统设置 ===== -->
+        <div id="tab-settings" class="tab-content hidden">
+            <h2 class="text-xl font-semibold text-slate-800 mb-6">系统设置</h2>
+            <div class="glass-card rounded-xl p-6 max-w-lg">
+                <h3 class="font-medium text-slate-700 mb-4">LLM API 配置</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm text-slate-500 mb-1">服务提供商</label>
+                        <select id="cfgProvider" class="w-full px-3 py-2 border border-amber-200 rounded-lg text-sm">
+                            <option value="openai">OpenAI 兼容</option>
+                            <option value="anthropic">Anthropic (Claude)</option>
+                            <option value="baidu">百度文心一言</option>
+                            <option value="xunfei">讯飞星火</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-slate-500 mb-1">API 端点</label>
+                        <input type="text" id="cfgEndpoint" class="w-full px-3 py-2 border border-amber-200 rounded-lg text-sm" placeholder="https://api.openai.com/v1/chat/completions">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-slate-500 mb-1">API Key</label>
+                        <input type="password" id="cfgApiKey" class="w-full px-3 py-2 border border-amber-200 rounded-lg text-sm" placeholder="sk-... 或 AK|SK">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-slate-500 mb-1">模型名称</label>
+                        <input type="text" id="cfgModel" class="w-full px-3 py-2 border border-amber-200 rounded-lg text-sm" placeholder="gpt-3.5-turbo">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="cfgEnabled" class="rounded">
+                        <label for="cfgEnabled" class="text-sm text-slate-600">启用 LLM API</label>
+                    </div>
+                    <div class="flex gap-3 pt-2">
+                        <button onclick="saveLLMConfig()" class="px-5 py-2 bg-tcm-primary text-white rounded-lg text-sm hover:opacity-90">保存配置</button>
+                        <button onclick="testLLMConfig()" class="px-5 py-2 border border-tcm-primary tcm-primary rounded-lg text-sm hover:bg-tcm-primary hover:text-white">测试连接</button>
+                    </div>
+                    <div id="cfgMsg" class="text-sm hidden"></div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- 创建用户弹窗 -->
+<div id="createUserModal" class="fixed inset-0 bg-black/30 z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-xl">
+        <h3 class="text-lg font-semibold text-slate-800 mb-4">新增用户</h3>
+        <div class="space-y-3">
+            <div>
+                <label class="block text-sm text-slate-500 mb-1">用户名</label>
+                <input type="text" id="newUsername" class="w-full px-3 py-2 border border-amber-200 rounded-lg text-sm">
+            </div>
+            <div>
+                <label class="block text-sm text-slate-500 mb-1">密码</label>
+                <input type="password" id="newPassword" class="w-full px-3 py-2 border border-amber-200 rounded-lg text-sm" placeholder="至少6位">
+            </div>
+            <div>
+                <label class="block text-sm text-slate-500 mb-1">昵称</label>
+                <input type="text" id="newDisplayName" class="w-full px-3 py-2 border border-amber-200 rounded-lg text-sm">
+            </div>
+            <div>
+                <label class="block text-sm text-slate-500 mb-1">角色</label>
+                <select id="newRole" class="w-full px-3 py-2 border border-amber-200 rounded-lg text-sm">
+                    <option value="student">学生</option>
+                    <option value="teacher">教师</option>
+                    <option value="admin">管理员</option>
+                </select>
+            </div>
+        </div>
+        <div class="flex gap-3 mt-5">
+            <button onclick="createUser()" class="px-5 py-2 bg-tcm-primary text-white rounded-lg text-sm hover:opacity-90">创建</button>
+            <button onclick="hideCreateUserModal()" class="px-5 py-2 border border-slate-300 rounded-lg text-sm hover:bg-slate-50">取消</button>
+        </div>
+    </div>
+</div>
+
+<!-- 重置密码弹窗 -->
+<div id="resetPwModal" class="fixed inset-0 bg-black/30 z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-xl">
+        <h3 class="text-lg font-semibold text-slate-800 mb-4">重置密码</h3>
+        <input type="hidden" id="resetUserId">
+        <div>
+            <label class="block text-sm text-slate-500 mb-1">新密码</label>
+            <input type="password" id="resetNewPw" class="w-full px-3 py-2 border border-amber-200 rounded-lg text-sm" placeholder="至少6位">
+        </div>
+        <div class="flex gap-3 mt-5">
+            <button onclick="resetPassword()" class="px-5 py-2 bg-tcm-primary text-white rounded-lg text-sm hover:opacity-90">确认重置</button>
+            <button onclick="document.getElementById('resetPwModal').classList.add('hidden')" class="px-5 py-2 border border-slate-300 rounded-lg text-sm hover:bg-slate-50">取消</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ==================== 全局状态 ====================
+const API = '';  // 同源部署，留空
+let authToken = localStorage.getItem('token') || '';
+let userPage = 1;
+let logPage = 1;
+
+// ==================== 认证检查 ====================
+async function checkAuth() {
+    if (!authToken) {
+        // 没有token，显示内联登录表单而不是跳转
+        showAdminLogin();
+        return false;
+    }
+    try {
+        const resp = await fetch(API + '/api/auth/me', {
+            headers: { 'Authorization': 'Bearer ' + authToken }
+        });
+        if (!resp.ok) {
+            localStorage.removeItem('token');
+            authToken = '';
+            // token失效，显示内联登录
+            showAdminLogin();
+            return false;
+        }
+        const user = await resp.json();
+        if (user.role !== 'admin') {
+            document.querySelector('main').innerHTML = `
+                <div class="flex flex-col items-center justify-center py-20">
+                    <iconify-icon icon="solar:shield-warning-linear" class="text-6xl text-amber-300 mb-4"></iconify-icon>
+                    <h3 class="text-lg font-medium text-slate-600 mb-2">需要管理员权限</h3>
+                    <p class="text-sm text-slate-400 mb-4">当前账号：${user.displayName || user.username}（${user.role === 'teacher' ? '教师' : '学生'}）</p>
+                    <a href="tcm-dashboard.html" class="px-4 py-2 bg-tcm-primary text-white rounded-lg text-sm">返回看板</a>
+                </div>`;
+            return false;
+        }
+        document.getElementById('adminName').textContent = user.displayName || user.username;
+        return true;
+    } catch (e) {
+        console.error('Auth check failed:', e);
+        // 后端不可用时显示错误提示
+        document.querySelector('main').innerHTML = `
+            <div class="flex flex-col items-center justify-center py-20">
+                <iconify-icon icon="solar:server-square-cloud-linear" class="text-6xl text-slate-300 mb-4"></iconify-icon>
+                <h3 class="text-lg font-medium text-slate-600 mb-2">无法连接到后端服务</h3>
+                <p class="text-sm text-slate-400 mb-4">请确保后端服务已启动 (node server.js)</p>
+                <a href="tcm-dashboard.html" class="px-4 py-2 bg-tcm-primary text-white rounded-lg text-sm">返回看板</a>
+            </div>`;
+        return false;
+    }
+}
+
+function showAdminLogin() {
+    document.querySelector('main').innerHTML = `
+        <div class="flex flex-col items-center justify-center py-16">
+            <div class="w-16 h-16 bg-tcm-primary/10 rounded-2xl flex items-center justify-center mb-4">
+                <iconify-icon icon="solar:shield-check-bold" class="text-3xl tcm-primary"></iconify-icon>
+            </div>
+            <h3 class="text-lg font-semibold text-slate-700 mb-1">管理后台登录</h3>
+            <p class="text-sm text-slate-400 mb-6">请使用管理员账号登录</p>
+            <div class="w-full max-w-sm space-y-3">
+                <input type="text" id="adminLoginUser" placeholder="用户名" class="w-full px-4 py-2.5 border border-amber-200 rounded-lg text-sm outline-none focus:border-tcm-primary">
+                <input type="password" id="adminLoginPw" placeholder="密码" class="w-full px-4 py-2.5 border border-amber-200 rounded-lg text-sm outline-none focus:border-tcm-primary" onkeydown="if(event.key==='Enter')adminDoLogin()">
+                <div id="adminLoginErr" class="text-sm text-red-500 hidden"></div>
+                <button onclick="adminDoLogin()" class="w-full py-2.5 bg-tcm-primary text-white rounded-lg text-sm font-semibold hover:opacity-90">登录</button>
+            </div>
+            <a href="tcm-dashboard.html" class="mt-6 text-sm text-slate-400 hover:tcm-primary">← 返回看板</a>
+        </div>`;
+}
+
+async function adminDoLogin() {
+    const username = document.getElementById('adminLoginUser').value.trim();
+    const password = document.getElementById('adminLoginPw').value;
+    const errEl = document.getElementById('adminLoginErr');
+    if (!username || !password) {
+        errEl.textContent = '请输入用户名和密码';
+        errEl.classList.remove('hidden');
+        return;
+    }
+    try {
+        const resp = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await resp.json();
+        if (resp.ok && data.token) {
+            if (data.user.role !== 'admin') {
+                errEl.textContent = '该账号不是管理员';
+                errEl.classList.remove('hidden');
+                return;
+            }
+            localStorage.setItem('token', data.token);
+            authToken = data.token;
+            // 刷新页面加载管理后台
+            location.reload();
+        } else {
+            errEl.textContent = data.error || '登录失败';
+            errEl.classList.remove('hidden');
+        }
+    } catch (e) {
+        errEl.textContent = '无法连接服务器';
+        errEl.classList.remove('hidden');
+    }
+}
+
+// ==================== API 请求封装 ====================
+function doLogout() {
+    localStorage.removeItem('token');
+    window.location.href = 'tcm-login.html';
+}
+
+async function api(path, options = {}) {
+    const headers = { 'Content-Type': 'application/json', ...options.headers };
+    if (authToken) headers['Authorization'] = 'Bearer ' + authToken;
+    const resp = await fetch(API + path, { ...options, headers });
+    if (resp.status === 401) {
+        localStorage.removeItem('token');
+        window.location.href = 'tcm-login.html';
+        return null;
+    }
+    return resp.json();
+}
+
+// ==================== Tab 切换 ====================
+function toggleAdminSidebar() {
+    const sidebar = document.getElementById('adminSidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    sidebar.classList.toggle('-translate-x-full');
+    overlay.classList.toggle('hidden');
+}
+
+function switchTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    document.getElementById('tab-' + tab)?.classList.remove('hidden');
+    document.querySelectorAll('.sidebar-link').forEach(el => {
+        el.classList.toggle('active', el.dataset.tab === tab);
+    });
+    // 加载数据
+    if (tab === 'overview') loadOverview();
+    else if (tab === 'users') loadUsers();
+    else if (tab === 'generations') loadGenStats();
+    else if (tab === 'logs') loadLogs();
+    else if (tab === 'settings') loadLLMConfig();
+}
+
+// ==================== 数据总览 ====================
+async function loadOverview() {
+    const data = await api('/api/admin/stats/overview');
+    if (!data) return;
+    document.getElementById('statUsers').textContent = data.userCount || 0;
+    document.getElementById('statProjects').textContent = data.projectCount || 0;
+    document.getElementById('statGen').textContent = data.genCount || 0;
+    document.getElementById('statToday').textContent = data.todayGen || 0;
+    document.getElementById('statUploads').textContent = data.uploadCount || 0;
+
+    // 加载图表
+    const genData = await api('/api/admin/stats/generations?days=7');
+    if (genData) {
+        renderTrendChart(genData.byDate || []);
+        renderTypeChart(genData.byType || []);
+    }
+}
+
+function renderTrendChart(data) {
+    const chart = echarts.init(document.getElementById('chartTrend'));
+    chart.setOption({
+        tooltip: { trigger: 'axis' },
+        grid: { left: 40, right: 20, top: 20, bottom: 30 },
+        xAxis: { type: 'category', data: data.map(d => d.date?.slice(5) || ''), axisLabel: { fontSize: 11 } },
+        yAxis: { type: 'value', minInterval: 1, axisLabel: { fontSize: 11 } },
+        series: [{
+            type: 'line', data: data.map(d => d.count || 0),
+            smooth: true, areaStyle: { opacity: 0.15 },
+            lineStyle: { color: '#8B5A2B', width: 2 },
+            itemStyle: { color: '#8B5A2B' }
+        }]
+    });
+    window.addEventListener('resize', () => chart.resize());
+}
+
+function renderTypeChart(data) {
+    const chart = echarts.init(document.getElementById('chartType'));
+    const typeNames = { ppt: 'PPT', lesson: '教案', cases: '医案', quiz: '测验', knowledge: '图谱', chat: '对话' };
+    const colors = ['#8B5A2B', '#C23B22', '#2D8C5A', '#5B8CDB', '#E6A23C', '#9061C0'];
+    chart.setOption({
+        tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+        series: [{
+            type: 'pie', radius: ['40%', '70%'],
+            data: data.map((d, i) => ({ name: typeNames[d.type] || d.type, value: d.count, itemStyle: { color: colors[i % colors.length] } })),
+            label: { fontSize: 12 },
+            emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.2)' } }
+        }]
+    });
+    window.addEventListener('resize', () => chart.resize());
+}
+
+// ==================== 用户管理 ====================
+async function loadUsers() {
+    const search = document.getElementById('userSearch')?.value || '';
+    const role = document.getElementById('userRoleFilter')?.value || '';
+    const data = await api(`/api/admin/users?page=${userPage}&pageSize=15&search=${encodeURIComponent(search)}&role=${role}`);
+    if (!data) return;
+
+    const tbody = document.getElementById('userTableBody');
+    if (data.list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-slate-400">暂无数据</td></tr>';
+    } else {
+        const roleLabels = { admin: '管理员', teacher: '教师', student: '学生' };
+        const roleColors = { admin: 'bg-red-100 text-red-700', teacher: 'bg-blue-100 text-blue-700', student: 'bg-green-100 text-green-700' };
+        tbody.innerHTML = data.list.map(u => `
+            <tr class="border-t border-amber-50 hover:bg-amber-50/30">
+                <td class="px-4 py-3 font-medium">${u.username}</td>
+                <td class="px-4 py-3">${u.display_name || '-'}</td>
+                <td class="px-4 py-3"><span class="px-2 py-0.5 rounded-full text-xs ${roleColors[u.role] || ''}">${roleLabels[u.role] || u.role}</span></td>
+                <td class="px-4 py-3"><span class="px-2 py-0.5 rounded-full text-xs ${u.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}">${u.status === 'active' ? '正常' : '禁用'}</span></td>
+                <td class="px-4 py-3 text-slate-400">${u.last_login ? u.last_login.slice(0, 16).replace('T', ' ') : '-'}</td>
+                <td class="px-4 py-3 text-slate-400">${u.created_at ? u.created_at.slice(0, 10) : '-'}</td>
+                <td class="px-4 py-3 text-center">
+                    <button onclick="toggleUserStatus('${u.id}','${u.status}')" class="text-xs px-2 py-1 rounded hover:bg-amber-100 tcm-primary">${u.status === 'active' ? '禁用' : '启用'}</button>
+                    <button onclick="showResetPwModal('${u.id}')" class="text-xs px-2 py-1 rounded hover:bg-amber-100 text-amber-600">重置密码</button>
+                    <button onclick="deleteUser('${u.id}','${u.username}')" class="text-xs px-2 py-1 rounded hover:bg-red-100 text-red-500">删除</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+    document.getElementById('userPagination').textContent = `第 ${data.page} 页 / 共 ${data.total} 条`;
+}
+
+function prevUserPage() { if (userPage > 1) { userPage--; loadUsers(); } }
+function nextUserPage() { userPage++; loadUsers(); }
+
+function showCreateUserModal() {
+    document.getElementById('createUserModal').classList.remove('hidden');
+    document.getElementById('newUsername').value = '';
+    document.getElementById('newPassword').value = '';
+    document.getElementById('newDisplayName').value = '';
+    document.getElementById('newRole').value = 'student';
+}
+function hideCreateUserModal() { document.getElementById('createUserModal').classList.add('hidden'); }
+
+async function createUser() {
+    const body = {
+        username: document.getElementById('newUsername').value,
+        password: document.getElementById('newPassword').value,
+        displayName: document.getElementById('newDisplayName').value,
+        role: document.getElementById('newRole').value
+    };
+    const data = await api('/api/admin/users', { method: 'POST', body: JSON.stringify(body) });
+    if (data && data.success) {
+        hideCreateUserModal();
+        loadUsers();
+    } else {
+        alert(data?.error || '创建失败');
+    }
+}
+
+async function toggleUserStatus(id, currentStatus) {
+    const newStatus = currentStatus === 'active' ? 'disabled' : 'active';
+    const data = await api(`/api/admin/users/${id}`, { method: 'PUT', body: JSON.stringify({ status: newStatus }) });
+    if (data) loadUsers();
+}
+
+function showResetPwModal(id) {
+    document.getElementById('resetUserId').value = id;
+    document.getElementById('resetNewPw').value = '';
+    document.getElementById('resetPwModal').classList.remove('hidden');
+}
+
+async function resetPassword() {
+    const id = document.getElementById('resetUserId').value;
+    const pw = document.getElementById('resetNewPw').value;
+    const data = await api(`/api/admin/users/${id}/reset-password`, { method: 'PUT', body: JSON.stringify({ newPassword: pw }) });
+    if (data && data.success) {
+        document.getElementById('resetPwModal').classList.add('hidden');
+        alert('密码已重置');
+    } else {
+        alert(data?.error || '重置失败');
+    }
+}
+
+async function deleteUser(id, username) {
+    if (!confirm(`确认删除用户 ${username}？`)) return;
+    const data = await api(`/api/admin/users/${id}`, { method: 'DELETE' });
+    if (data) loadUsers();
+}
+
+// ==================== 生成统计 ====================
+async function loadGenStats() {
+    const data = await api('/api/admin/stats/generations?days=30');
+    if (!data) return;
+
+    const typeNames = { ppt: 'PPT', lesson: '教案', cases: '医案', quiz: '测验', knowledge: '图谱', chat: '对话' };
+    const colors = ['#8B5A2B', '#C23B22', '#2D8C5A', '#5B8CDB', '#E6A23C', '#9061C0'];
+
+    // 按类型饼图
+    const typeChart = echarts.init(document.getElementById('chartGenType'));
+    typeChart.setOption({
+        tooltip: { trigger: 'item' },
+        series: [{
+            type: 'pie', radius: ['40%', '70%'],
+            data: (data.byType || []).map((d, i) => ({ name: typeNames[d.type] || d.type, value: d.count, itemStyle: { color: colors[i % colors.length] } }))
+        }]
+    });
+
+    // 按模型柱状图
+    const modelChart = echarts.init(document.getElementById('chartGenModel'));
+    const models = data.byModel || [];
+    modelChart.setOption({
+        tooltip: { trigger: 'axis' },
+        grid: { left: 80, right: 20, top: 20, bottom: 30 },
+        xAxis: { type: 'value', minInterval: 1 },
+        yAxis: { type: 'category', data: models.map(m => m.model || 'unknown'), axisLabel: { fontSize: 11 } },
+        series: [{ type: 'bar', data: models.map(m => m.count), itemStyle: { color: '#8B5A2B' } }]
+    });
+
+    window.addEventListener('resize', () => { typeChart.resize(); modelChart.resize(); });
+
+    // 活跃用户
+    const userData = await api('/api/admin/stats/users');
+    if (userData) {
+        const tbody = document.getElementById('activeUsersBody');
+        tbody.innerHTML = (userData.activeUsers || []).map(u => `
+            <tr class="border-t border-amber-50 hover:bg-amber-50/30">
+                <td class="px-4 py-3 font-medium">${u.username}</td>
+                <td class="px-4 py-3">${u.display_name || '-'}</td>
+                <td class="px-4 py-3">${u.gen_count || 0}</td>
+                <td class="px-4 py-3 text-slate-400">${u.last_active ? u.last_active.slice(0, 16).replace('T', ' ') : '-'}</td>
+            </tr>
+        `).join('') || '<tr><td colspan="4" class="text-center py-8 text-slate-400">暂无数据</td></tr>';
+    }
+}
+
+// ==================== 系统日志 ====================
+async function loadLogs() {
+    const action = document.getElementById('logActionFilter')?.value || '';
+    const startDate = document.getElementById('logStartDate')?.value || '';
+    const endDate = document.getElementById('logEndDate')?.value || '';
+    const params = new URLSearchParams({ page: logPage, pageSize: 30 });
+    if (action) params.set('action', action);
+    if (startDate) params.set('startDate', startDate);
+    if (endDate) params.set('endDate', endDate);
+
+    const data = await api(`/api/admin/logs?${params}`);
+    if (!data) return;
+
+    const tbody = document.getElementById('logTableBody');
+    if (data.list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-slate-400">暂无日志</td></tr>';
+    } else {
+        tbody.innerHTML = data.list.map(l => `
+            <tr class="border-t border-amber-50 hover:bg-amber-50/30">
+                <td class="px-4 py-2 text-slate-500 whitespace-nowrap">${l.created_at?.slice(0, 16).replace('T', ' ') || '-'}</td>
+                <td class="px-4 py-2"><span class="px-2 py-0.5 bg-amber-50 rounded text-xs tcm-primary">${l.action}</span></td>
+                <td class="px-4 py-2 text-slate-600 max-w-md truncate">${l.detail || '-'}</td>
+                <td class="px-4 py-2 text-slate-400">${l.ip || '-'}</td>
+            </tr>
+        `).join('');
+    }
+    document.getElementById('logPagination').textContent = `第 ${data.page} 页 / 共 ${data.total} 条`;
+}
+
+function prevLogPage() { if (logPage > 1) { logPage--; loadLogs(); } }
+function nextLogPage() { logPage++; loadLogs(); }
+
+// ==================== 系统设置 ====================
+async function loadLLMConfig() {
+    const data = await api('/api/llm/config');
+    if (!data) return;
+    document.getElementById('cfgProvider').value = data.provider || 'openai';
+    document.getElementById('cfgEndpoint').value = data.endpoint || '';
+    document.getElementById('cfgApiKey').value = data.apiKey || '';
+    document.getElementById('cfgModel').value = data.model || '';
+    document.getElementById('cfgEnabled').checked = data.enabled || false;
+}
+
+async function saveLLMConfig() {
+    const body = {
+        provider: document.getElementById('cfgProvider').value,
+        endpoint: document.getElementById('cfgEndpoint').value,
+        apiKey: document.getElementById('cfgApiKey').value,
+        model: document.getElementById('cfgModel').value,
+        enabled: document.getElementById('cfgEnabled').checked
+    };
+    const data = await api('/api/llm/config', { method: 'PUT', body: JSON.stringify(body) });
+    const msg = document.getElementById('cfgMsg');
+    if (data && data.success) {
+        msg.textContent = '配置已保存';
+        msg.className = 'text-sm text-green-600';
+    } else {
+        msg.textContent = data?.error || '保存失败';
+        msg.className = 'text-sm text-red-500';
+    }
+    msg.classList.remove('hidden');
+}
+
+async function testLLMConfig() {
+    const msg = document.getElementById('cfgMsg');
+    msg.textContent = '测试中...';
+    msg.className = 'text-sm text-amber-600';
+    msg.classList.remove('hidden');
+    const data = await api('/api/llm/test', { method: 'POST' });
+    if (data && data.success) {
+        msg.textContent = '连接成功: ' + data.message;
+        msg.className = 'text-sm text-green-600';
+    } else {
+        msg.textContent = '连接失败: ' + (data?.message || '未知错误');
+        msg.className = 'text-sm text-red-500';
+    }
+}
+
+// ==================== 初始化 ====================
+document.addEventListener('DOMContentLoaded', async () => {
+    const ok = await checkAuth();
+    if (ok) loadOverview();
+});
+</script>
+
+</body>
+</html>
